@@ -175,6 +175,7 @@ class OpenAIRealtimeClient {
   /// Gracefully hang up the call and close the peer connection.
   Future<void> disconnect({bool hangup = true}) async {
     _logger.info('🔌 Disconnecting from realtime session...');
+    await _cancelActiveResponseBeforeDisconnect();
     if (hangup && _callId != null) {
       try {
         _logger.fine('Hanging up call: $_callId');
@@ -260,12 +261,17 @@ class OpenAIRealtimeClient {
     _notifyResponsesIdle();
   }
 
-  Future<void> _waitForResponsesToFinish() {
+  Future<void> _waitForResponsesToFinish({Duration timeout = const Duration(seconds: 5)}) {
     if (!_responseInProgress) return Future.value();
     final completer = Completer<void>();
     _responseIdleWaiters.add(completer);
     _logger.fine('⏳ Waiting for active response(s) to finish before sending new item...');
-    return completer.future;
+    return completer.future.timeout(
+      timeout,
+      onTimeout: () {
+        _logger.warning('⚠️ Timed out waiting for response to finish.');
+      },
+    );
   }
 
   void _notifyResponsesIdle() {
@@ -277,6 +283,22 @@ class OpenAIRealtimeClient {
       }
     }
     _responseIdleWaiters.clear();
+  }
+
+  Future<void> _cancelActiveResponseBeforeDisconnect() async {
+    if (!_responseInProgress) return;
+    if (_eventChannel == null || _eventChannel!.state != RTCDataChannelState.RTCDataChannelOpen) {
+      _logger.fine('Response in progress but data channel is closed; skipping cancel.');
+      return;
+    }
+    try {
+      _logger.fine('⏹ Cancelling active response before disconnect');
+      await sendEvent(const ResponseCancelEvent());
+      await sendEvent(const OutputAudioBufferClearEvent());
+      await _waitForResponsesToFinish(timeout: const Duration(seconds: 2));
+    } catch (err, stack) {
+      _logger.warning('⚠️ Failed to cancel response before disconnect: $err', err, stack);
+    }
   }
 
   void _logEventPayload(String payload) {

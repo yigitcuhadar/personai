@@ -34,7 +34,12 @@ class PromptInput extends FormzInput<String, String> {
 }
 
 class HomeCubit extends Cubit<HomeState> {
-  HomeCubit() : super(const HomeState());
+  HomeCubit({String defaultApiKey = ''})
+    : super(
+        HomeState(
+          apiKey: ApiKeyInput.pure(defaultApiKey.trim()),
+        ),
+      );
 
   OpenAIRealtimeClient? _client;
   StreamSubscription<RealtimeServerEvent>? _eventSub;

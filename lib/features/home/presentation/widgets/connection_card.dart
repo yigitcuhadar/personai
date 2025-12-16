@@ -39,6 +39,8 @@ class _ApiKeyField extends StatelessWidget {
         final displayError = state.apiKey.displayError;
         final isEnabled = state.status == HomeStatus.initial || state.status == HomeStatus.error;
         return TextFormField(
+          key: ValueKey('api-key-field'),
+          initialValue: state.apiKey.value,
           enabled: isEnabled,
           autocorrect: false,
           onChanged: (value) => context.read<HomeCubit>().onApiKeyChanged(value),

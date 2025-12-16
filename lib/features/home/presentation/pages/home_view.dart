@@ -48,7 +48,7 @@ class HomeView extends StatelessWidget {
                   SizedBox(height: 12),
                   PromptCard(),
                   SizedBox(height: 12),
-                  const LogPane(),
+                  LogPane(),
                 ],
               ),
             ),

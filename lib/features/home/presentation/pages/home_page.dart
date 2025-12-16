@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../app/config/app_config.dart';
+import '../../../../app/di/injector.dart';
 import '../cubit/home_cubit.dart';
 import 'home_view.dart';
 
@@ -12,7 +14,9 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => HomeCubit(),
+      create: (_) => HomeCubit(
+        defaultApiKey: getIt<AppConfig>().openaiApiKey ?? '',
+      ),
       child: const HomeView(),
     );
   }
