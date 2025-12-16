@@ -14,8 +14,7 @@ class ApiKeyInput extends FormzInput<String, String> {
   const ApiKeyInput.dirty([super.value = '']) : super.dirty();
 
   @override
-  String? validator(String value) =>
-      value.trim().isEmpty ? 'API anahtarı gerekli' : null;
+  String? validator(String value) => value.trim().isEmpty ? 'API anahtarı gerekli' : null;
 }
 
 class ModelInput extends FormzInput<String, String> {
@@ -23,8 +22,7 @@ class ModelInput extends FormzInput<String, String> {
   const ModelInput.dirty([super.value = 'gpt-realtime']) : super.dirty();
 
   @override
-  String? validator(String value) =>
-      value.trim().isEmpty ? 'Model gerekli' : null;
+  String? validator(String value) => value.trim().isEmpty ? 'Model gerekli' : null;
 }
 
 class PromptInput extends FormzInput<String, String> {
@@ -32,8 +30,7 @@ class PromptInput extends FormzInput<String, String> {
   const PromptInput.dirty([super.value = '']) : super.dirty();
 
   @override
-  String? validator(String value) =>
-      value.trim().isEmpty ? 'Prompt gerekli' : null;
+  String? validator(String value) => value.trim().isEmpty ? 'Prompt gerekli' : null;
 }
 
 class HomeCubit extends Cubit<HomeState> {
@@ -43,6 +40,10 @@ class HomeCubit extends Cubit<HomeState> {
   StreamSubscription<RealtimeServerEvent>? _eventSub;
   StreamSubscription<RealtimeClientEvent>? _clientEventSub;
   DateTime? _sessionCreatedAt;
+
+  bool get _isConnecting => state.status == HomeStatus.connecting;
+  bool get _isConnected => state.status == HomeStatus.connected;
+  bool get _canChangeConfig => !_isConnecting && !_isConnected;
 
   void onApiKeyChanged(String value) {
     emit(state.copyWith(apiKey: ApiKeyInput.dirty(value), clearError: true));
@@ -65,16 +66,12 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   void setDebugLogging(bool value) {
-    if (state.status == HomeStatus.connecting ||
-        state.status == HomeStatus.connected)
-      return;
+    if (!_canChangeConfig) return;
     emit(state.copyWith(debugLogging: value, clearError: true));
   }
 
   Future<void> connect() async {
-    if (state.status == HomeStatus.connecting ||
-        state.status == HomeStatus.connected)
-      return;
+    if (_isConnecting || _isConnected) return;
 
     final apiKey = ApiKeyInput.dirty(state.apiKey.value.trim());
     final model = ModelInput.dirty(state.model.value.trim());
@@ -99,39 +96,8 @@ class HomeCubit extends Cubit<HomeState> {
       ),
     );
 
-    final client = OpenAIRealtimeClient(
-      accessToken: apiKey.value,
-      debug: state.debugLogging,
-    );
-    if (state.debugLogging) {
-      enableOpenAIRealtimeLogging();
-    }
-
-    await _eventSub?.cancel();
-    await _clientEventSub?.cancel();
-    _sessionCreatedAt = null;
-    _eventSub = client.events.listen(
-      _handleServerEvent,
-      onError: (err, stack) {
-        _appendEventLog(
-          direction: LogDirection.server,
-          type: 'server.error',
-          payload: {'error': '$err'},
-          rawEvent: err,
-        );
-      },
-    );
-    _clientEventSub = client.clientEvents.listen(
-      _handleClientEvent,
-      onError: (err, stack) {
-        _appendEventLog(
-          direction: LogDirection.client,
-          type: 'client.error',
-          payload: {'error': '$err'},
-          rawEvent: err,
-        );
-      },
-    );
+    final client = _createClient(apiKey.value);
+    await _attachClientStreams(client);
 
     try {
       await client.connect(
@@ -153,10 +119,7 @@ class HomeCubit extends Cubit<HomeState> {
         rawEvent: {'message': 'Bağlanıldı', 'callId': client.callId},
       );
     } catch (err) {
-      await _eventSub?.cancel();
-      await _clientEventSub?.cancel();
-      _eventSub = null;
-      _clientEventSub = null;
+      await _detachClientStreams();
       await client.dispose();
       emit(
         state.copyWith(
@@ -179,10 +142,7 @@ class HomeCubit extends Cubit<HomeState> {
     if (client == null) return;
     emit(state.copyWith(status: HomeStatus.disconnecting, clearError: true));
     await client.disconnect();
-    await _eventSub?.cancel();
-    await _clientEventSub?.cancel();
-    _eventSub = null;
-    _clientEventSub = null;
+    await _detachClientStreams();
     _client = null;
     _sessionCreatedAt = null;
     emit(
@@ -235,6 +195,51 @@ class HomeCubit extends Cubit<HomeState> {
     );
   }
 
+  OpenAIRealtimeClient _createClient(String token) {
+    final client = OpenAIRealtimeClient(
+      accessToken: token,
+      debug: state.debugLogging,
+    );
+    if (state.debugLogging) {
+      enableOpenAIRealtimeLogging();
+    }
+    return client;
+  }
+
+  Future<void> _attachClientStreams(OpenAIRealtimeClient client) async {
+    await _detachClientStreams();
+    _sessionCreatedAt = null;
+    _eventSub = client.serverEvents.listen(
+      _handleServerEvent,
+      onError: (err, stack) {
+        _appendEventLog(
+          direction: LogDirection.server,
+          type: 'server.error',
+          payload: {'error': '$err'},
+          rawEvent: err,
+        );
+      },
+    );
+    _clientEventSub = client.clientEvents.listen(
+      _handleClientEvent,
+      onError: (err, stack) {
+        _appendEventLog(
+          direction: LogDirection.client,
+          type: 'client.error',
+          payload: {'error': '$err'},
+          rawEvent: err,
+        );
+      },
+    );
+  }
+
+  Future<void> _detachClientStreams() async {
+    await _eventSub?.cancel();
+    await _clientEventSub?.cancel();
+    _eventSub = null;
+    _clientEventSub = null;
+  }
+
   void _appendEventLog({
     required LogDirection direction,
     required String type,
@@ -243,11 +248,8 @@ class HomeCubit extends Cubit<HomeState> {
     Object? rawEvent,
   }) {
     final now = timestamp ?? DateTime.now();
-    final normalizedPayload = Map<String, dynamic>.from(payload)
-      ..putIfAbsent('type', () => type);
-    final elapsed = _sessionCreatedAt != null
-        ? now.difference(_sessionCreatedAt!)
-        : null;
+    final normalizedPayload = Map<String, dynamic>.from(payload)..putIfAbsent('type', () => type);
+    final elapsed = _sessionCreatedAt != null ? now.difference(_sessionCreatedAt!) : null;
     final detail = LogEventDetail(
       payload: normalizedPayload,
       timestamp: now,
@@ -259,8 +261,7 @@ class HomeCubit extends Cubit<HomeState> {
     if (logs.isNotEmpty) {
       final last = logs.last;
       if (last.type == type && last.direction == direction) {
-        final updatedDetails = List<LogEventDetail>.from(last.details)
-          ..add(detail);
+        final updatedDetails = List<LogEventDetail>.from(last.details)..add(detail);
         logs[logs.length - 1] = last.copyWith(details: updatedDetails);
         emit(state.copyWith(logs: logs));
         return;
@@ -279,8 +280,7 @@ class HomeCubit extends Cubit<HomeState> {
 
   @override
   Future<void> close() async {
-    await _eventSub?.cancel();
-    await _clientEventSub?.cancel();
+    await _detachClientStreams();
     await _client?.dispose();
     return super.close();
   }

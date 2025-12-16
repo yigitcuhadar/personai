@@ -19,7 +19,7 @@ Future<void> main() async {
   final client = OpenAIRealtimeClient(accessToken: apiKey, debug: true);
 
   // Subscribe to server events.
-  final sub = client.events.listen((event) {
+  final sub = client.serverEvents.listen((event) {
     switch (event) {
       case ResponseOutputTextDeltaEvent delta:
         print('Model: ${delta.delta}');
@@ -32,9 +32,7 @@ Future<void> main() async {
 
   await client.connect(
     model: 'gpt-realtime',
-    session: const RealtimeSessionConfig(
-      type: 'realtime',
-    ),
+    session: const RealtimeSessionConfig(type: 'realtime'),
   );
 
   // Simple text turn.
