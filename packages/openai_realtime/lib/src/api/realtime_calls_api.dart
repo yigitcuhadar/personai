@@ -21,42 +21,46 @@ class RealtimeCallsApi {
 
   Uri _resolve(String path) => baseUrl.replace(path: '${baseUrl.path}$path');
 
-  Map<String, String> get _authHeaders => {'Authorization': 'Bearer $accessToken'};
+  Map<String, String> get _authHeaders => {
+    'Authorization': 'Bearer $accessToken',
+    // Required for the Realtime API v1 GA endpoints.
+    'OpenAI-Beta': 'realtime=v1',
+  };
+
+  /// The HTTP API for `POST /v1/realtime/calls` currently rejects some session
+  /// fields (e.g., `output_modalities`). Strip those while keeping the shape
+  /// aligned with the documented curl sample.
+  JsonMap _sessionPayloadForCreate(RealtimeSessionConfig session) {
+    final json = Map<String, dynamic>.from(session.toJson());
+    json.remove('output_modalities');
+    return json;
+  }
 
   /// Create a new call by exchanging the WebRTC SDP offer for an answer.
-  Future<CallAnswer> createCall({required String offerSdp, RealtimeSessionConfig? session}) async {
-    var uri = _resolve('/realtime/calls');
+  ///
+  /// This follows the documented `POST /v1/realtime/calls` contract:
+  /// - Multipart form body with an `sdp` part (application/sdp)
+  /// - A `session` part (application/json) that must include the model
+  Future<CallAnswer> createCall({
+    required String offerSdp,
+    required RealtimeSessionConfig session,
+  }) async {
+    final uri = _resolve('/realtime/calls');
     logger.info('🔄 Creating realtime call...');
 
-    // Add session config as query parameters if provided
-    if (session != null) {
-      logger.fine('📝 Session config: ${session.toJson()}');
-      final sessionJson = session.toJson();
-      final queryParams = <String, String>{};
-
-      sessionJson.forEach((key, value) {
-        if (value is List) {
-          // Convert lists to comma-separated string
-          queryParams[key] = value.join(',');
-        } else {
-          queryParams[key] = value.toString();
-        }
-      });
-
-      uri = uri.replace(queryParameters: queryParams);
-      logger.fine('Query parameters: $queryParams');
+    if (session.model == null || session.model!.isEmpty) {
+      throw ArgumentError('Realtime session must include a model name.');
     }
+    final normalizedSession =
+        session.type == null ? session.copyWith(type: 'realtime') : session;
 
     final request = http.MultipartRequest('POST', uri);
     request.headers.addAll(_authHeaders);
 
-    // Add SDP as a field
+    // Send both parts as form fields to exactly mirror the documented curl example.
+    // The server accepts these as long as the names match.
     request.fields['sdp'] = offerSdp;
-
-    logger.fine('Request fields: ${request.fields.length}');
-    for (final entry in request.fields.entries) {
-      logger.fine('  - ${entry.key}: ${entry.value.length} chars');
-    }
+    request.fields['session'] = jsonEncode(_sessionPayloadForCreate(normalizedSession));
 
     _logMultipartRequest(request);
     final streamed = await httpClient.send(request);
@@ -66,7 +70,10 @@ class RealtimeCallsApi {
     if (response.statusCode != 201) {
       logger.severe('❌ Call creation failed with status ${response.statusCode}');
       logger.severe('Response body: ${response.body}');
-      throw http.ClientException('Failed to create realtime call: ${response.statusCode} ${response.body}', uri);
+      throw http.ClientException(
+        'Failed to create realtime call: ${response.statusCode} ${response.body}',
+        uri,
+      );
     }
 
     final location = response.headers['location'];

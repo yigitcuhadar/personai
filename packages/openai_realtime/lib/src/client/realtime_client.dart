@@ -61,7 +61,7 @@ class OpenAIRealtimeClient {
       _peerConnection != null && _peerConnection!.connectionState != RTCPeerConnectionState.RTCPeerConnectionStateClosed;
 
   /// Establish the WebRTC connection and Realtime data channel.
-  Future<void> connect({RealtimeSessionConfig? session}) async {
+  Future<void> connect({required String model, RealtimeSessionConfig? session}) async {
     _logger.info('🔄 Initiating WebRTC connection...');
     await _disposePeer();
     _peerConnection = await createPeerConnection(_rtcConfiguration);
@@ -96,6 +96,9 @@ class OpenAIRealtimeClient {
         ..binaryType = 'binary',
     );
     _eventChannel!.onMessage = _handleMessage;
+    _eventChannel!.onDataChannelState = (state) {
+      _logger.info('📡 Data channel state: $state');
+    };
     _logger.fine('✅ Data channel created');
 
     _logger.fine('Creating WebRTC offer...');
@@ -110,12 +113,16 @@ class OpenAIRealtimeClient {
     }
 
     _logger.fine('Local SDP length: ${localDescription!.sdp!.length} characters');
-    final answer = await callsApi.createCall(offerSdp: localDescription!.sdp!, session: session);
+    final sessionConfig = _prepareSessionConfig(model, session);
+    final answer = await callsApi.createCall(offerSdp: localDescription!.sdp!, session: sessionConfig);
     _callId = answer.callId;
     _logger.info('✅ Call created. Call ID: $_callId');
 
     _logger.fine('Setting remote description (answer)...');
     await _peerConnection!.setRemoteDescription(RTCSessionDescription(answer.sdp, 'answer'));
+    if (_eventChannel != null) {
+      await _waitForDataChannelOpen(_eventChannel!);
+    }
     _logger.info('✅ WebRTC connection established successfully');
   }
 
@@ -254,6 +261,39 @@ class OpenAIRealtimeClient {
     } catch (_) {
       _logger.warning('⚠️ ICE gathering timed out after 5 seconds.');
     }
+  }
+
+  RealtimeSessionConfig _prepareSessionConfig(String model, RealtimeSessionConfig? session) {
+    final provided = session ?? const RealtimeSessionConfig();
+    if (provided.model != null && provided.model != model) {
+      throw ArgumentError(
+        'connect() model "$model" does not match provided session model "${provided.model}".',
+      );
+    }
+    final type = provided.type ?? 'realtime';
+    return provided.copyWith(model: model, type: type);
+  }
+
+  Future<void> _waitForDataChannelOpen(RTCDataChannel channel) async {
+    if (channel.state == RTCDataChannelState.RTCDataChannelOpen) {
+      _logger.fine('✅ Data channel already open');
+      return;
+    }
+
+    final completer = Completer<void>();
+    channel.onDataChannelState = (state) {
+      _logger.info('📡 Data channel state: $state');
+      if (state == RTCDataChannelState.RTCDataChannelOpen && !completer.isCompleted) {
+        completer.complete();
+      }
+    };
+
+    await completer.future.timeout(
+      const Duration(seconds: 10),
+      onTimeout: () {
+        throw TimeoutException('Timed out waiting for data channel to open.');
+      },
+    );
   }
 
   /// Dispose resources.

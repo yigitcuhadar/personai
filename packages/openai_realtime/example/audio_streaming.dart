@@ -31,7 +31,10 @@ Future<void> main() async {
   });
 
   await client.connect(
-    session: const RealtimeSessionConfig(type: 'realtime', model: 'gpt-realtime', outputModalities: ['audio']),
+    model: 'gpt-realtime',
+    session: const RealtimeSessionConfig(
+      type: 'realtime',
+    ),
   );
 
   // Simple text turn.
