@@ -29,7 +29,13 @@ class OpenAIRealtimeClient {
                {'urls': 'stun:stun.l.google.com:19302'},
              ],
            },
-       callsApi = callsApi ?? RealtimeCallsApi(accessToken: accessToken, baseUrl: baseUrl, logFullHttp: debug) {
+       callsApi =
+           callsApi ??
+           RealtimeCallsApi(
+             accessToken: accessToken,
+             baseUrl: baseUrl,
+             logFullHttp: debug,
+           ) {
     if (debug) {
       enableOpenAIRealtimeLogging();
     }
@@ -39,7 +45,10 @@ class OpenAIRealtimeClient {
   final RealtimeCallsApi callsApi;
 
   final _events = StreamController<RealtimeServerEvent>.broadcast();
+  final _clientEvents = StreamController<RealtimeClientEvent>.broadcast();
   final _remoteAudioTracks = StreamController<MediaStreamTrack>.broadcast();
+  final Set<String> _activeResponseIds = <String>{};
+  final List<Completer<void>> _responseIdleWaiters = <Completer<void>>[];
 
   RTCPeerConnection? _peerConnection;
   RTCDataChannel? _eventChannel;
@@ -48,6 +57,9 @@ class OpenAIRealtimeClient {
 
   /// Stream of parsed server events delivered over the data channel.
   Stream<RealtimeServerEvent> get events => _events.stream;
+
+  /// Stream of client-originated events sent over the data channel.
+  Stream<RealtimeClientEvent> get clientEvents => _clientEvents.stream;
 
   /// Stream of remote audio tracks. Attach to an audio renderer to play output
   /// audio produced by the model.
@@ -58,10 +70,15 @@ class OpenAIRealtimeClient {
 
   /// Whether the client has an active peer connection.
   bool get isConnected =>
-      _peerConnection != null && _peerConnection!.connectionState != RTCPeerConnectionState.RTCPeerConnectionStateClosed;
+      _peerConnection != null &&
+      _peerConnection!.connectionState !=
+          RTCPeerConnectionState.RTCPeerConnectionStateClosed;
 
   /// Establish the WebRTC connection and Realtime data channel.
-  Future<void> connect({required String model, RealtimeSessionConfig? session}) async {
+  Future<void> connect({
+    required String model,
+    RealtimeSessionConfig? session,
+  }) async {
     _logger.info('🔄 Initiating WebRTC connection...');
     await _disposePeer();
     _peerConnection = await createPeerConnection(_rtcConfiguration);
@@ -69,7 +86,8 @@ class OpenAIRealtimeClient {
 
     _peerConnection!.onTrack = (event) {
       _logger.fine('📺 Received media track: ${event.track?.kind}');
-      for (final track in event.track != null ? [event.track!] : <MediaStreamTrack>[]) {
+      for (final track
+          in event.track != null ? [event.track!] : <MediaStreamTrack>[]) {
         if (track.kind == 'audio') {
           _logger.fine('🔊 Audio track added to stream');
           _remoteAudioTracks.add(track);
@@ -102,7 +120,9 @@ class OpenAIRealtimeClient {
     _logger.fine('✅ Data channel created');
 
     _logger.fine('Creating WebRTC offer...');
-    final offer = await _peerConnection!.createOffer({'offerToReceiveAudio': 1});
+    final offer = await _peerConnection!.createOffer({
+      'offerToReceiveAudio': 1,
+    });
     await _peerConnection!.setLocalDescription(offer);
     _logger.fine('✅ Local description set');
 
@@ -112,14 +132,21 @@ class OpenAIRealtimeClient {
       throw StateError('Local description missing SDP.');
     }
 
-    _logger.fine('Local SDP length: ${localDescription!.sdp!.length} characters');
+    _logger.fine(
+      'Local SDP length: ${localDescription!.sdp!.length} characters',
+    );
     final sessionConfig = _prepareSessionConfig(model, session);
-    final answer = await callsApi.createCall(offerSdp: localDescription!.sdp!, session: sessionConfig);
+    final answer = await callsApi.createCall(
+      offerSdp: localDescription!.sdp!,
+      session: sessionConfig,
+    );
     _callId = answer.callId;
     _logger.info('✅ Call created. Call ID: $_callId');
 
     _logger.fine('Setting remote description (answer)...');
-    await _peerConnection!.setRemoteDescription(RTCSessionDescription(answer.sdp, 'answer'));
+    await _peerConnection!.setRemoteDescription(
+      RTCSessionDescription(answer.sdp, 'answer'),
+    );
     if (_eventChannel != null) {
       await _waitForDataChannelOpen(_eventChannel!);
     }
@@ -128,7 +155,8 @@ class OpenAIRealtimeClient {
 
   /// Sends a client event over the data channel.
   Future<void> sendEvent(RealtimeClientEvent event) async {
-    if (_eventChannel == null || _eventChannel!.state != RTCDataChannelState.RTCDataChannelOpen) {
+    if (_eventChannel == null ||
+        _eventChannel!.state != RTCDataChannelState.RTCDataChannelOpen) {
       throw StateError('Data channel is not open.');
     }
     final payload = jsonEncode(event.toJson());
@@ -139,6 +167,7 @@ class OpenAIRealtimeClient {
     _logger.fine('Payload:');
     _logEventPayload(payload);
     _logger.fine('═══════════════════════════════════════════════════════');
+    _clientEvents.add(event);
     await _eventChannel!.send(RTCDataChannelMessage(payload));
   }
 
@@ -146,12 +175,24 @@ class OpenAIRealtimeClient {
   Future<void> sendAudioChunk(Uint8List bytes, {String? eventId}) {
     _logger.fine('🎤 Sending audio chunk: ${bytes.length} bytes');
     final encoded = base64Encode(bytes);
-    return sendEvent(InputAudioBufferAppendEvent(eventId: eventId, audio: encoded));
+    return sendEvent(
+      InputAudioBufferAppendEvent(eventId: eventId, audio: encoded),
+    );
   }
 
   /// Create a user text message item and request a response.
   Future<void> sendText(String text, {String? eventId}) async {
     _logger.fine('💬 Sending user message: $text');
+    if (_activeResponseIds.isNotEmpty) {
+      final responseId = _activeResponseIds.last;
+      _logger.fine(
+        '⏹ Cancelling active response before new user input: $responseId',
+      );
+      await sendEvent(ResponseCancelEvent(responseId: responseId));
+      // Drop any buffered assistant audio so the previous response stops playing.
+      await sendEvent(const OutputAudioBufferClearEvent());
+      await _waitForResponsesToFinish();
+    }
     final create = ConversationItemCreateEvent(
       eventId: eventId,
       item: RealtimeItem(
@@ -182,13 +223,19 @@ class OpenAIRealtimeClient {
 
   /// Acquire the microphone and add an upstream audio track to the peer
   /// connection.
-  Future<MediaStreamTrack> enableMicrophone({bool echoCancellation = true, bool noiseSuppression = true}) async {
+  Future<MediaStreamTrack> enableMicrophone({
+    bool echoCancellation = true,
+    bool noiseSuppression = true,
+  }) async {
     _logger.fine('🎤 Requesting microphone access...');
     _logger.fine('  Echo cancellation: $echoCancellation');
     _logger.fine('  Noise suppression: $noiseSuppression');
 
     final constraints = {
-      'audio': {'echoCancellation': echoCancellation, 'noiseSuppression': noiseSuppression},
+      'audio': {
+        'echoCancellation': echoCancellation,
+        'noiseSuppression': noiseSuppression,
+      },
       'video': false,
     };
     _localStream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -207,12 +254,16 @@ class OpenAIRealtimeClient {
     await _peerConnection?.close();
     _peerConnection = null;
     _callId = null;
+    _activeResponseIds.clear();
+    _notifyResponsesIdle();
     _logger.fine('✅ Resources disposed');
   }
 
   void _handleMessage(RTCDataChannelMessage message) {
     if (message.isBinary) {
-      _logger.warning('⚠️ Received binary data channel message of length ${message.binary?.length}');
+      _logger.warning(
+        '⚠️ Received binary data channel message of length ${message.binary?.length}',
+      );
       return;
     }
     try {
@@ -225,12 +276,60 @@ class OpenAIRealtimeClient {
       final event = RealtimeServerEvent.fromJson(json);
       _logger.fine('Event type: ${event.type}');
       _logger.fine('═══════════════════════════════════════════════════════');
+      _trackResponseLifecycle(event);
       _events.add(event);
     } catch (err, stack) {
       _logger.warning('❌ Failed to decode server event: $err', err, stack);
       _logger.warning('Raw message: ${message.text}');
-      _events.add(UnknownServerEvent(type: 'unknown', raw: {'error': err.toString(), 'payload': message.text}));
+      _events.add(
+        UnknownServerEvent(
+          type: 'unknown',
+          raw: {'error': err.toString(), 'payload': message.text},
+        ),
+      );
     }
+  }
+
+  void _trackResponseLifecycle(RealtimeServerEvent event) {
+    switch (event) {
+      case ResponseCreatedEvent created:
+        final id = created.response.id;
+        if (id != null) {
+          _logger.fine('🟢 Tracking active response: $id');
+          _activeResponseIds.add(id);
+        }
+        break;
+      case ResponseDoneEvent done:
+        final id = done.response.id;
+        if (id != null && _activeResponseIds.remove(id)) {
+          _logger.fine('⚪️ Response finished: $id');
+        }
+        break;
+      default:
+        break;
+    }
+    _notifyResponsesIdle();
+  }
+
+  Future<void> _waitForResponsesToFinish() {
+    if (_activeResponseIds.isEmpty) return Future.value();
+    final completer = Completer<void>();
+    _responseIdleWaiters.add(completer);
+    _logger.fine(
+      '⏳ Waiting for active response(s) to finish before sending new item...',
+    );
+    return completer.future;
+  }
+
+  void _notifyResponsesIdle() {
+    if (_activeResponseIds.isNotEmpty) return;
+    if (_responseIdleWaiters.isEmpty) return;
+    for (final waiter in List<Completer<void>>.from(_responseIdleWaiters)) {
+      if (!waiter.isCompleted) {
+        waiter.complete();
+      }
+    }
+    _responseIdleWaiters.clear();
   }
 
   void _logEventPayload(String payload) {
@@ -243,7 +342,8 @@ class OpenAIRealtimeClient {
   }
 
   Future<void> _waitForIceGatheringComplete(RTCPeerConnection pc) async {
-    if (pc.iceGatheringState == RTCIceGatheringState.RTCIceGatheringStateComplete) {
+    if (pc.iceGatheringState ==
+        RTCIceGatheringState.RTCIceGatheringStateComplete) {
       _logger.fine('✅ ICE gathering already complete');
       return;
     }
@@ -251,7 +351,8 @@ class OpenAIRealtimeClient {
     final completer = Completer<void>();
     pc.onIceGatheringState = (state) {
       _logger.fine('ICE gathering state: $state');
-      if (state == RTCIceGatheringState.RTCIceGatheringStateComplete && !completer.isCompleted) {
+      if (state == RTCIceGatheringState.RTCIceGatheringStateComplete &&
+          !completer.isCompleted) {
         _logger.fine('✅ ICE gathering complete');
         completer.complete();
       }
@@ -263,7 +364,10 @@ class OpenAIRealtimeClient {
     }
   }
 
-  RealtimeSessionConfig _prepareSessionConfig(String model, RealtimeSessionConfig? session) {
+  RealtimeSessionConfig _prepareSessionConfig(
+    String model,
+    RealtimeSessionConfig? session,
+  ) {
     final provided = session ?? const RealtimeSessionConfig();
     if (provided.model != null && provided.model != model) {
       throw ArgumentError(
@@ -283,7 +387,8 @@ class OpenAIRealtimeClient {
     final completer = Completer<void>();
     channel.onDataChannelState = (state) {
       _logger.info('📡 Data channel state: $state');
-      if (state == RTCDataChannelState.RTCDataChannelOpen && !completer.isCompleted) {
+      if (state == RTCDataChannelState.RTCDataChannelOpen &&
+          !completer.isCompleted) {
         completer.complete();
       }
     };
@@ -300,6 +405,7 @@ class OpenAIRealtimeClient {
   Future<void> dispose() async {
     await disconnect();
     await _events.close();
+    await _clientEvents.close();
     await _remoteAudioTracks.close();
   }
 }

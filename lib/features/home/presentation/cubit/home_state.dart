@@ -5,6 +5,7 @@ class HomeState extends Equatable {
     this.status = HomeStatus.initial,
     this.debugLogging = false,
     this.logs = const [],
+    this.logsReversed = false,
     this.callId,
     this.lastError,
     this.apiKey = const ApiKeyInput.pure(),
@@ -14,7 +15,8 @@ class HomeState extends Equatable {
 
   final HomeStatus status;
   final bool debugLogging;
-  final List<String> logs;
+  final List<LogEntry> logs;
+  final bool logsReversed;
   final String? callId;
   final String? lastError;
   final ApiKeyInput apiKey;
@@ -24,7 +26,8 @@ class HomeState extends Equatable {
   HomeState copyWith({
     HomeStatus? status,
     bool? debugLogging,
-    List<String>? logs,
+    List<LogEntry>? logs,
+    bool? logsReversed,
     String? callId,
     String? lastError,
     ApiKeyInput? apiKey,
@@ -36,6 +39,7 @@ class HomeState extends Equatable {
       status: status ?? this.status,
       debugLogging: debugLogging ?? this.debugLogging,
       logs: logs ?? this.logs,
+      logsReversed: logsReversed ?? this.logsReversed,
       callId: callId ?? this.callId,
       lastError: clearError ? null : lastError ?? this.lastError,
       apiKey: apiKey ?? this.apiKey,
@@ -45,7 +49,17 @@ class HomeState extends Equatable {
   }
 
   @override
-  List<Object?> get props => [status, debugLogging, logs, callId, lastError, apiKey, model, prompt];
+  List<Object?> get props => [
+    status,
+    debugLogging,
+    logs,
+    logsReversed,
+    callId,
+    lastError,
+    apiKey,
+    model,
+    prompt,
+  ];
 }
 
 enum HomeStatus {

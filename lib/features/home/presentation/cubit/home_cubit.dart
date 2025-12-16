@@ -5,6 +5,8 @@ import 'package:equatable/equatable.dart';
 import 'package:formz/formz.dart';
 import 'package:openai_realtime/openai_realtime.dart';
 
+import '../models/log_entry.dart';
+
 part 'home_state.dart';
 
 class ApiKeyInput extends FormzInput<String, String> {
@@ -12,15 +14,17 @@ class ApiKeyInput extends FormzInput<String, String> {
   const ApiKeyInput.dirty([super.value = '']) : super.dirty();
 
   @override
-  String? validator(String value) => value.trim().isEmpty ? 'API anahtarı gerekli' : null;
+  String? validator(String value) =>
+      value.trim().isEmpty ? 'API anahtarı gerekli' : null;
 }
 
 class ModelInput extends FormzInput<String, String> {
   const ModelInput.pure([super.value = 'gpt-realtime']) : super.pure();
-  const ModelInput.dirty([super.value = '']) : super.dirty();
+  const ModelInput.dirty([super.value = 'gpt-realtime']) : super.dirty();
 
   @override
-  String? validator(String value) => value.trim().isEmpty ? 'Model gerekli' : null;
+  String? validator(String value) =>
+      value.trim().isEmpty ? 'Model gerekli' : null;
 }
 
 class PromptInput extends FormzInput<String, String> {
@@ -28,7 +32,8 @@ class PromptInput extends FormzInput<String, String> {
   const PromptInput.dirty([super.value = '']) : super.dirty();
 
   @override
-  String? validator(String value) => value.trim().isEmpty ? 'Prompt gerekli' : null;
+  String? validator(String value) =>
+      value.trim().isEmpty ? 'Prompt gerekli' : null;
 }
 
 class HomeCubit extends Cubit<HomeState> {
@@ -36,6 +41,8 @@ class HomeCubit extends Cubit<HomeState> {
 
   OpenAIRealtimeClient? _client;
   StreamSubscription<RealtimeServerEvent>? _eventSub;
+  StreamSubscription<RealtimeClientEvent>? _clientEventSub;
+  DateTime? _sessionCreatedAt;
 
   void onApiKeyChanged(String value) {
     emit(state.copyWith(apiKey: ApiKeyInput.dirty(value), clearError: true));
@@ -49,34 +56,80 @@ class HomeCubit extends Cubit<HomeState> {
     emit(state.copyWith(prompt: PromptInput.dirty(value), clearError: true));
   }
 
+  void clearLogs() {
+    emit(state.copyWith(logs: const []));
+  }
+
+  void toggleLogsOrder() {
+    emit(state.copyWith(logsReversed: !state.logsReversed));
+  }
+
   void setDebugLogging(bool value) {
-    if (state.status == HomeStatus.connecting || state.status == HomeStatus.connected) return;
+    if (state.status == HomeStatus.connecting ||
+        state.status == HomeStatus.connected)
+      return;
     emit(state.copyWith(debugLogging: value, clearError: true));
   }
 
   Future<void> connect() async {
-    if (state.status == HomeStatus.connecting || state.status == HomeStatus.connected) return;
+    if (state.status == HomeStatus.connecting ||
+        state.status == HomeStatus.connected)
+      return;
 
     final apiKey = ApiKeyInput.dirty(state.apiKey.value.trim());
     final model = ModelInput.dirty(state.model.value.trim());
-    final validated = Formz.validate([apiKey, model]);
-    if (!validated) {
-      emit(state.copyWith(apiKey: apiKey, model: model, lastError: 'API anahtarı ve model gerekli.'));
+    final isValid = Formz.validate([apiKey, model]);
+    if (!isValid) {
+      emit(
+        state.copyWith(
+          apiKey: apiKey,
+          model: model,
+          lastError: 'API anahtarı ve model gerekli.',
+        ),
+      );
       return;
     }
 
-    emit(state.copyWith(status: HomeStatus.connecting, apiKey: apiKey, model: model, clearError: true));
+    emit(
+      state.copyWith(
+        status: HomeStatus.connecting,
+        apiKey: apiKey,
+        model: model,
+        clearError: true,
+      ),
+    );
 
-    final client = OpenAIRealtimeClient(accessToken: apiKey.value, debug: state.debugLogging);
+    final client = OpenAIRealtimeClient(
+      accessToken: apiKey.value,
+      debug: state.debugLogging,
+    );
     if (state.debugLogging) {
       enableOpenAIRealtimeLogging();
     }
 
-    _eventSub?.cancel();
+    await _eventSub?.cancel();
+    await _clientEventSub?.cancel();
+    _sessionCreatedAt = null;
     _eventSub = client.events.listen(
-      _handleEvent,
+      _handleServerEvent,
       onError: (err, stack) {
-        _appendLog('Hata: $err');
+        _appendEventLog(
+          direction: LogDirection.server,
+          type: 'server.error',
+          payload: {'error': '$err'},
+          rawEvent: err,
+        );
+      },
+    );
+    _clientEventSub = client.clientEvents.listen(
+      _handleClientEvent,
+      onError: (err, stack) {
+        _appendEventLog(
+          direction: LogDirection.client,
+          type: 'client.error',
+          payload: {'error': '$err'},
+          rawEvent: err,
+        );
       },
     );
 
@@ -93,13 +146,31 @@ class HomeCubit extends Cubit<HomeState> {
           clearError: true,
         ),
       );
-      _appendLog('Bağlanıldı (callId: ${client.callId ?? 'bilinmiyor'})');
+      _appendEventLog(
+        direction: LogDirection.client,
+        type: 'connection',
+        payload: {'message': 'Bağlanıldı', 'callId': client.callId},
+        rawEvent: {'message': 'Bağlanıldı', 'callId': client.callId},
+      );
     } catch (err) {
       await _eventSub?.cancel();
+      await _clientEventSub?.cancel();
       _eventSub = null;
+      _clientEventSub = null;
       await client.dispose();
-      emit(state.copyWith(status: HomeStatus.error, callId: null, lastError: '$err'));
-      _appendLog('Bağlantı hatası: $err');
+      emit(
+        state.copyWith(
+          status: HomeStatus.error,
+          callId: null,
+          lastError: '$err',
+        ),
+      );
+      _appendEventLog(
+        direction: LogDirection.client,
+        type: 'connection.error',
+        payload: {'error': '$err'},
+        rawEvent: err,
+      );
     }
   }
 
@@ -109,10 +180,24 @@ class HomeCubit extends Cubit<HomeState> {
     emit(state.copyWith(status: HomeStatus.disconnecting, clearError: true));
     await client.disconnect();
     await _eventSub?.cancel();
+    await _clientEventSub?.cancel();
     _eventSub = null;
+    _clientEventSub = null;
     _client = null;
-    emit(state.copyWith(status: HomeStatus.initial, callId: null, clearError: true));
-    _appendLog('Bağlantı kapatıldı');
+    _sessionCreatedAt = null;
+    emit(
+      state.copyWith(
+        status: HomeStatus.initial,
+        callId: null,
+        clearError: true,
+      ),
+    );
+    _appendEventLog(
+      direction: LogDirection.client,
+      type: 'connection',
+      payload: {'message': 'Bağlantı kapatıldı'},
+      rawEvent: {'message': 'Bağlantı kapatıldı'},
+    );
   }
 
   Future<void> sendPrompt() async {
@@ -125,28 +210,77 @@ class HomeCubit extends Cubit<HomeState> {
       return;
     }
     await client.sendText(prompt);
-    _appendLog('👤 $prompt');
   }
 
-  void _handleEvent(RealtimeServerEvent event) {
-    switch (event) {
-      case ResponseOutputTextDeltaEvent delta:
-        _appendLog('🤖 ${delta.delta}');
-      case ResponseOutputAudioTranscriptDeltaEvent delta:
-        _appendLog('🎙️ ${delta.delta}');
-      default:
-        _appendLog('ℹ️ ${event.type}');
+  void _handleServerEvent(RealtimeServerEvent event) {
+    final now = DateTime.now();
+    if (event is SessionCreatedEvent) {
+      _sessionCreatedAt = now;
     }
+    _appendEventLog(
+      direction: LogDirection.server,
+      type: event.type,
+      payload: event.toJson(),
+      timestamp: now,
+      rawEvent: event,
+    );
   }
 
-  void _appendLog(String message) {
-    final updated = List<String>.from(state.logs)..add(message);
-    emit(state.copyWith(logs: updated));
+  void _handleClientEvent(RealtimeClientEvent event) {
+    _appendEventLog(
+      direction: LogDirection.client,
+      type: event.type,
+      payload: event.toJson(),
+      rawEvent: event,
+    );
+  }
+
+  void _appendEventLog({
+    required LogDirection direction,
+    required String type,
+    required Map<String, dynamic> payload,
+    DateTime? timestamp,
+    Object? rawEvent,
+  }) {
+    final now = timestamp ?? DateTime.now();
+    final normalizedPayload = Map<String, dynamic>.from(payload)
+      ..putIfAbsent('type', () => type);
+    final elapsed = _sessionCreatedAt != null
+        ? now.difference(_sessionCreatedAt!)
+        : null;
+    final detail = LogEventDetail(
+      payload: normalizedPayload,
+      timestamp: now,
+      elapsedSinceSession: elapsed,
+      event: rawEvent,
+    );
+
+    final logs = List<LogEntry>.from(state.logs);
+    if (logs.isNotEmpty) {
+      final last = logs.last;
+      if (last.type == type && last.direction == direction) {
+        final updatedDetails = List<LogEventDetail>.from(last.details)
+          ..add(detail);
+        logs[logs.length - 1] = last.copyWith(details: updatedDetails);
+        emit(state.copyWith(logs: logs));
+        return;
+      }
+    }
+
+    logs.add(
+      LogEntry(
+        type: type,
+        direction: direction,
+        details: [detail],
+      ),
+    );
+    emit(state.copyWith(logs: logs));
   }
 
   @override
   Future<void> close() async {
     await _eventSub?.cancel();
+    await _clientEventSub?.cancel();
     await _client?.dispose();
     return super.close();
   }

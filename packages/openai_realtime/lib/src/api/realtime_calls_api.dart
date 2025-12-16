@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:http_parser/http_parser.dart';
 import 'package:logging/logging.dart';
 
 import '../models/realtime_models.dart';
