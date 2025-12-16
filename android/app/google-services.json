@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "625129709642",
+    "project_id": "personai-firebase",
+    "storage_bucket": "personai-firebase.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:625129709642:android:1b8ed49c69e09ba4abc6b3",
+        "android_client_info": {
+          "package_name": "com.example.personai"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD8cWDdCDLYH8W3lL9s-ZKVZjv0_Nvc5Fs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

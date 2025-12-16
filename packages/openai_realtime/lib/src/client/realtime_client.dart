@@ -1,0 +1,265 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:logging/logging.dart';
+
+import '../api/realtime_calls_api.dart';
+import '../logging.dart';
+import '../models/realtime_models.dart';
+
+/// High level WebRTC client for the OpenAI Realtime API.
+///
+/// This client manages the WebRTC peer connection, the Realtime data channel
+/// used for JSON events, and exposes typed event streams.
+class OpenAIRealtimeClient {
+  OpenAIRealtimeClient({
+    required String accessToken,
+    Uri? baseUrl,
+    Map<String, dynamic>? rtcConfiguration,
+    RealtimeCallsApi? callsApi,
+    Logger? logger,
+    bool debug = false,
+  }) : _logger = logger ?? Logger('OpenAIRealtimeClient'),
+       _rtcConfiguration =
+           rtcConfiguration ??
+           {
+             'iceServers': [
+               {'urls': 'stun:stun.l.google.com:19302'},
+             ],
+           },
+       callsApi = callsApi ?? RealtimeCallsApi(accessToken: accessToken, baseUrl: baseUrl, logFullHttp: debug) {
+    if (debug) {
+      enableOpenAIRealtimeLogging();
+    }
+  }
+  final Logger _logger;
+  final Map<String, dynamic> _rtcConfiguration;
+  final RealtimeCallsApi callsApi;
+
+  final _events = StreamController<RealtimeServerEvent>.broadcast();
+  final _remoteAudioTracks = StreamController<MediaStreamTrack>.broadcast();
+
+  RTCPeerConnection? _peerConnection;
+  RTCDataChannel? _eventChannel;
+  MediaStream? _localStream;
+  String? _callId;
+
+  /// Stream of parsed server events delivered over the data channel.
+  Stream<RealtimeServerEvent> get events => _events.stream;
+
+  /// Stream of remote audio tracks. Attach to an audio renderer to play output
+  /// audio produced by the model.
+  Stream<MediaStreamTrack> get remoteAudioTracks => _remoteAudioTracks.stream;
+
+  /// Current call id if available.
+  String? get callId => _callId;
+
+  /// Whether the client has an active peer connection.
+  bool get isConnected =>
+      _peerConnection != null && _peerConnection!.connectionState != RTCPeerConnectionState.RTCPeerConnectionStateClosed;
+
+  /// Establish the WebRTC connection and Realtime data channel.
+  Future<void> connect({RealtimeSessionConfig? session}) async {
+    _logger.info('🔄 Initiating WebRTC connection...');
+    await _disposePeer();
+    _peerConnection = await createPeerConnection(_rtcConfiguration);
+    _logger.fine('✅ Peer connection created');
+
+    _peerConnection!.onTrack = (event) {
+      _logger.fine('📺 Received media track: ${event.track?.kind}');
+      for (final track in event.track != null ? [event.track!] : <MediaStreamTrack>[]) {
+        if (track.kind == 'audio') {
+          _logger.fine('🔊 Audio track added to stream');
+          _remoteAudioTracks.add(track);
+        }
+      }
+    };
+    _peerConnection!.onConnectionState = (state) {
+      _logger.info('🔌 Peer connection state changed: $state');
+    };
+
+    _logger.fine('Adding audio transceiver (receive only)...');
+    // Allow receiving audio from the server.
+    await _peerConnection!.addTransceiver(
+      kind: RTCRtpMediaType.RTCRtpMediaTypeAudio,
+      init: RTCRtpTransceiverInit(direction: TransceiverDirection.RecvOnly),
+    );
+
+    _logger.fine('Creating data channel: oai-events');
+    _eventChannel = await _peerConnection!.createDataChannel(
+      'oai-events',
+      RTCDataChannelInit()
+        ..ordered = true
+        ..maxRetransmits = -1
+        ..binaryType = 'binary',
+    );
+    _eventChannel!.onMessage = _handleMessage;
+    _logger.fine('✅ Data channel created');
+
+    _logger.fine('Creating WebRTC offer...');
+    final offer = await _peerConnection!.createOffer({'offerToReceiveAudio': 1});
+    await _peerConnection!.setLocalDescription(offer);
+    _logger.fine('✅ Local description set');
+
+    await _waitForIceGatheringComplete(_peerConnection!);
+    final localDescription = await _peerConnection!.getLocalDescription();
+    if (localDescription?.sdp == null) {
+      throw StateError('Local description missing SDP.');
+    }
+
+    _logger.fine('Local SDP length: ${localDescription!.sdp!.length} characters');
+    final answer = await callsApi.createCall(offerSdp: localDescription!.sdp!, session: session);
+    _callId = answer.callId;
+    _logger.info('✅ Call created. Call ID: $_callId');
+
+    _logger.fine('Setting remote description (answer)...');
+    await _peerConnection!.setRemoteDescription(RTCSessionDescription(answer.sdp, 'answer'));
+    _logger.info('✅ WebRTC connection established successfully');
+  }
+
+  /// Sends a client event over the data channel.
+  Future<void> sendEvent(RealtimeClientEvent event) async {
+    if (_eventChannel == null || _eventChannel!.state != RTCDataChannelState.RTCDataChannelOpen) {
+      throw StateError('Data channel is not open.');
+    }
+    final payload = jsonEncode(event.toJson());
+    _logger.fine('═══════════════════════════════════════════════════════');
+    _logger.fine('📤 SENDING EVENT - ${event.runtimeType}');
+    _logger.fine('Event type: ${event.type}');
+    _logger.fine('─────────────────────────────────────────────────────');
+    _logger.fine('Payload:');
+    _logEventPayload(payload);
+    _logger.fine('═══════════════════════════════════════════════════════');
+    await _eventChannel!.send(RTCDataChannelMessage(payload));
+  }
+
+  /// Convenience helper to append base64-encoded audio to the input buffer.
+  Future<void> sendAudioChunk(Uint8List bytes, {String? eventId}) {
+    _logger.fine('🎤 Sending audio chunk: ${bytes.length} bytes');
+    final encoded = base64Encode(bytes);
+    return sendEvent(InputAudioBufferAppendEvent(eventId: eventId, audio: encoded));
+  }
+
+  /// Create a user text message item and request a response.
+  Future<void> sendText(String text, {String? eventId}) async {
+    _logger.fine('💬 Sending user message: $text');
+    final create = ConversationItemCreateEvent(
+      eventId: eventId,
+      item: RealtimeItem(
+        type: 'message',
+        role: 'user',
+        content: [InputTextContent(text: text)],
+      ),
+    );
+    await sendEvent(create);
+    await sendEvent(const ResponseCreateEvent());
+  }
+
+  /// Gracefully hang up the call and close the peer connection.
+  Future<void> disconnect({bool hangup = true}) async {
+    _logger.info('🔌 Disconnecting from realtime session...');
+    if (hangup && _callId != null) {
+      try {
+        _logger.fine('Hanging up call: $_callId');
+        await callsApi.hangupCall(_callId!);
+        _logger.info('✅ Call hung up successfully');
+      } catch (err) {
+        _logger.warning('❌ Hangup failed: $err');
+      }
+    }
+    await _disposePeer();
+    _logger.info('✅ Disconnected from realtime session');
+  }
+
+  /// Acquire the microphone and add an upstream audio track to the peer
+  /// connection.
+  Future<MediaStreamTrack> enableMicrophone({bool echoCancellation = true, bool noiseSuppression = true}) async {
+    _logger.fine('🎤 Requesting microphone access...');
+    _logger.fine('  Echo cancellation: $echoCancellation');
+    _logger.fine('  Noise suppression: $noiseSuppression');
+
+    final constraints = {
+      'audio': {'echoCancellation': echoCancellation, 'noiseSuppression': noiseSuppression},
+      'video': false,
+    };
+    _localStream = await navigator.mediaDevices.getUserMedia(constraints);
+    final track = _localStream!.getAudioTracks().first;
+    await _peerConnection?.addTrack(track, _localStream!);
+    _logger.info('✅ Microphone enabled');
+    return track;
+  }
+
+  Future<void> _disposePeer() async {
+    _logger.fine('🧹 Disposing peer connection resources...');
+    await _eventChannel?.close();
+    _eventChannel = null;
+    await _localStream?.dispose();
+    _localStream = null;
+    await _peerConnection?.close();
+    _peerConnection = null;
+    _callId = null;
+    _logger.fine('✅ Resources disposed');
+  }
+
+  void _handleMessage(RTCDataChannelMessage message) {
+    if (message.isBinary) {
+      _logger.warning('⚠️ Received binary data channel message of length ${message.binary?.length}');
+      return;
+    }
+    try {
+      _logger.fine('═══════════════════════════════════════════════════════');
+      _logger.fine('📥 RECEIVED MESSAGE');
+      _logger.fine('─────────────────────────────────────────────────────');
+      _logEventPayload(message.text);
+
+      final json = jsonDecode(message.text) as Map<String, dynamic>;
+      final event = RealtimeServerEvent.fromJson(json);
+      _logger.fine('Event type: ${event.type}');
+      _logger.fine('═══════════════════════════════════════════════════════');
+      _events.add(event);
+    } catch (err, stack) {
+      _logger.warning('❌ Failed to decode server event: $err', err, stack);
+      _logger.warning('Raw message: ${message.text}');
+      _events.add(UnknownServerEvent(type: 'unknown', raw: {'error': err.toString(), 'payload': message.text}));
+    }
+  }
+
+  void _logEventPayload(String payload) {
+    if (payload.length > 500) {
+      _logger.fine('  ${payload.substring(0, 500)}...');
+      _logger.fine('  (Total length: ${payload.length} characters)');
+    } else {
+      _logger.fine('  $payload');
+    }
+  }
+
+  Future<void> _waitForIceGatheringComplete(RTCPeerConnection pc) async {
+    if (pc.iceGatheringState == RTCIceGatheringState.RTCIceGatheringStateComplete) {
+      _logger.fine('✅ ICE gathering already complete');
+      return;
+    }
+    _logger.fine('⏳ Waiting for ICE gathering to complete...');
+    final completer = Completer<void>();
+    pc.onIceGatheringState = (state) {
+      _logger.fine('ICE gathering state: $state');
+      if (state == RTCIceGatheringState.RTCIceGatheringStateComplete && !completer.isCompleted) {
+        _logger.fine('✅ ICE gathering complete');
+        completer.complete();
+      }
+    };
+    try {
+      await completer.future.timeout(const Duration(seconds: 5));
+    } catch (_) {
+      _logger.warning('⚠️ ICE gathering timed out after 5 seconds.');
+    }
+  }
+
+  /// Dispose resources.
+  Future<void> dispose() async {
+    await disconnect();
+    await _events.close();
+    await _remoteAudioTracks.close();
+  }
+}
