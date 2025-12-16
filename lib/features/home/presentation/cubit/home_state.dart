@@ -11,6 +11,8 @@ class HomeState extends Equatable {
     this.apiKey = const ApiKeyInput.pure(),
     this.model = const ModelInput.pure(),
     this.prompt = const PromptInput.pure(),
+    this.instructions = const InstructionsInput.pure(),
+    this.voice = const VoiceInput.pure(),
   });
 
   final HomeStatus status;
@@ -22,6 +24,8 @@ class HomeState extends Equatable {
   final ApiKeyInput apiKey;
   final ModelInput model;
   final PromptInput prompt;
+  final InstructionsInput instructions;
+  final VoiceInput voice;
 
   HomeState copyWith({
     HomeStatus? status,
@@ -33,6 +37,8 @@ class HomeState extends Equatable {
     ApiKeyInput? apiKey,
     ModelInput? model,
     PromptInput? prompt,
+    InstructionsInput? instructions,
+    VoiceInput? voice,
     bool clearError = false,
   }) {
     return HomeState(
@@ -45,6 +51,8 @@ class HomeState extends Equatable {
       apiKey: apiKey ?? this.apiKey,
       model: model ?? this.model,
       prompt: prompt ?? this.prompt,
+      instructions: instructions ?? this.instructions,
+      voice: voice ?? this.voice,
     );
   }
 
@@ -59,6 +67,8 @@ class HomeState extends Equatable {
     apiKey,
     model,
     prompt,
+    instructions,
+    voice, 
   ];
 }
 

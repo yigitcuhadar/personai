@@ -11,3 +11,9 @@ const List<String> realtimeModelNames = [
   'gpt-4o-mini-realtime-preview',
   'gpt-4o-mini-realtime-preview-2024-12-17',
 ];
+
+/// Supported realtime voices. Favorited voices are commonly recommended defaults.
+const List<String> realtimeVoiceNames = ['alloy', 'ash', 'ballad', 'coral', 'echo', 'sage', 'shimmer', 'verse', 'marin', 'cedar'];
+
+/// Voices we highlight as preferred defaults in UIs.
+const Set<String> realtimeFavoriteVoices = {'marin', 'cedar'};

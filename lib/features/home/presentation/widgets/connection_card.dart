@@ -19,6 +19,11 @@ class ConnectionCard extends StatelessWidget {
             _ApiKeyField(),
             SizedBox(height: 8),
             _ModelDropdown(),
+            SizedBox(height: 8),
+            _InstructionsField(),
+            SizedBox(height: 8),
+            _VoiceDropdown(),
+            SizedBox(height: 8),
             _VerboseLoggingSwitch(),
             _ConnectButtons(),
           ],
@@ -88,6 +93,74 @@ class _ModelDropdown extends StatelessWidget {
             labelText: 'Model',
             errorText: displayError,
           ),
+        );
+      },
+    );
+  }
+}
+
+class _InstructionsField extends StatelessWidget {
+  const _InstructionsField();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<HomeCubit, HomeState>(
+      buildWhen: (p, c) => p.instructions != c.instructions || p.status != c.status,
+      builder: (context, state) {
+        final isEnabled = state.status == HomeStatus.initial || state.status == HomeStatus.error;
+        return TextFormField(
+          key: const ValueKey('instructions-field'),
+          autocorrect: false,
+          initialValue: state.instructions.value,
+          enabled: isEnabled,
+          minLines: 2,
+          maxLines: 4,
+          onChanged: (value) => context.read<HomeCubit>().onInstructionsChanged(value),
+          decoration: const InputDecoration(
+            labelText: 'Instructions (opsiyonel)',
+            hintText: 'Assistant davranışı...',
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _VoiceDropdown extends StatelessWidget {
+  const _VoiceDropdown();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<HomeCubit, HomeState>(
+      buildWhen: (p, c) => p.voice != c.voice || p.status != c.status,
+      builder: (context, state) {
+        final isEnabled = state.status == HomeStatus.initial || state.status == HomeStatus.error;
+        final value = state.voice.value.isNotEmpty ? state.voice.value : realtimeFavoriteVoices.first;
+        return DropdownButtonFormField<String>(
+          key: const ValueKey('voice-dropdown'),
+          initialValue: value,
+          onChanged: isEnabled
+              ? (value) => context.read<HomeCubit>().onVoiceChanged(
+                  value ?? realtimeFavoriteVoices.first,
+                )
+              : null,
+          decoration: const InputDecoration(labelText: 'Voice'),
+          items: realtimeVoiceNames
+              .map(
+                (voice) => DropdownMenuItem<String>(
+                  value: voice,
+                  child: Row(
+                    children: [
+                      Text(voice),
+                      if (realtimeFavoriteVoices.contains(voice)) ...[
+                        const SizedBox(width: 6),
+                        const Icon(Icons.star, size: 14, color: Colors.amber),
+                      ],
+                    ],
+                  ),
+                ),
+              )
+              .toList(),
         );
       },
     );

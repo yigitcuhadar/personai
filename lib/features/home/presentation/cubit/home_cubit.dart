@@ -33,6 +33,22 @@ class PromptInput extends FormzInput<String, String> {
   String? validator(String value) => value.trim().isEmpty ? 'Prompt gerekli' : null;
 }
 
+class InstructionsInput extends FormzInput<String, String> {
+  const InstructionsInput.pure([super.value = '']) : super.pure();
+  const InstructionsInput.dirty([super.value = '']) : super.dirty();
+
+  @override
+  String? validator(String value) => null; // optional
+}
+
+class VoiceInput extends FormzInput<String, String> {
+  const VoiceInput.pure([super.value = 'marin']) : super.pure();
+  const VoiceInput.dirty([super.value = 'marin']) : super.dirty();
+
+  @override
+  String? validator(String value) => realtimeVoiceNames.contains(value) ? null : 'Geçersiz ses';
+}
+
 class HomeCubit extends Cubit<HomeState> {
   HomeCubit({String defaultApiKey = ''})
     : super(
@@ -62,6 +78,14 @@ class HomeCubit extends Cubit<HomeState> {
     emit(state.copyWith(prompt: PromptInput.dirty(value), clearError: true));
   }
 
+  void onInstructionsChanged(String value) {
+    emit(state.copyWith(instructions: InstructionsInput.dirty(value), clearError: true));
+  }
+
+  void onVoiceChanged(String value) {
+    emit(state.copyWith(voice: VoiceInput.dirty(value), clearError: true));
+  }
+
   void clearLogs() {
     emit(state.copyWith(logs: const []));
   }
@@ -80,12 +104,14 @@ class HomeCubit extends Cubit<HomeState> {
 
     final apiKey = ApiKeyInput.dirty(state.apiKey.value.trim());
     final model = ModelInput.dirty(state.model.value.trim());
-    final isValid = Formz.validate([apiKey, model]);
+    final voice = VoiceInput.dirty(state.voice.value);
+    final isValid = Formz.validate([apiKey, model, voice]);
     if (!isValid) {
       emit(
         state.copyWith(
           apiKey: apiKey,
           model: model,
+          voice: voice,
           lastError: 'API anahtarı ve model gerekli.',
         ),
       );
@@ -105,9 +131,13 @@ class HomeCubit extends Cubit<HomeState> {
     await _attachClientStreams(client);
 
     try {
+      final session = RealtimeSessionConfig(
+        type: 'realtime',
+        model: model.value,
+      );
       await client.connect(
         model: model.value,
-        session: const RealtimeSessionConfig(type: 'realtime'),
+        session: session,
       );
       _client = client;
       emit(
@@ -117,6 +147,7 @@ class HomeCubit extends Cubit<HomeState> {
           clearError: true,
         ),
       );
+      await _sendSessionUpdate(includeVoice: true, includeInstructions: true);
       _appendEventLog(
         direction: LogDirection.client,
         type: 'connection',
@@ -198,6 +229,23 @@ class HomeCubit extends Cubit<HomeState> {
       payload: event.toJson(),
       rawEvent: event,
     );
+  }
+
+  Future<void> _sendSessionUpdate({
+    required bool includeVoice,
+    required bool includeInstructions,
+  }) async {
+    if (!_isConnected || _client == null) return;
+    final session = RealtimeSessionConfig(
+      audio: includeVoice ? RealtimeAudioConfig(output: RealtimeAudioOutputConfig(voice: state.voice.value)) : null,
+      instructions: includeInstructions
+          ? state.instructions.value.trim().isEmpty
+                ? null
+                : state.instructions.value.trim()
+          : null,
+    );
+    if (session.audio == null && session.instructions == null) return;
+    await _client!.sendEvent(SessionUpdateEvent(session: session));
   }
 
   OpenAIRealtimeClient _createClient(String token) {
