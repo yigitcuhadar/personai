@@ -30,17 +30,15 @@ class LoginView extends StatelessWidget {
           appBar: AppBar(title: Text('Login')),
           body: SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(8),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+              padding: const EdgeInsets.all(16),
+              child: const Column(
                 children: [
                   _EmailInput(),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   _PasswordInput(),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   _LoginButton(),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   _SignUpButton(),
                 ],
               ),
@@ -53,6 +51,7 @@ class LoginView extends StatelessWidget {
 }
 
 class _EmailInput extends StatelessWidget {
+  const _EmailInput();
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<LoginCubit, LoginState>(
@@ -62,6 +61,7 @@ class _EmailInput extends StatelessWidget {
         final isInProgress = state.status.isInProgress;
         return TextField(
           key: const Key('loginForm_emailInput_textField'),
+          autocorrect: false,
           enabled: !isInProgress,
           onChanged: (email) => context.read<LoginCubit>().emailChanged(email),
           keyboardType: TextInputType.emailAddress,
@@ -77,6 +77,7 @@ class _EmailInput extends StatelessWidget {
 }
 
 class _PasswordInput extends StatelessWidget {
+  const _PasswordInput();
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<LoginCubit, LoginState>(
@@ -86,6 +87,7 @@ class _PasswordInput extends StatelessWidget {
         final isInProgress = state.status.isInProgress;
         return TextField(
           key: const Key('loginForm_passwordInput_textField'),
+          autocorrect: false,
           enabled: !isInProgress,
           onChanged: (password) => context.read<LoginCubit>().passwordChanged(password),
           obscureText: true,
@@ -102,6 +104,7 @@ class _PasswordInput extends StatelessWidget {
 }
 
 class _LoginButton extends StatelessWidget {
+  const _LoginButton();
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<LoginCubit, LoginState>(
@@ -120,6 +123,7 @@ class _LoginButton extends StatelessWidget {
 }
 
 class _SignUpButton extends StatelessWidget {
+  const _SignUpButton();
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<LoginCubit, LoginState>(
