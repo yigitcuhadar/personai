@@ -372,7 +372,7 @@ class HomeCubit extends Cubit<HomeState> {
     if (!_isConnected || _client == null) return;
     final session = RealtimeSessionConfig(
       voice: includeVoice ? state.voice.value.trim() : null,
-      inputAudioTranscription: const {'model': 'gpt-4o-mini-transcribe'},
+      inputAudioTranscription: const {'model': 'whisper-1'},
       instructions: includeInstructions
           ? state.instructions.value.trim().isEmpty
                 ? null

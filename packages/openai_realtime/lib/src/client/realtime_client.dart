@@ -230,6 +230,11 @@ class OpenAIRealtimeClient {
       _logReceivedMessage(message.text);
       final json = jsonDecode(message.text) as Map<String, dynamic>;
       final event = RealtimeServerEvent.fromJson(json);
+      // TODO tum eventler kapsandigina emin olunduktan sonra silinecek
+      if (event is UnknownServerEvent) {
+        _logger.warning('❌ FUnknown Server Event: ${event.type}');
+        print('Unknown Server Event: ${event.type}');
+      }
       _logger.fine('Event type: ${event.type}');
       _logger.fine('═══════════════════════════════════════════════════════');
       _trackResponseLifecycle(event);

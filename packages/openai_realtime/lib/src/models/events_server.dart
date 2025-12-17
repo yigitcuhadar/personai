@@ -7,11 +7,34 @@ sealed class RealtimeServerEvent {
 
   JsonMap toJson();
 
+  static const Map<String, String> _legacyEventAliases = {
+    'conversation.item.created': ConversationItemAddedEvent.eventType,
+  };
+
+  static String _normalizeEventType(String type) {
+    final alias = _legacyEventAliases[type];
+    if (alias != null) return alias;
+    if (type.startsWith('response.audio_transcript.')) {
+      return type.replaceFirst(
+        'response.audio_transcript.',
+        'response.output_audio_transcript.',
+      );
+    }
+    if (type.startsWith('response.audio.')) {
+      return type.replaceFirst('response.audio.', 'response.output_audio.');
+    }
+    if (type.startsWith('response.text.')) {
+      return type.replaceFirst('response.text.', 'response.output_text.');
+    }
+    return type;
+  }
+
   static RealtimeServerEvent fromJson(JsonMap json) {
-    final type = json['type'] as String?;
-    if (type == null) {
+    final rawType = json['type'] as String?;
+    if (rawType == null) {
       throw ArgumentError('Server event missing "type" field.');
     }
+    final type = _normalizeEventType(rawType);
     switch (type) {
       case ServerErrorEvent.eventType:
         return ServerErrorEvent.fromJson(json);
@@ -102,7 +125,7 @@ sealed class RealtimeServerEvent {
       case RateLimitsUpdatedEvent.eventType:
         return RateLimitsUpdatedEvent.fromJson(json);
       default:
-        return UnknownServerEvent(type: type, raw: json);
+        return UnknownServerEvent(type: rawType, raw: json);
     }
   }
 }
