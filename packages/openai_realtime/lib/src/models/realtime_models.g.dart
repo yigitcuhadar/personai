@@ -13,6 +13,9 @@ RealtimeSessionConfig _$RealtimeSessionConfigFromJson(
   object: json['object'] as String?,
   id: json['id'] as String?,
   model: json['model'] as String?,
+  modalities: (json['modalities'] as List<dynamic>?)
+      ?.map((e) => e as String)
+      .toList(),
   outputModalities: (json['output_modalities'] as List<dynamic>?)
       ?.map((e) => e as String)
       .toList(),
@@ -37,6 +40,16 @@ RealtimeSessionConfig _$RealtimeSessionConfigFromJson(
   audio: json['audio'] == null
       ? null
       : RealtimeAudioConfig.fromJson(json['audio'] as Map<String, dynamic>),
+  voice: json['voice'] as String?,
+  inputAudioFormat: json['input_audio_format'] as String?,
+  outputAudioFormat: json['output_audio_format'] as String?,
+  inputAudioTranscription:
+      json['input_audio_transcription'] as Map<String, dynamic>?,
+  turnDetection: json['turn_detection'] == null
+      ? null
+      : RealtimeTurnDetection.fromJson(
+          json['turn_detection'] as Map<String, dynamic>,
+        ),
   include: (json['include'] as List<dynamic>?)
       ?.map((e) => e as String)
       .toList(),
@@ -49,6 +62,7 @@ Map<String, dynamic> _$RealtimeSessionConfigToJson(
   'object': ?instance.object,
   'id': ?instance.id,
   'model': ?instance.model,
+  'modalities': ?instance.modalities,
   'output_modalities': ?instance.outputModalities,
   'instructions': ?instance.instructions,
   'tools': ?instance.tools?.map((e) => e.toJson()).toList(),
@@ -58,7 +72,11 @@ Map<String, dynamic> _$RealtimeSessionConfigToJson(
   'truncation': ?instance.truncation,
   'prompt': ?instance.prompt?.toJson(),
   'expires_at': ?instance.expiresAt,
-  'audio': ?instance.audio?.toJson(),
+  'voice': ?instance.voice,
+  'input_audio_format': ?instance.inputAudioFormat,
+  'output_audio_format': ?instance.outputAudioFormat,
+  'input_audio_transcription': ?instance.inputAudioTranscription,
+  'turn_detection': ?instance.turnDetection?.toJson(),
   'include': ?instance.include,
 };
 

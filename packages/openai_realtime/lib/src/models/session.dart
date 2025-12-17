@@ -9,6 +9,7 @@ class RealtimeSessionConfig {
     this.object,
     this.id,
     this.model,
+    @JsonKey(name: 'modalities') this.modalities,
     @JsonKey(name: 'output_modalities') this.outputModalities,
     this.instructions,
     this.tools,
@@ -18,7 +19,13 @@ class RealtimeSessionConfig {
     this.truncation,
     this.prompt,
     @JsonKey(name: 'expires_at') this.expiresAt,
+    @Deprecated('Use top-level voice/input_audio_format/output_audio_format fields') @JsonKey(includeToJson: false)
     this.audio,
+    this.voice,
+    @JsonKey(name: 'input_audio_format') this.inputAudioFormat,
+    @JsonKey(name: 'output_audio_format') this.outputAudioFormat,
+    @JsonKey(name: 'input_audio_transcription') this.inputAudioTranscription,
+    @JsonKey(name: 'turn_detection') this.turnDetection,
     this.include,
   });
 
@@ -33,6 +40,10 @@ class RealtimeSessionConfig {
 
   /// Realtime model name.
   final String? model;
+
+  /// Desired input/output modalities (e.g. `["audio", "text"]`).
+  @JsonKey(name: 'modalities')
+  final List<String>? modalities;
 
   /// Permitted output modalities for the model (e.g. `["audio"]` or `["text"]`).
   @JsonKey(name: 'output_modalities')
@@ -67,7 +78,27 @@ class RealtimeSessionConfig {
   final int? expiresAt;
 
   /// Input/output audio configuration.
+  @Deprecated('Use voice/input_audio_format/output_audio_format instead')
   final RealtimeAudioConfig? audio;
+
+  /// Voice to use for audio output (top-level Realtime v1 field).
+  final String? voice;
+
+  /// Input audio format (e.g. `pcm16`).
+  @JsonKey(name: 'input_audio_format')
+  final String? inputAudioFormat;
+
+  /// Output audio format (e.g. `pcm16`).
+  @JsonKey(name: 'output_audio_format')
+  final String? outputAudioFormat;
+
+  /// Transcription settings for input audio.
+  @JsonKey(name: 'input_audio_transcription')
+  final JsonMap? inputAudioTranscription;
+
+  /// Voice activity detection / turn detection settings.
+  @JsonKey(name: 'turn_detection')
+  final RealtimeTurnDetection? turnDetection;
 
   /// Additional response fields to include from the server.
   final List<String>? include;
@@ -82,6 +113,7 @@ class RealtimeSessionConfig {
     String? object,
     String? id,
     String? model,
+    List<String>? modalities,
     List<String>? outputModalities,
     String? instructions,
     List<RealtimeTool>? tools,
@@ -92,6 +124,11 @@ class RealtimeSessionConfig {
     RealtimePromptReference? prompt,
     int? expiresAt,
     RealtimeAudioConfig? audio,
+    String? voice,
+    String? inputAudioFormat,
+    String? outputAudioFormat,
+    JsonMap? inputAudioTranscription,
+    RealtimeTurnDetection? turnDetection,
     List<String>? include,
   }) {
     return RealtimeSessionConfig(
@@ -99,6 +136,7 @@ class RealtimeSessionConfig {
       object: object ?? this.object,
       id: id ?? this.id,
       model: model ?? this.model,
+      modalities: modalities ?? this.modalities,
       outputModalities: outputModalities ?? this.outputModalities,
       instructions: instructions ?? this.instructions,
       tools: tools ?? this.tools,
@@ -109,6 +147,11 @@ class RealtimeSessionConfig {
       prompt: prompt ?? this.prompt,
       expiresAt: expiresAt ?? this.expiresAt,
       audio: audio ?? this.audio,
+      voice: voice ?? this.voice,
+      inputAudioFormat: inputAudioFormat ?? this.inputAudioFormat,
+      outputAudioFormat: outputAudioFormat ?? this.outputAudioFormat,
+      inputAudioTranscription: inputAudioTranscription ?? this.inputAudioTranscription,
+      turnDetection: turnDetection ?? this.turnDetection,
       include: include ?? this.include,
     );
   }

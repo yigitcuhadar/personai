@@ -237,14 +237,14 @@ class HomeCubit extends Cubit<HomeState> {
   }) async {
     if (!_isConnected || _client == null) return;
     final session = RealtimeSessionConfig(
-      audio: includeVoice ? RealtimeAudioConfig(output: RealtimeAudioOutputConfig(voice: state.voice.value)) : null,
+      voice: includeVoice ? state.voice.value.trim() : null,
       instructions: includeInstructions
           ? state.instructions.value.trim().isEmpty
                 ? null
                 : state.instructions.value.trim()
           : null,
     );
-    if (session.audio == null && session.instructions == null) return;
+    if (session.voice == null && session.instructions == null) return;
     await _client!.sendEvent(SessionUpdateEvent(session: session));
   }
 
