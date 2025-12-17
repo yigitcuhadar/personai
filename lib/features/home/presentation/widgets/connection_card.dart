@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:openai_realtime/openai_realtime.dart';
 
 import '../cubit/home_cubit.dart';
+import 'home_card_styles.dart';
 import 'status_badge.dart';
 
 class ConnectionCard extends StatelessWidget {
@@ -16,14 +17,14 @@ class ConnectionCard extends StatelessWidget {
         final isCollapsed = state.status == HomeStatus.connected || state.status == HomeStatus.disconnecting;
         return Material(
           elevation: 3,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(kHomeCardRadius),
           clipBehavior: Clip.antiAlias,
           child: AnimatedSize(
             duration: const Duration(milliseconds: 500),
             curve: Curves.easeInOut,
             alignment: Alignment.topCenter,
             child: Container(
-              padding: EdgeInsets.all(14),
+              padding: EdgeInsets.all(kHomeCardPadding),
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [Color(0xFFF6F7FB), Color(0xFFF2F8F2)],
@@ -96,7 +97,7 @@ class _ConnectionHeader extends StatelessWidget {
             const Expanded(
               child: Text(
                 'Connection setup',
-                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                style: kHomeCardTitleTextStyle,
               ),
             ),
             StatusBadge(

@@ -4,17 +4,18 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubit/home_cubit.dart';
 import '../models/log_entry.dart';
 import '../models/message_entry.dart';
+import 'home_card_styles.dart';
 import 'realtime_audio_output.dart';
 import 'status_badge.dart';
 
-class ConversationPane extends StatelessWidget {
-  const ConversationPane({super.key});
+class ConversationCard extends StatelessWidget {
+  const ConversationCard({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Material(
       elevation: 3,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(kHomeCardRadius),
       clipBehavior: Clip.antiAlias,
       child: DecoratedBox(
         decoration: const BoxDecoration(
@@ -64,7 +65,7 @@ class ConversationPane extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(14),
+              padding: EdgeInsets.all(kHomeCardPadding),
               child: Column(
                 children: const [
                   _ConversationHeader(),
@@ -98,7 +99,7 @@ class _ConversationHeader extends StatelessWidget {
                 children: [
                   Text(
                     'Conversation',
-                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                    style: kHomeCardTitleTextStyle,
                   ),
                   Text(
                     'Live feed',
@@ -317,25 +318,24 @@ class _PromptComposerState extends State<_PromptComposer> {
         final isConnected = state.status == HomeStatus.connected;
         final isBusy = state.status == HomeStatus.connecting || state.status == HomeStatus.disconnecting;
         final isPromptValid = state.prompt.isValid;
+        final isPromptEnabled = isConnected && !isBusy;
         if (state.prompt.value.isEmpty && _controller.text.isNotEmpty) {
           _controller.clear();
         }
         return Row(
           children: [
             Expanded(
-              child: TextField(
+              child: TextFormField(
                 controller: _controller,
                 autocorrect: false,
                 minLines: 1,
                 maxLines: 1,
                 textInputAction: TextInputAction.send,
+                enabled: isPromptEnabled,
                 onChanged: (value) => context.read<HomeCubit>().onPromptChanged(value),
-                onSubmitted: isConnected && isPromptValid && !isBusy ? (_) => _submit(state) : null,
+                onFieldSubmitted: isConnected && isPromptValid && !isBusy ? (_) => _submit(state) : null,
                 decoration: InputDecoration(
                   hintText: 'Type a question...',
-                  filled: true,
-                  fillColor: Colors.white.withAlpha(230),
-                  isDense: true,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -391,8 +391,7 @@ class _MicButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<HomeCubit, HomeState>(
-      buildWhen: (p, c) =>
-          p.status != c.status || p.micStatus != c.micStatus || p.isUserSpeaking != c.isUserSpeaking,
+      buildWhen: (p, c) => p.status != c.status || p.micStatus != c.micStatus || p.isUserSpeaking != c.isUserSpeaking,
       builder: (context, state) {
         final isConnected = state.status == HomeStatus.connected;
         final isBusy = state.status == HomeStatus.connecting || state.status == HomeStatus.disconnecting;
@@ -417,8 +416,8 @@ class _MicButton extends StatelessWidget {
         final tooltip = !isConnected
             ? 'Connect to use microphone'
             : isActive
-                ? 'Disable microphone'
-                : 'Enable microphone';
+            ? 'Disable microphone'
+            : 'Enable microphone';
 
         return Tooltip(
           message: tooltip,

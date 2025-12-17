@@ -155,10 +155,13 @@ class HomeCubit extends Cubit<HomeState> {
         session: session,
       );
       _client = client;
+      await _stopMicrophone(updateSession: false);
       emit(
         state.copyWith(
           status: HomeStatus.connected,
           callId: client.callId,
+          micStatus: MicStatus.off,
+          isUserSpeaking: false,
           clearError: true,
         ),
       );
@@ -176,6 +179,8 @@ class HomeCubit extends Cubit<HomeState> {
         state.copyWith(
           status: HomeStatus.error,
           callId: null,
+          micStatus: MicStatus.off,
+          isUserSpeaking: false,
           lastError: '$err',
         ),
       );
@@ -643,6 +648,7 @@ class HomeCubit extends Cubit<HomeState> {
 
   @override
   Future<void> close() async {
+    await _stopMicrophone(updateSession: false);
     await _detachClientStreams();
     await _client?.dispose();
     await _remoteAudioTracks.close();
