@@ -6,6 +6,7 @@ import '../../../../app/di/injector.dart';
 import '../cubit/home_cubit.dart';
 import '../widgets/connection_card.dart';
 import '../widgets/log_pane.dart';
+import '../widgets/message_pane.dart';
 import '../widgets/prompt_card.dart';
 
 class HomeView extends StatelessWidget {
@@ -39,14 +40,16 @@ class HomeView extends StatelessWidget {
               ),
             ],
           ),
-          body: const SafeArea(
+          body: SafeArea(
             child: SingleChildScrollView(
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
               child: Column(
-                children: [
+                children: const [
                   ConnectionCard(),
                   SizedBox(height: 12),
                   PromptCard(),
+                  SizedBox(height: 12),
+                  MessagePane(),
                   SizedBox(height: 12),
                   LogPane(),
                 ],

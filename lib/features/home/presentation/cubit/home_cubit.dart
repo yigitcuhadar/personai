@@ -6,6 +6,7 @@ import 'package:formz/formz.dart';
 import 'package:openai_realtime/openai_realtime.dart';
 
 import '../models/log_entry.dart';
+import '../models/message_entry.dart';
 
 part 'home_state.dart';
 
@@ -61,6 +62,9 @@ class HomeCubit extends Cubit<HomeState> {
   StreamSubscription<RealtimeServerEvent>? _eventSub;
   StreamSubscription<RealtimeClientEvent>? _clientEventSub;
   DateTime? _sessionCreatedAt;
+  final Map<String, int> _messageIndexById = <String, int>{};
+  final Set<String> _responseTextKeys = <String>{};
+  int _messageCounter = 0;
 
   bool get _isConnecting => state.status == HomeStatus.connecting;
   bool get _isConnected => state.status == HomeStatus.connected;
@@ -127,7 +131,13 @@ class HomeCubit extends Cubit<HomeState> {
       ),
     );
 
-    final client = _createClient(apiKey.value);
+    final client = OpenAIRealtimeClient(
+      accessToken: apiKey.value,
+      debug: state.debugLogging,
+    );
+    if (state.debugLogging) {
+      enableOpenAIRealtimeLogging();
+    }
     await _attachClientStreams(client);
 
     try {
@@ -210,8 +220,108 @@ class HomeCubit extends Cubit<HomeState> {
 
   void _handleServerEvent(RealtimeServerEvent event) {
     final now = DateTime.now();
-    if (event is SessionCreatedEvent) {
-      _sessionCreatedAt = now;
+    _MessageUpdate? messageUpdate;
+    switch (event) {
+      case SessionCreatedEvent():
+        _sessionCreatedAt = now;
+        break;
+      case ConversationItemInputTranscriptionDelta e:
+        messageUpdate = _MessageUpdate.delta(
+          id: _inputTranscriptId(e.itemId, e.contentIndex),
+          direction: LogDirection.client,
+          delta: e.delta,
+        );
+        break;
+      case ConversationItemInputTranscriptionCompleted e:
+        messageUpdate = _MessageUpdate.text(
+          id: _inputTranscriptId(e.itemId, e.contentIndex),
+          direction: LogDirection.client,
+          text: e.transcript,
+        );
+        break;
+      case ResponseOutputTextDeltaEvent e:
+        final outputKey = _outputKey(e.itemId, e.outputIndex, e.contentIndex);
+        _responseTextKeys.add(outputKey);
+        messageUpdate = _MessageUpdate.delta(
+          id: _outputTextId(outputKey),
+          direction: LogDirection.server,
+          delta: e.delta,
+        );
+        break;
+      case ResponseOutputTextDoneEvent e:
+        final outputKey = _outputKey(e.itemId, e.outputIndex, e.contentIndex);
+        _responseTextKeys.add(outputKey);
+        messageUpdate = _MessageUpdate.text(
+          id: _outputTextId(outputKey),
+          direction: LogDirection.server,
+          text: e.text,
+        );
+        break;
+      case ResponseOutputAudioTranscriptDeltaEvent e:
+        final outputKey = _outputKey(e.itemId, e.outputIndex, e.contentIndex);
+        if (_responseTextKeys.contains(outputKey)) break;
+        messageUpdate = _MessageUpdate.delta(
+          id: _outputAudioTranscriptId(outputKey),
+          direction: LogDirection.server,
+          delta: e.delta,
+        );
+        break;
+      case ResponseOutputAudioTranscriptDoneEvent e:
+        final outputKey = _outputKey(e.itemId, e.outputIndex, e.contentIndex);
+        if (_responseTextKeys.contains(outputKey)) break;
+        messageUpdate = _MessageUpdate.text(
+          id: _outputAudioTranscriptId(outputKey),
+          direction: LogDirection.server,
+          text: e.transcript,
+        );
+        break;
+      case ServerErrorEvent():
+      case SessionUpdatedEvent():
+      case ConversationItemAddedEvent():
+      case ConversationItemDoneEvent():
+      case ConversationItemRetrievedEvent():
+      case ConversationItemInputTranscriptionSegment():
+      case ConversationItemInputTranscriptionFailed():
+      case ConversationItemTruncatedEvent():
+      case ConversationItemDeletedEvent():
+      case InputAudioBufferCommittedEvent():
+      case InputAudioBufferDtmfEvent():
+      case InputAudioBufferClearedEvent():
+      case InputAudioBufferSpeechStartedEvent():
+      case InputAudioBufferSpeechStoppedEvent():
+      case InputAudioBufferTimeoutTriggeredEvent():
+      case OutputAudioBufferStartedEvent():
+      case OutputAudioBufferStoppedEvent():
+      case OutputAudioBufferClearedEvent():
+      case ResponseCreatedEvent():
+      case ResponseDoneEvent():
+      case ResponseOutputItemAddedEvent():
+      case ResponseOutputItemDoneEvent():
+      case ResponseContentPartAddedEvent():
+      case ResponseContentPartDoneEvent():
+      case ResponseOutputAudioDeltaEvent():
+      case ResponseOutputAudioDoneEvent():
+      case ResponseFunctionCallArgumentsDeltaEvent():
+      case ResponseFunctionCallArgumentsDoneEvent():
+      case ResponseMcpCallArgumentsDeltaEvent():
+      case ResponseMcpCallArgumentsDoneEvent():
+      case ResponseMcpCallInProgressEvent():
+      case ResponseMcpCallCompletedEvent():
+      case ResponseMcpCallFailedEvent():
+      case McpListToolsInProgressEvent():
+      case McpListToolsCompletedEvent():
+      case McpListToolsFailedEvent():
+      case RateLimitsUpdatedEvent():
+      case UnknownServerEvent():
+        break;
+    }
+    if (messageUpdate != null) {
+      _applyMessageChange(
+        id: messageUpdate.id,
+        direction: messageUpdate.direction,
+        delta: messageUpdate.delta,
+        text: messageUpdate.text,
+      );
     }
     _appendEventLog(
       direction: LogDirection.server,
@@ -223,6 +333,30 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   void _handleClientEvent(RealtimeClientEvent event) {
+    String? inputText;
+    switch (event) {
+      case ConversationItemCreateEvent e:
+        inputText = _extractInputText(e.item);
+        break;
+      case SessionUpdateEvent():
+      case InputAudioBufferAppendEvent():
+      case InputAudioBufferCommitEvent():
+      case InputAudioBufferClearEvent():
+      case ConversationItemRetrieveEvent():
+      case ConversationItemTruncateEvent():
+      case ConversationItemDeleteEvent():
+      case ResponseCreateEvent():
+      case ResponseCancelEvent():
+      case OutputAudioBufferClearEvent():
+        break;
+    }
+    if (inputText != null) {
+      _applyMessageChange(
+        id: _nextClientMessageId(),
+        direction: LogDirection.client,
+        text: inputText,
+      );
+    }
     _appendEventLog(
       direction: LogDirection.client,
       type: event.type,
@@ -238,25 +372,17 @@ class HomeCubit extends Cubit<HomeState> {
     if (!_isConnected || _client == null) return;
     final session = RealtimeSessionConfig(
       voice: includeVoice ? state.voice.value.trim() : null,
+      inputAudioTranscription: const {'model': 'gpt-4o-mini-transcribe'},
       instructions: includeInstructions
           ? state.instructions.value.trim().isEmpty
                 ? null
                 : state.instructions.value.trim()
           : null,
     );
-    if (session.voice == null && session.instructions == null) return;
-    await _client!.sendEvent(SessionUpdateEvent(session: session));
-  }
-
-  OpenAIRealtimeClient _createClient(String token) {
-    final client = OpenAIRealtimeClient(
-      accessToken: token,
-      debug: state.debugLogging,
-    );
-    if (state.debugLogging) {
-      enableOpenAIRealtimeLogging();
+    if (session.voice == null && session.instructions == null && session.inputAudioTranscription == null) {
+      return;
     }
-    return client;
+    await _client!.sendEvent(SessionUpdateEvent(session: session));
   }
 
   Future<void> _attachClientStreams(OpenAIRealtimeClient client) async {
@@ -331,10 +457,80 @@ class HomeCubit extends Cubit<HomeState> {
     emit(state.copyWith(logs: logs));
   }
 
+  void _applyMessageChange({
+    required String id,
+    required LogDirection direction,
+    String? delta,
+    String? text,
+  }) {
+    final hasDelta = delta != null && delta.isNotEmpty;
+    final hasText = text != null && text.isNotEmpty;
+    if (!hasDelta && !hasText) return;
+
+    final incoming = hasDelta ? delta : text!;
+    final messages = List<MessageEntry>.from(state.messages);
+    final index = _messageIndexById[id];
+    if (index != null && index < messages.length) {
+      final existing = messages[index];
+      final nextText = hasDelta ? existing.text + incoming : incoming;
+      if (nextText == existing.text) return;
+      messages[index] = existing.copyWith(text: nextText);
+    } else {
+      _messageIndexById[id] = messages.length;
+      messages.add(
+        MessageEntry(
+          id: id,
+          direction: direction,
+          text: incoming,
+        ),
+      );
+    }
+    emit(state.copyWith(messages: messages));
+  }
+
+  String _nextClientMessageId() => 'client_${_messageCounter++}';
+
+  String? _extractInputText(RealtimeItem item) {
+    for (final content in item.content) {
+      if (content is InputTextContent) {
+        final text = content.text.trim();
+        if (text.isNotEmpty) return text;
+      }
+    }
+    return null;
+  }
+
+  String _inputTranscriptId(String itemId, int contentIndex) => 'input_audio:$itemId:$contentIndex';
+
+  String _outputKey(String itemId, int outputIndex, int contentIndex) => '$itemId:$outputIndex:$contentIndex';
+
+  String _outputTextId(String key) => 'output_text:$key';
+
+  String _outputAudioTranscriptId(String key) => 'output_audio_transcript:$key';
+
   @override
   Future<void> close() async {
     await _detachClientStreams();
     await _client?.dispose();
     return super.close();
   }
+}
+
+class _MessageUpdate {
+  const _MessageUpdate.delta({
+    required this.id,
+    required this.direction,
+    required this.delta,
+  }) : text = null;
+
+  const _MessageUpdate.text({
+    required this.id,
+    required this.direction,
+    required this.text,
+  }) : delta = null;
+
+  final String id;
+  final LogDirection direction;
+  final String? delta;
+  final String? text;
 }

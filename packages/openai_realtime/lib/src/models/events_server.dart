@@ -1,7 +1,7 @@
 part of 'realtime_models.dart';
 
 /// Base class for server-originated events.
-abstract class RealtimeServerEvent {
+sealed class RealtimeServerEvent {
   String get type;
   String? get eventId;
 
