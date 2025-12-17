@@ -5,9 +5,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../app/di/injector.dart';
 import '../cubit/home_cubit.dart';
 import '../widgets/connection_card.dart';
+import '../widgets/conversation_pane.dart';
 import '../widgets/log_pane.dart';
-import '../widgets/message_pane.dart';
-import '../widgets/prompt_card.dart';
 
 class HomeView extends StatelessWidget {
   const HomeView({super.key});
@@ -41,19 +40,36 @@ class HomeView extends StatelessWidget {
             ],
           ),
           body: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: const [
-                  ConnectionCard(),
-                  SizedBox(height: 12),
-                  PromptCard(),
-                  SizedBox(height: 12),
-                  MessagePane(),
-                  SizedBox(height: 12),
-                  LogPane(),
-                ],
-              ),
+            bottom: false,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                const logMinSize = 0.12;
+                final bottomPadding =
+                    constraints.maxHeight * logMinSize + 16;
+                return Stack(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(16, 16, 16, bottomPadding),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: const [
+                          ConnectionCard(),
+                          SizedBox(height: 12),
+                          Expanded(child: ConversationPane()),
+                        ],
+                      ),
+                    ),
+                    const Align(
+                      alignment: Alignment.bottomCenter,
+                      child: LogSheet(
+                        minChildSize: logMinSize,
+                        initialChildSize: 0.22,
+                        maxChildSize: 0.7,
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ),
         ),

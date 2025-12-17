@@ -3,33 +3,133 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:openai_realtime/openai_realtime.dart';
 
 import '../cubit/home_cubit.dart';
+import 'status_badge.dart';
 
 class ConnectionCard extends StatelessWidget {
   const ConnectionCard({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: const [
-            _ApiKeyField(),
-            SizedBox(height: 8),
-            _ModelDropdown(),
-            SizedBox(height: 8),
-            _InstructionsField(),
-            SizedBox(height: 8),
-            _VoiceDropdown(),
-            SizedBox(height: 8),
-            _VerboseLoggingSwitch(),
-            _ConnectButtons(),
-          ],
-        ),
-      ),
+    return BlocBuilder<HomeCubit, HomeState>(
+      buildWhen: (p, c) => p.status != c.status,
+      builder: (context, state) {
+        final isCollapsed = state.status == HomeStatus.connected || state.status == HomeStatus.disconnecting;
+        return Material(
+          elevation: 3,
+          borderRadius: BorderRadius.circular(20),
+          clipBehavior: Clip.antiAlias,
+          child: AnimatedSize(
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeInOut,
+            alignment: Alignment.topCenter,
+            child: Container(
+              padding: EdgeInsets.all(14),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFFF6F7FB), Color(0xFFF2F8F2)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: isCollapsed ? const _CollapsedConnectionContent() : const _ExpandedConnectionContent(),
+            ),
+          ),
+        );
+      },
     );
+  }
+}
+
+class _ExpandedConnectionContent extends StatelessWidget {
+  const _ExpandedConnectionContent();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: const [
+        _ConnectionHeader(),
+        SizedBox(height: 10),
+        _ApiKeyField(),
+        SizedBox(height: 8),
+        _ModelDropdown(),
+        SizedBox(height: 8),
+        _InstructionsField(),
+        SizedBox(height: 8),
+        _VoiceDropdown(),
+        SizedBox(height: 8),
+        _VerboseLoggingSwitch(),
+        SizedBox(height: 8),
+        _ConnectButtons(),
+      ],
+    );
+  }
+}
+
+class _CollapsedConnectionContent extends StatelessWidget {
+  const _CollapsedConnectionContent();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _ConnectionHeader(),
+        SizedBox(height: 8),
+        _ConnectButtons(),
+      ],
+    );
+  }
+}
+
+class _ConnectionHeader extends StatelessWidget {
+  const _ConnectionHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<HomeCubit, HomeState>(
+      buildWhen: (p, c) => p.status != c.status,
+      builder: (context, state) {
+        final info = _connectionStatusInfo(state.status);
+        return Row(
+          children: [
+            const Expanded(
+              child: Text(
+                'Connection setup',
+                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+              ),
+            ),
+            StatusBadge(
+              label: info.label,
+              color: info.color,
+              showDot: true,
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _ConnectionStatusInfo {
+  const _ConnectionStatusInfo(this.label, this.color);
+
+  final String label;
+  final Color color;
+}
+
+_ConnectionStatusInfo _connectionStatusInfo(HomeStatus status) {
+  switch (status) {
+    case HomeStatus.connected:
+      return const _ConnectionStatusInfo('Connected', Colors.green);
+    case HomeStatus.connecting:
+      return const _ConnectionStatusInfo('Connecting', Colors.orange);
+    case HomeStatus.disconnecting:
+      return const _ConnectionStatusInfo('Disconnecting', Colors.orange);
+    case HomeStatus.error:
+      return const _ConnectionStatusInfo('Error', Colors.red);
+    case HomeStatus.initial:
+      return const _ConnectionStatusInfo('Ready', Colors.blueGrey);
   }
 }
 
@@ -117,8 +217,8 @@ class _InstructionsField extends StatelessWidget {
           maxLines: 4,
           onChanged: (value) => context.read<HomeCubit>().onInstructionsChanged(value),
           decoration: const InputDecoration(
-            labelText: 'Instructions (opsiyonel)',
-            hintText: 'Assistant davranışı...',
+            labelText: 'Instructions (optional)',
+            hintText: 'Assistant behavior...',
           ),
         );
       },
@@ -182,7 +282,7 @@ class _VerboseLoggingSwitch extends StatelessWidget {
           value: debugLogging,
           contentPadding: EdgeInsets.zero,
           title: const Text('Verbose logging'),
-          subtitle: const Text('SDK, HTTP ve event trafiğini yazdır'),
+          subtitle: const Text('Print SDK, HTTP, and event traffic'),
           onChanged: isEnabled ? (value) => context.read<HomeCubit>().setDebugLogging(value) : null,
         );
       },

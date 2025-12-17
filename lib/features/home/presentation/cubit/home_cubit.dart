@@ -15,7 +15,7 @@ class ApiKeyInput extends FormzInput<String, String> {
   const ApiKeyInput.dirty([super.value = '']) : super.dirty();
 
   @override
-  String? validator(String value) => value.trim().isEmpty ? 'API anahtarı gerekli' : null;
+  String? validator(String value) => value.trim().isEmpty ? 'API key is required' : null;
 }
 
 class ModelInput extends FormzInput<String, String> {
@@ -23,7 +23,7 @@ class ModelInput extends FormzInput<String, String> {
   const ModelInput.dirty([super.value = 'gpt-realtime']) : super.dirty();
 
   @override
-  String? validator(String value) => value.trim().isEmpty ? 'Model gerekli' : null;
+  String? validator(String value) => value.trim().isEmpty ? 'Model is required' : null;
 }
 
 class PromptInput extends FormzInput<String, String> {
@@ -31,7 +31,7 @@ class PromptInput extends FormzInput<String, String> {
   const PromptInput.dirty([super.value = '']) : super.dirty();
 
   @override
-  String? validator(String value) => value.trim().isEmpty ? 'Prompt gerekli' : null;
+  String? validator(String value) => value.trim().isEmpty ? 'Prompt is required' : null;
 }
 
 class InstructionsInput extends FormzInput<String, String> {
@@ -47,7 +47,7 @@ class VoiceInput extends FormzInput<String, String> {
   const VoiceInput.dirty([super.value = 'marin']) : super.dirty();
 
   @override
-  String? validator(String value) => realtimeVoiceNames.contains(value) ? null : 'Geçersiz ses';
+  String? validator(String value) => realtimeVoiceNames.contains(value) ? null : 'Invalid voice';
 }
 
 class HomeCubit extends Cubit<HomeState> {
@@ -116,7 +116,7 @@ class HomeCubit extends Cubit<HomeState> {
           apiKey: apiKey,
           model: model,
           voice: voice,
-          lastError: 'API anahtarı ve model gerekli.',
+          lastError: 'API key and model are required.',
         ),
       );
       return;
@@ -161,8 +161,8 @@ class HomeCubit extends Cubit<HomeState> {
       _appendEventLog(
         direction: LogDirection.client,
         type: 'connection',
-        payload: {'message': 'Bağlanıldı', 'callId': client.callId},
-        rawEvent: {'message': 'Bağlanıldı', 'callId': client.callId},
+        payload: {'message': 'Connected', 'callId': client.callId},
+        rawEvent: {'message': 'Connected', 'callId': client.callId},
       );
     } catch (err) {
       await _detachClientStreams();
@@ -201,8 +201,8 @@ class HomeCubit extends Cubit<HomeState> {
     _appendEventLog(
       direction: LogDirection.client,
       type: 'connection',
-      payload: {'message': 'Bağlantı kapatıldı'},
-      rawEvent: {'message': 'Bağlantı kapatıldı'},
+      payload: {'message': 'Disconnected'},
+      rawEvent: {'message': 'Disconnected'},
     );
   }
 
@@ -212,7 +212,7 @@ class HomeCubit extends Cubit<HomeState> {
 
     final client = _client;
     if (client == null) {
-      emit(state.copyWith(lastError: 'Önce bağlanın.'));
+      emit(state.copyWith(lastError: 'Connect first.'));
       return;
     }
     await client.sendText(prompt);
