@@ -8,34 +8,18 @@ import 'home_card_styles.dart';
 class LogsSheet extends StatelessWidget {
   const LogsSheet({
     super.key,
-    required this.controller,
-    this.sheetKey,
     this.minChildSize = 0.12,
     this.initialChildSize = 0.2,
     this.maxChildSize = 0.65,
   });
 
-  final DraggableScrollableController controller;
-  final GlobalKey? sheetKey;
   final double minChildSize;
   final double initialChildSize;
   final double maxChildSize;
 
-  void _expandSheet() {
-    if (!controller.isAttached) return;
-    final target = maxChildSize;
-    if (controller.size >= target - 0.01) return;
-    controller.animateTo(
-      target,
-      duration: const Duration(milliseconds: 220),
-      curve: Curves.easeOut,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return DraggableScrollableSheet(
-      controller: controller,
       minChildSize: minChildSize,
       initialChildSize: initialChildSize,
       maxChildSize: maxChildSize,
@@ -44,14 +28,12 @@ class LogsSheet extends StatelessWidget {
           elevation: 8,
           color: Colors.transparent,
           child: Container(
-            key: sheetKey,
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.vertical(top: Radius.circular(kHomeCardRadius)),
             ),
             child: _LogsContent(
               scrollController: scrollController,
-              onExpand: _expandSheet,
             ),
           ),
         );
@@ -63,11 +45,9 @@ class LogsSheet extends StatelessWidget {
 class _LogsContent extends StatelessWidget {
   const _LogsContent({
     required this.scrollController,
-    required this.onExpand,
   });
 
   final ScrollController scrollController;
-  final VoidCallback onExpand;
 
   @override
   Widget build(BuildContext context) {
@@ -78,40 +58,49 @@ class _LogsContent extends StatelessWidget {
         final onToggleOrder = context.read<HomeCubit>().toggleLogsOrder;
         final onClear = context.read<HomeCubit>().clearLogs;
         final hasLogs = logs.isNotEmpty;
-        return Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              _LogsHeader(
-                isReversed: state.logsReversed,
-                hasLogs: hasLogs,
-                onToggleOrder: onToggleOrder,
-                onClear: onClear,
-                onExpand: onExpand,
-              ),
-              const SizedBox(height: 8),
-              Expanded(
-                child: ListView.separated(
-                  controller: scrollController,
-                  padding: EdgeInsets.zero,
-                  itemCount: hasLogs ? logs.length : 1,
-                  separatorBuilder: (_, __) => hasLogs ? const SizedBox(height: 8) : const SizedBox.shrink(),
-                  itemBuilder: (context, index) {
-                    if (!hasLogs) {
-                      return const Padding(
-                        padding: EdgeInsets.only(top: 12),
-                        child: Center(child: Text('No events yet.')),
-                      );
-                    }
-                    return _LogEntryTile(
-                      entry: logs[index],
-                      isReversed: state.logsReversed,
-                    );
-                  },
+        return CustomScrollView(
+          controller: scrollController,
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsetsGeometry.all(kHomeCardPadding),
+              sliver: SliverToBoxAdapter(
+                child: _LogsHeader(
+                  isReversed: state.logsReversed,
+                  hasLogs: hasLogs,
+                  onToggleOrder: onToggleOrder,
+                  onClear: onClear,
                 ),
               ),
-            ],
-          ),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 8)),
+            if (!hasLogs)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: kHomeCardPadding, right: kHomeCardPadding, bottom: kHomeCardPadding),
+                  child: const Center(child: Text('No events yet.')),
+                ),
+              )
+            else
+              SliverPadding(
+                padding: const EdgeInsets.only(left: kHomeCardPadding, right: kHomeCardPadding, bottom: kHomeCardPadding),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      if (index.isOdd) {
+                        return const SizedBox(height: 8);
+                      }
+                      final entry = logs[index ~/ 2];
+                      return _LogEntryTile(
+                        entry: entry,
+                        isReversed: state.logsReversed,
+                      );
+                    },
+                    childCount: logs.length * 2 - 1,
+                  ),
+                ),
+              ),
+          ],
         );
       },
     );
@@ -124,42 +113,34 @@ class _LogsHeader extends StatelessWidget {
     required this.hasLogs,
     required this.onToggleOrder,
     required this.onClear,
-    required this.onExpand,
   });
 
   final bool isReversed;
   final bool hasLogs;
   final VoidCallback onToggleOrder;
   final VoidCallback onClear;
-  final VoidCallback onExpand;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onExpand,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: kHomeCardPadding),
-        child: Row(
-          children: [
-            const Expanded(
-              child: Text(
-                'Logs',
-                style: kHomeCardTitleTextStyle,
-              ),
-            ),
-            IconButton(
-              tooltip: 'Reverse order',
-              icon: Icon(isReversed ? Icons.arrow_downward : Icons.arrow_upward),
-              onPressed: onToggleOrder,
-            ),
-            IconButton(
-              tooltip: 'Clear',
-              icon: const Icon(Icons.delete_outline),
-              onPressed: hasLogs ? onClear : null,
-            ),
-          ],
+    return Row(
+      children: [
+        const Expanded(
+          child: Text(
+            'Logs',
+            style: kHomeCardTitleTextStyle,
+          ),
         ),
-      ),
+        IconButton(
+          tooltip: 'Reverse order',
+          icon: Icon(isReversed ? Icons.arrow_downward : Icons.arrow_upward),
+          onPressed: onToggleOrder,
+        ),
+        IconButton(
+          tooltip: 'Clear',
+          icon: const Icon(Icons.delete_outline),
+          onPressed: hasLogs ? onClear : null,
+        ),
+      ],
     );
   }
 }

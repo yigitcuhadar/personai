@@ -65,7 +65,7 @@ class ConversationCard extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: EdgeInsets.all(kHomeCardPadding),
+              padding: const EdgeInsets.all(kHomeCardPadding),
               child: Column(
                 children: const [
                   _ConversationHeader(),
@@ -74,6 +74,20 @@ class ConversationCard extends StatelessWidget {
                   _PromptComposer(),
                 ],
               ),
+            ),
+            BlocBuilder<HomeCubit, HomeState>(
+              buildWhen: (p, c) => p.status != c.status,
+              builder: (context, state) {
+                final isConnected = state.status == HomeStatus.connected;
+                if (isConnected) {
+                  return const SizedBox.shrink();
+                }
+                return Positioned.fill(
+                  child: Container(
+                    color: Colors.grey.shade400.withAlpha(90),
+                  ),
+                );
+              },
             ),
           ],
         ),

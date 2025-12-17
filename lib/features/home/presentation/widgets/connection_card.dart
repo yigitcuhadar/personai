@@ -24,7 +24,7 @@ class ConnectionCard extends StatelessWidget {
             curve: Curves.easeInOut,
             alignment: Alignment.topCenter,
             child: Container(
-              padding: EdgeInsets.all(kHomeCardPadding),
+              padding: const EdgeInsets.all(kHomeCardPadding),
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [Color(0xFFF6F7FB), Color(0xFFF2F8F2)],
