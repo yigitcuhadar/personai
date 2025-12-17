@@ -6,50 +6,15 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:formz/formz.dart';
 import 'package:openai_realtime/openai_realtime.dart';
 
+import '../models/inputs/api_key_input.dart';
+import '../models/inputs/instructions_input.dart';
+import '../models/inputs/model_input.dart';
+import '../models/inputs/prompt_input.dart';
+import '../models/inputs/voice_input.dart';
 import '../models/log_entry.dart';
 import '../models/message_entry.dart';
 
 part 'home_state.dart';
-
-class ApiKeyInput extends FormzInput<String, String> {
-  const ApiKeyInput.pure([super.value = '']) : super.pure();
-  const ApiKeyInput.dirty([super.value = '']) : super.dirty();
-
-  @override
-  String? validator(String value) => value.trim().isEmpty ? 'API key is required' : null;
-}
-
-class ModelInput extends FormzInput<String, String> {
-  const ModelInput.pure([super.value = 'gpt-realtime']) : super.pure();
-  const ModelInput.dirty([super.value = 'gpt-realtime']) : super.dirty();
-
-  @override
-  String? validator(String value) => value.trim().isEmpty ? 'Model is required' : null;
-}
-
-class PromptInput extends FormzInput<String, String> {
-  const PromptInput.pure([super.value = '']) : super.pure();
-  const PromptInput.dirty([super.value = '']) : super.dirty();
-
-  @override
-  String? validator(String value) => value.trim().isEmpty ? 'Prompt is required' : null;
-}
-
-class InstructionsInput extends FormzInput<String, String> {
-  const InstructionsInput.pure([super.value = '']) : super.pure();
-  const InstructionsInput.dirty([super.value = '']) : super.dirty();
-
-  @override
-  String? validator(String value) => null; // optional
-}
-
-class VoiceInput extends FormzInput<String, String> {
-  const VoiceInput.pure([super.value = 'marin']) : super.pure();
-  const VoiceInput.dirty([super.value = 'marin']) : super.dirty();
-
-  @override
-  String? validator(String value) => realtimeVoiceNames.contains(value) ? null : 'Invalid voice';
-}
 
 class HomeCubit extends Cubit<HomeState> {
   HomeCubit({String defaultApiKey = ''})
