@@ -207,7 +207,7 @@ class _LogPaneHeaderDelegate extends SliverPersistentHeaderDelegate {
           SizedBox(
             height: _headerRowHeight,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 18),
               child: _LogPaneHeader(
                 isReversed: isReversed,
                 hasLogs: hasLogs,
@@ -362,7 +362,7 @@ class _LogPaneHeader extends StatelessWidget {
         const Expanded(
           child: Text(
             'Logs',
-            style: TextStyle(fontWeight: FontWeight.w700),
+            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
           ),
         ),
         IconButton(

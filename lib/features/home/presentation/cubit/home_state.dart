@@ -7,6 +7,8 @@ class HomeState extends Equatable {
     this.logs = const [],
     this.logsReversed = false,
     this.messages = const [],
+    this.micStatus = MicStatus.off,
+    this.isUserSpeaking = false,
     this.callId,
     this.lastError,
     this.apiKey = const ApiKeyInput.pure(),
@@ -21,6 +23,8 @@ class HomeState extends Equatable {
   final List<LogEntry> logs;
   final bool logsReversed;
   final List<MessageEntry> messages;
+  final MicStatus micStatus;
+  final bool isUserSpeaking;
   final String? callId;
   final String? lastError;
   final ApiKeyInput apiKey;
@@ -35,6 +39,8 @@ class HomeState extends Equatable {
     List<LogEntry>? logs,
     bool? logsReversed,
     List<MessageEntry>? messages,
+    MicStatus? micStatus,
+    bool? isUserSpeaking,
     String? callId,
     String? lastError,
     ApiKeyInput? apiKey,
@@ -50,6 +56,8 @@ class HomeState extends Equatable {
       logs: logs ?? this.logs,
       logsReversed: logsReversed ?? this.logsReversed,
       messages: messages ?? this.messages,
+      micStatus: micStatus ?? this.micStatus,
+      isUserSpeaking: isUserSpeaking ?? this.isUserSpeaking,
       callId: callId ?? this.callId,
       lastError: clearError ? null : lastError ?? this.lastError,
       apiKey: apiKey ?? this.apiKey,
@@ -67,6 +75,8 @@ class HomeState extends Equatable {
     logs,
     logsReversed,
     messages,
+    micStatus,
+    isUserSpeaking,
     callId,
     lastError,
     apiKey,
@@ -82,5 +92,13 @@ enum HomeStatus {
   connecting,
   connected,
   disconnecting,
+  error,
+}
+
+enum MicStatus {
+  off,
+  starting,
+  on,
+  stopping,
   error,
 }

@@ -44,8 +44,7 @@ class HomeView extends StatelessWidget {
             child: LayoutBuilder(
               builder: (context, constraints) {
                 const logMinSize = 0.12;
-                final bottomPadding =
-                    constraints.maxHeight * logMinSize + 16;
+                final bottomPadding = constraints.maxHeight * logMinSize + 100;
                 return Stack(
                   children: [
                     Padding(

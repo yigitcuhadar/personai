@@ -47,6 +47,8 @@ class OpenAIRealtimeClient {
   RTCPeerConnection? _peerConnection;
   RTCDataChannel? _eventChannel;
   MediaStream? _localStream;
+  MediaStreamTrack? _localAudioTrack;
+  RTCRtpSender? _localAudioSender;
   String? _callId;
 
   /// Stream of parsed server events delivered over the data channel.
@@ -86,11 +88,11 @@ class OpenAIRealtimeClient {
       _logger.info('🔌 Peer connection state changed: $state');
     };
 
-    _logger.fine('Adding audio transceiver (receive only)...');
-    // Allow receiving audio from the server.
+    _logger.fine('Adding audio transceiver (send/receive)...');
+    // Allow receiving audio from the server and optionally sending mic input.
     await _peerConnection!.addTransceiver(
       kind: RTCRtpMediaType.RTCRtpMediaTypeAudio,
-      init: RTCRtpTransceiverInit(direction: TransceiverDirection.RecvOnly),
+      init: RTCRtpTransceiverInit(direction: TransceiverDirection.SendRecv),
     );
 
     _logger.fine('Creating data channel: oai-events');
@@ -196,15 +198,43 @@ class OpenAIRealtimeClient {
     _logger.fine('  Echo cancellation: $echoCancellation');
     _logger.fine('  Noise suppression: $noiseSuppression');
 
+    if (_localAudioTrack != null) {
+      _localAudioTrack!.enabled = true;
+      return _localAudioTrack!;
+    }
+    if (_peerConnection == null) {
+      throw StateError('Peer connection is not available. Call connect() first.');
+    }
+
     final constraints = {
       'audio': {'echoCancellation': echoCancellation, 'noiseSuppression': noiseSuppression},
       'video': false,
     };
     _localStream = await navigator.mediaDevices.getUserMedia(constraints);
     final track = _localStream!.getAudioTracks().first;
-    await _peerConnection?.addTrack(track, _localStream!);
+    _localAudioSender = await _peerConnection?.addTrack(track, _localStream!);
+    _localAudioTrack = track;
     _logger.info('✅ Microphone enabled');
     return track;
+  }
+
+  /// Stop the microphone and remove the upstream audio track.
+  Future<void> disableMicrophone() async {
+    if (_localStream == null && _localAudioTrack == null) return;
+    _logger.fine('🎤 Disabling microphone...');
+    try {
+      _localAudioTrack?.enabled = false;
+      _localAudioTrack?.stop();
+      if (_localAudioSender != null && _peerConnection != null) {
+        await _peerConnection!.removeTrack(_localAudioSender!);
+      }
+      await _localStream?.dispose();
+    } finally {
+      _localStream = null;
+      _localAudioTrack = null;
+      _localAudioSender = null;
+    }
+    _logger.info('✅ Microphone disabled');
   }
 
   Future<void> _disposePeer() async {
@@ -213,6 +243,8 @@ class OpenAIRealtimeClient {
     _eventChannel = null;
     await _localStream?.dispose();
     _localStream = null;
+    _localAudioTrack = null;
+    _localAudioSender = null;
     await _peerConnection?.close();
     _peerConnection = null;
     _callId = null;
