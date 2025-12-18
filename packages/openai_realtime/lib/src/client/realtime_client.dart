@@ -51,6 +51,7 @@ class OpenAIRealtimeClient {
   String? _callId;
   MediaStream? _localStream;
   MediaStreamTrack? _localAudioTrack;
+  RTCRtpTransceiver? _audioTransceiver;
   RTCRtpSender? _localAudioSender;
 
   /// Stream of parsed server events delivered over the data channel.
@@ -73,8 +74,10 @@ class OpenAIRealtimeClient {
   /// Establish the WebRTC connection and Realtime data channel.
   Future<void> connect({required String model, RealtimeSessionConfig? session}) async {
     _logger.info('🔄 Initiating WebRTC connection...');
+    await _hangupActiveCall();
     await _disposePeer();
     await _createPeerConnection();
+    await _primeLocalAudioTrack();
     await _prepareDataChannel();
     await _exchangeOffer(model, session);
     _logger.info('✅ WebRTC connection established successfully');
@@ -152,11 +155,12 @@ class OpenAIRealtimeClient {
       _logger.info('🔌 Peer connection state changed: $state');
     };
 
-    _logger.fine('Adding audio transceiver (send/receive)...');
-    await _peerConnection!.addTransceiver(
+    _logger.fine('Adding audio transceiver (send/recv with no track until mic enabled)...');
+    _audioTransceiver = await _peerConnection!.addTransceiver(
       kind: RTCRtpMediaType.RTCRtpMediaTypeAudio,
       init: RTCRtpTransceiverInit(direction: TransceiverDirection.SendRecv),
     );
+    _localAudioSender = _audioTransceiver!.sender;
   }
 
   /// Acquire the microphone and add an upstream audio track to the peer connection.
@@ -165,42 +169,39 @@ class OpenAIRealtimeClient {
     _logger.fine('  Echo cancellation: $echoCancellation');
     _logger.fine('  Noise suppression: $noiseSuppression');
 
-    if (_localAudioTrack != null) {
-      _localAudioTrack!.enabled = true;
+    // Track is primed during connect. If permissions changed, refresh the stream.
+    if (_localAudioTrack == null) {
+      await _primeLocalAudioTrack(
+        enabled: true,
+        echoCancellation: echoCancellation,
+        noiseSuppression: noiseSuppression,
+      );
       return _localAudioTrack!;
     }
-    if (_peerConnection == null) {
-      throw StateError('Peer connection is not available. Call connect() first.');
-    }
-    final pc = _peerConnection!;
-
-    final constraints = {
-      'audio': {'echoCancellation': echoCancellation, 'noiseSuppression': noiseSuppression},
-      'video': false,
-    };
-    _localStream = await navigator.mediaDevices.getUserMedia(constraints);
-    final track = _localStream!.getAudioTracks().first;
-    _localAudioSender = await pc.addTrack(track, _localStream!);
-    _localAudioTrack = track;
+    _localAudioTrack!.enabled = true;
     _logger.info('✅ Microphone enabled');
-    return track;
+    return _localAudioTrack!;
   }
 
   /// Stop the microphone and remove the upstream audio track.
-  Future<void> disableMicrophone() async {
+  Future<void> disableMicrophone({bool release = false}) async {
     if (_localStream == null && _localAudioTrack == null) return;
     _logger.fine('🎤 Disabling microphone...');
     try {
       _localAudioTrack?.enabled = false;
-      _localAudioTrack?.stop();
-      if (_localAudioSender != null && _peerConnection != null) {
-        await _peerConnection!.removeTrack(_localAudioSender!);
+      if (release) {
+        _localAudioTrack?.stop();
+        if (_audioTransceiver != null) {
+          await _audioTransceiver!.sender.replaceTrack(null);
+        }
+        await _localStream?.dispose();
       }
-      await _localStream?.dispose();
     } finally {
-      _localStream = null;
-      _localAudioTrack = null;
-      _localAudioSender = null;
+      if (release) {
+        _localStream = null;
+        _localAudioTrack = null;
+        _localAudioSender = _audioTransceiver?.sender;
+      }
     }
     _logger.info('✅ Microphone disabled');
   }
@@ -255,7 +256,8 @@ class OpenAIRealtimeClient {
 
   Future<void> _disposePeer() async {
     _logger.fine('🧹 Disposing peer connection resources...');
-    await disableMicrophone();
+    await disableMicrophone(release: true);
+    _audioTransceiver = null;
     await _eventChannel?.close();
     _eventChannel = null;
     await _peerConnection?.close();
@@ -434,5 +436,41 @@ class OpenAIRealtimeClient {
     await _serverEvents.close();
     await _clientEvents.close();
     await _remoteAudioTracks.close();
+  }
+
+  Future<void> _hangupActiveCall() async {
+    if (_callId == null) return;
+    try {
+      _logger.fine('Hanging up existing call before reconnect: $_callId');
+      await callsApi.hangupCall(_callId!);
+    } catch (err, stack) {
+      _logger.warning('⚠️ Failed to hang up existing call: $err', err, stack);
+    } finally {
+      _callId = null;
+    }
+  }
+
+  /// Pre-create a disabled local audio track so the initial SDP includes an
+  /// upstream sender; toggling the mic later won't require renegotiation.
+  Future<void> _primeLocalAudioTrack({
+    bool enabled = false,
+    bool echoCancellation = true,
+    bool noiseSuppression = true,
+  }) async {
+    if (_audioTransceiver == null) {
+      throw StateError('Audio transceiver missing. Call connect() first.');
+    }
+    if (_localAudioTrack != null) return;
+    final constraints = {
+      'audio': {'echoCancellation': echoCancellation, 'noiseSuppression': noiseSuppression},
+      'video': false,
+    };
+    _localStream = await navigator.mediaDevices.getUserMedia(constraints);
+    final track = _localStream!.getAudioTracks().first;
+    track.enabled = enabled;
+    _localAudioSender = _audioTransceiver!.sender;
+    await _localAudioSender!.replaceTrack(track);
+    _localAudioTrack = track;
+    _logger.fine('🎤 Primed local audio track (enabled=$enabled)');
   }
 }

@@ -403,11 +403,12 @@ class _MicButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<HomeCubit, HomeState>(
-      buildWhen: (p, c) => p.status != c.status,
+      buildWhen: (p, c) => p.status != c.status || p.micEnabled != c.micEnabled,
       builder: (context, state) {
         final isConnected = state.status == HomeStatus.connected;
         final isBusy = state.status == HomeStatus.connecting || state.status == HomeStatus.disconnecting;
         final isEnabled = isConnected && !isBusy;
+        final micEnabled = state.micEnabled;
 
         Color backgroundColor;
         Color iconColor;
@@ -415,8 +416,8 @@ class _MicButton extends StatelessWidget {
           backgroundColor = Colors.grey.shade200;
           iconColor = Colors.grey.shade500;
         } else {
-          backgroundColor = Colors.white.withAlpha(230);
-          iconColor = Colors.black54;
+          backgroundColor = micEnabled ? const Color(0xFFE9F9EF) : Colors.white.withAlpha(230);
+          iconColor = micEnabled ? const Color(0xFF2E9E65) : Colors.black54;
         }
 
         return SizedBox.square(
@@ -427,12 +428,12 @@ class _MicButton extends StatelessWidget {
             elevation: 2,
             child: InkWell(
               customBorder: const CircleBorder(),
-              onTap: isEnabled ? () => context.read<HomeCubit>().openMic() : null,
+              onTap: isEnabled ? () => context.read<HomeCubit>().toggleMic() : null,
               child: Center(
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 180),
                   child: Icon(
-                    Icons.mic,
+                    micEnabled ? Icons.mic_off : Icons.mic,
                     color: iconColor,
                     size: 18,
                   ),

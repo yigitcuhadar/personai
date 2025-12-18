@@ -34,6 +34,7 @@ class HomeCubit extends Cubit<HomeState> {
 
   bool get _isConnecting => state.status == HomeStatus.connecting;
   bool get _isConnected => state.status == HomeStatus.connected;
+  bool get _isMicEnabled => state.micEnabled;
   bool get _canChangeConfig => !_isConnecting && !_isConnected;
 
   void onApiKeyChanged(String value) {
@@ -116,7 +117,7 @@ class HomeCubit extends Cubit<HomeState> {
         session: session,
       );
       _client = client;
-      emit(state.copyWith(status: HomeStatus.connected, clearError: true));
+      emit(state.copyWith(status: HomeStatus.connected, micEnabled: false, clearError: true));
       await _sendSessionUpdate(includeVoice: true, includeInstructions: true);
       _appendEventLog(
         direction: LogDirection.client,
@@ -145,7 +146,7 @@ class HomeCubit extends Cubit<HomeState> {
     await _detachSubscriptions();
     _client = null;
     _sessionCreatedAt = null;
-    emit(state.copyWith(status: HomeStatus.initial, clearError: true));
+    emit(state.copyWith(status: HomeStatus.initial, micEnabled: false, clearError: true));
     _appendEventLog(
       direction: LogDirection.client,
       type: 'connection',
@@ -166,13 +167,23 @@ class HomeCubit extends Cubit<HomeState> {
     await client.sendText(prompt);
   }
 
-  Future<void> openMic() async{
+  Future<void> toggleMic() async {
     final client = _client;
     if (client == null) {
       emit(state.copyWith(lastError: 'Connect first.'));
       return;
     }
-    await client.enableMicrophone();
+    final enable = !_isMicEnabled;
+    try {
+      if (enable) {
+        await client.enableMicrophone();
+      } else {
+        await client.disableMicrophone();
+      }
+      emit(state.copyWith(micEnabled: enable, clearError: true));
+    } catch (err) {
+      emit(state.copyWith(lastError: '$err'));
+    }
   }
 
   void _handleServerEvent(RealtimeServerEvent event) {

@@ -8,6 +8,7 @@ class HomeState extends Equatable {
     this.logsReversed = false,
     this.messages = const [],
     this.lastError,
+    this.micEnabled = false,
     this.apiKey = const ApiKeyInput.pure(),
     this.model = const ModelInput.pure(),
     this.prompt = const PromptInput.pure(),
@@ -21,6 +22,7 @@ class HomeState extends Equatable {
   final bool logsReversed;
   final List<MessageEntry> messages;
   final String? lastError;
+  final bool micEnabled;
   final ApiKeyInput apiKey;
   final ModelInput model;
   final PromptInput prompt;
@@ -34,6 +36,7 @@ class HomeState extends Equatable {
     bool? logsReversed,
     List<MessageEntry>? messages,
     String? lastError,
+    bool? micEnabled,
     ApiKeyInput? apiKey,
     ModelInput? model,
     PromptInput? prompt,
@@ -48,6 +51,7 @@ class HomeState extends Equatable {
       logsReversed: logsReversed ?? this.logsReversed,
       messages: messages ?? this.messages,
       lastError: clearError ? null : lastError ?? this.lastError,
+      micEnabled: micEnabled ?? this.micEnabled,
       apiKey: apiKey ?? this.apiKey,
       model: model ?? this.model,
       prompt: prompt ?? this.prompt,
@@ -64,6 +68,7 @@ class HomeState extends Equatable {
     logsReversed,
     messages,
     lastError,
+    micEnabled,
     apiKey,
     model,
     prompt,

@@ -1,0 +1,1 @@
+flutter: 2025-12-18T17:15:40.008400 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_Co951FS7e94gJo3IRtEvT","response_id":"resp_Co950ZLV3xG1yw0hUO2jg","item_id":"item_Co950w2iSk3TF2rxUkBwC","output_index":0,"content_index":0,"delta":"ım","obfuscation":"K1P4pXSsCY4W8z"}
