@@ -25,9 +25,9 @@ class HomeCubit extends Cubit<HomeState> {
       );
 
   OpenAIRealtimeClient? _client;
-  StreamSubscription<RealtimeServerEvent>? _eventSub;
-  StreamSubscription<RealtimeClientEvent>? _clientEventSub;
-  StreamSubscription<MediaStreamTrack>? _remoteAudioSub;
+  StreamSubscription<RealtimeServerEvent>? _serverSubscription;
+  StreamSubscription<RealtimeClientEvent>? _clientSubscription;
+  StreamSubscription<MediaStreamTrack>? _audioSubscription;
   final StreamController<MediaStreamTrack> _remoteAudioTracks = StreamController<MediaStreamTrack>.broadcast();
   DateTime? _sessionCreatedAt;
   final Map<String, int> _messageIndexById = <String, int>{};
@@ -216,7 +216,7 @@ class HomeCubit extends Cubit<HomeState> {
 
     emit(state.copyWith(micStatus: MicStatus.starting, clearError: true));
     try {
-      await _client!.enableMicrophone();
+      //await _client!.enableMicrophone();
       await _sendSessionUpdate(
         includeVoice: true,
         includeInstructions: false,
@@ -452,7 +452,7 @@ class HomeCubit extends Cubit<HomeState> {
   Future<void> _attachClientStreams(OpenAIRealtimeClient client) async {
     await _detachClientStreams();
     _sessionCreatedAt = null;
-    _eventSub = client.serverEvents.listen(
+    _serverSubscription = client.serverEvents.listen(
       _handleServerEvent,
       onError: (err, stack) {
         _appendEventLog(
@@ -463,7 +463,7 @@ class HomeCubit extends Cubit<HomeState> {
         );
       },
     );
-    _clientEventSub = client.clientEvents.listen(
+    _clientSubscription = client.clientEvents.listen(
       _handleClientEvent,
       onError: (err, stack) {
         _appendEventLog(
@@ -474,7 +474,7 @@ class HomeCubit extends Cubit<HomeState> {
         );
       },
     );
-    _remoteAudioSub = client.remoteAudioTracks.listen(
+    _audioSubscription = client.remoteAudioTracks.listen(
       _remoteAudioTracks.add,
       onError: (err, stack) {
         _appendEventLog(
@@ -488,12 +488,12 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   Future<void> _detachClientStreams() async {
-    await _eventSub?.cancel();
-    await _clientEventSub?.cancel();
-    await _remoteAudioSub?.cancel();
-    _eventSub = null;
-    _clientEventSub = null;
-    _remoteAudioSub = null;
+    await _serverSubscription?.cancel();
+    await _clientSubscription?.cancel();
+    await _audioSubscription?.cancel();
+    _serverSubscription = null;
+    _clientSubscription = null;
+    _audioSubscription = null;
   }
 
   void _appendEventLog({
@@ -572,7 +572,7 @@ class HomeCubit extends Cubit<HomeState> {
 
   Future<void> _stopMicrophone({required bool updateSession}) async {
     try {
-      await _client?.disableMicrophone();
+      //await _client?.disableMicrophone();
     } catch (err) {
       _appendEventLog(
         direction: LogDirection.client,
