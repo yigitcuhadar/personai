@@ -433,7 +433,7 @@ class _MicButton extends StatelessWidget {
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 180),
                   child: Icon(
-                    micEnabled ? Icons.mic_off : Icons.mic,
+                    micEnabled ? Icons.mic : Icons.mic_off,
                     color: iconColor,
                     size: 18,
                   ),

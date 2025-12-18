@@ -118,7 +118,14 @@ class HomeCubit extends Cubit<HomeState> {
       );
       _client = client;
       emit(state.copyWith(status: HomeStatus.connected, micEnabled: false, clearError: true));
-      await _sendSessionUpdate(includeVoice: true, includeInstructions: true);
+      await _sendSessionUpdate(
+        includeVoice: true,
+        includeInstructions: true,
+        inputAudioTranscription: const {
+          'enabled': true,
+          'model': 'whisper-1',
+        },
+      );
       _appendEventLog(
         direction: LogDirection.client,
         type: 'connection',

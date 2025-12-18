@@ -1,0 +1,529 @@
+════════
+flutter: 2025-12-18T19:26:51.174618 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:26:51.174919 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:26:51.175045 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB7zmNc0SvqaO6B6E5FN","response_id":"resp_CoB7xKMfa3GI8Xb2ffS4B","item_id":"item_CoB7xkdrnoi8ZaumCPoK3","output_index":0,"content_index":0,"delta":".","obfuscation":"GQSISn0HA7sskw6"}
+flutter: 2025-12-18T19:26:51.175471 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:26:51.175616 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:51.176064 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:51.176175 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:26:51.176269 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:26:51.176365 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB7zWEPL16SuTNez5jPW","response_id":"resp_CoB7xKMfa3GI8Xb2ffS4B","item_id":"item_CoB7xkdrnoi8ZaumCPoK3","output_index":0,"content_index":0,"delta":" Ben","obfuscation":"nFQ7WDNvtxaO"}
+flutter: 2025-12-18T19:26:51.176507 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:26:51.176597 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:51.177112 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:51.177257 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:26:51.177353 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:26:51.177447 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB7zGShYfxPmeFe3ihfb","response_id":"resp_CoB7xKMfa3GI8Xb2ffS4B","item_id":"item_CoB7xkdrnoi8ZaumCPoK3","output_index":0,"content_index":0,"delta":" de","obfuscation":"FZGVjhvtunjEZ"}
+flutter: 2025-12-18T19:26:51.177581 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:26:51.177667 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:51.178997 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:51.179234 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:26:51.179334 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:26:51.179474 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB7zRniPc6Ql9WPmcyrt","response_id":"resp_CoB7xKMfa3GI8Xb2ffS4B","item_id":"item_CoB7xkdrnoi8ZaumCPoK3","output_index":0,"content_index":0,"delta":" seni","obfuscation":"vnDlBjNY6Gt"}
+flutter: 2025-12-18T19:26:51.179643 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:26:51.179729 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:51.187610 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:51.187824 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:26:51.187915 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:26:51.188009 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB7zIPpPUErSnGIhqwFx","response_id":"resp_CoB7xKMfa3GI8Xb2ffS4B","item_id":"item_CoB7xkdrnoi8ZaumCPoK3","output_index":0,"content_index":0,"delta":" rahat","obfuscation":"zitohsLwcJ"}
+flutter: 2025-12-18T19:26:51.188169 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:26:51.188255 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:51.194797 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:51.194990 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:26:51.195081 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:26:51.195183 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB7zkp7jyySDL7D9IfDc","response_id":"resp_CoB7xKMfa3GI8Xb2ffS4B","item_id":"item_CoB7xkdrnoi8ZaumCPoK3","output_index":0,"content_index":0,"delta":"ça","obfuscation":"ol0diXQBzdgaro"}
+flutter: 2025-12-18T19:26:51.195388 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:26:51.195474 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:51.933250 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:51.933869 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:26:51.934067 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:26:51.934280 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB7zgxoDwDSVOEWufZV2","response_id":"resp_CoB7xKMfa3GI8Xb2ffS4B","item_id":"item_CoB7xkdrnoi8ZaumCPoK3","output_index":0,"content_index":0,"delta":" duy","obfuscation":"nNFZuQJ6Ctt4"}
+flutter: 2025-12-18T19:26:51.934688 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:26:51.935018 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:51.936377 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:51.936670 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:26:51.936827 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:26:51.936982 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB7zJUlhHmYV7GrPPD6x","response_id":"resp_CoB7xKMfa3GI8Xb2ffS4B","item_id":"item_CoB7xkdrnoi8ZaumCPoK3","output_index":0,"content_index":0,"delta":"abili","obfuscation":"GkY4es4xcw2"}
+flutter: 2025-12-18T19:26:51.937270 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:26:51.937464 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:51.940038 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:51.940393 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:26:51.940538 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:26:51.940694 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB7zhToZxqLafDifG4HS","response_id":"resp_CoB7xKMfa3GI8Xb2ffS4B","item_id":"item_CoB7xkdrnoi8ZaumCPoK3","output_index":0,"content_index":0,"delta":"yorum","obfuscation":"CLR0JWgKMyR"}
+flutter: 2025-12-18T19:26:51.940987 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:26:51.941168 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:51.941609 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:51.941891 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:26:51.942016 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:26:51.942165 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB7zrSPAughggxMeXOdv","response_id":"resp_CoB7xKMfa3GI8Xb2ffS4B","item_id":"item_CoB7xkdrnoi8ZaumCPoK3","output_index":0,"content_index":0,"delta":".","obfuscation":"FpPZXBllRrzG2sj"}
+flutter: 2025-12-18T19:26:51.942411 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:26:51.942716 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:51.977047 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:51.977446 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:26:51.977541 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:26:51.977642 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB7zBPEsNg1zXlCLZCyY","response_id":"resp_CoB7xKMfa3GI8Xb2ffS4B","item_id":"item_CoB7xkdrnoi8ZaumCPoK3","output_index":0,"content_index":0,"delta":" Nas","obfuscation":"9P9byLW8Hk6o"}
+flutter: 2025-12-18T19:26:51.978118 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:26:51.978214 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:51.978710 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:51.978819 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:26:51.978896 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:26:51.978986 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB7z4Gh0kyL6JepCOL75","response_id":"resp_CoB7xKMfa3GI8Xb2ffS4B","item_id":"item_CoB7xkdrnoi8ZaumCPoK3","output_index":0,"content_index":0,"delta":"ıl","obfuscation":"eWMvboamy98oat"}
+flutter: 2025-12-18T19:26:51.979181 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:26:51.979273 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:51.979772 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:51.979875 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:26:51.979953 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:26:51.980047 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB7zf8lmdGfjTIWyZetL","response_id":"resp_CoB7xKMfa3GI8Xb2ffS4B","item_id":"item_CoB7xkdrnoi8ZaumCPoK3","output_index":0,"content_index":0,"delta":" yardımcı","obfuscation":"UEmH0ol"}
+flutter: 2025-12-18T19:26:51.980233 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:26:51.980316 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:51.980511 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:51.980618 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:26:51.980701 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:26:51.980911 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB7z0mSPDwezZz80z5dN","response_id":"resp_CoB7xKMfa3GI8Xb2ffS4B","item_id":"item_CoB7xkdrnoi8ZaumCPoK3","output_index":0,"content_index":0,"delta":" ol","obfuscation":"K21Cdog4jjozf"}
+flutter: 2025-12-18T19:26:51.981062 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:26:51.981155 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:51.981424 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:51.981551 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:26:51.981651 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:26:51.981745 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB7z12oVLJixvkXmOqy9","response_id":"resp_CoB7xKMfa3GI8Xb2ffS4B","item_id":"item_CoB7xkdrnoi8ZaumCPoK3","output_index":0,"content_index":0,"delta":"abil","obfuscation":"CyLL2DH5vAha"}
+flutter: 2025-12-18T19:26:51.981869 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:26:51.981951 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:52.052497 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:52.052852 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:26:52.052945 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:26:52.053047 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB80PlWLUiTDBLBiV4zL","response_id":"resp_CoB7xKMfa3GI8Xb2ffS4B","item_id":"item_CoB7xkdrnoi8ZaumCPoK3","output_index":0,"content_index":0,"delta":"irim","obfuscation":"7Ws2HZgLKdOf"}
+flutter: 2025-12-18T19:26:52.053295 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:26:52.053384 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:52.054316 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:52.054482 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:26:52.054576 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:26:52.054675 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB80OwokvaJOTPdFivXv","response_id":"resp_CoB7xKMfa3GI8Xb2ffS4B","item_id":"item_CoB7xkdrnoi8ZaumCPoK3","output_index":0,"content_index":0,"delta":"?","obfuscation":"yRL1uz7nwrs7Uz5"}
+flutter: 2025-12-18T19:26:52.054893 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:26:52.055016 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:52.751567 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:52.752542 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:26:52.752857 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:26:52.753262 FINE OpenAIRealtimeClient:   {"type":"response.audio.done","event_id":"event_CoB80IvnugCEuIFqgcYXD","response_id":"resp_CoB7xKMfa3GI8Xb2ffS4B","item_id":"item_CoB7xkdrnoi8ZaumCPoK3","output_index":0,"content_index":0}
+flutter: 2025-12-18T19:26:52.756165 FINE OpenAIRealtimeClient: Event type: response.output_audio.done
+flutter: 2025-12-18T19:26:52.756952 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:52.761702 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:52.762348 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:26:52.762647 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:26:52.762982 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.done","event_id":"event_CoB80jWosxMDR1kfSzJ6R","response_id":"resp_CoB7xKMfa3GI8Xb2ffS4B","item_id":"item_CoB7xkdrnoi8ZaumCPoK3","output_index":0,"content_index":0,"transcript":"Merhaba! Evet, seni gayet net duyuyorum. Sesin bana tam olarak ulaşıyor. Ben de seni rahatça duyabiliyorum. Nasıl yardımcı olabilirim?"}
+flutter: 2025-12-18T19:26:52.764631 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.done
+flutter: 2025-12-18T19:26:52.765014 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:52.766810 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:52.767319 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:26:52.767517 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:26:52.767777 FINE OpenAIRealtimeClient:   {"type":"response.content_part.done","event_id":"event_CoB80MNTN5w0tQ7QnEmrI","response_id":"resp_CoB7xKMfa3GI8Xb2ffS4B","item_id":"item_CoB7xkdrnoi8ZaumCPoK3","output_index":0,"content_index":0,"part":{"type":"audio","transcript":"Merhaba! Evet, seni gayet net duyuyorum. Sesin bana tam olarak ulaşıyor. Ben de seni rahatça duyabiliyorum. Nasıl yardımcı olabilirim?"}}
+flutter: 2025-12-18T19:26:52.769920 FINE OpenAIRealtimeClient: Event type: response.content_part.done
+flutter: 2025-12-18T19:26:52.770234 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:52.772054 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:52.772427 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:26:52.772582 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:26:52.772756 FINE OpenAIRealtimeClient:   {"type":"response.output_item.done","event_id":"event_CoB801LVfGT26NL6JJVrP","response_id":"resp_CoB7xKMfa3GI8Xb2ffS4B","output_index":0,"item":{"id":"item_CoB7xkdrnoi8ZaumCPoK3","object":"realtime.item","type":"message","status":"completed","role":"assistant","content":[{"type":"audio","transcript":"Merhaba! Evet, seni gayet net duyuyorum. Sesin bana tam olarak ulaşıyor. Ben de seni rahatça duyabiliyorum. Nasıl yardımcı olabilirim?"}]}}
+flutter: 2025-12-18T19:26:52.774550 FINE OpenAIRealtimeClient: Event type: response.output_item.done
+flutter: 2025-12-18T19:26:52.775089 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:52.776409 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:52.776748 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:26:52.776876 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:26:52.777035 FINE OpenAIRealtimeClient:   {"type":"response.done","event_id":"event_CoB80ChSkwH3W4PkaBWGw","response":{"object":"realtime.response","id":"resp_CoB7xKMfa3GI8Xb2ffS4B","status":"completed","status_details":null,"output":[{"id":"item_CoB7xkdrnoi8ZaumCPoK3","object":"realtime.item","type":"message","status":"completed","role":"assistant","content":[{"type":"audio","transcript":"Merhaba! Evet, seni gayet net duyuyorum. Sesin bana tam olarak ulaşıyor. Ben de seni rahatça duyabiliyorum. Nasıl yardımcı olabilirim?"}]}],"conversa...
+flutter: 2025-12-18T19:26:52.777273 FINE OpenAIRealtimeClient:   (Total length: 975 characters)
+flutter: 2025-12-18T19:26:52.780155 FINE OpenAIRealtimeClient: Event type: response.done
+flutter: 2025-12-18T19:26:52.780569 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:52.780754 FINE OpenAIRealtimeClient: ⚪️ Response finished
+flutter: 2025-12-18T19:26:52.782911 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:52.783200 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:26:52.783342 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:26:52.783489 FINE OpenAIRealtimeClient:   {"type":"rate_limits.updated","event_id":"event_CoB80IwSJCdxI4hLbxnNQ","rate_limits":[{"name":"tokens","limit":40000,"remaining":39191,"reset_seconds":1.213}]}
+flutter: 2025-12-18T19:26:52.784882 FINE OpenAIRealtimeClient: Event type: rate_limits.updated
+flutter: 2025-12-18T19:26:52.785039 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:59.474524 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:26:59.475190 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:26:59.475452 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:26:59.475722 FINE OpenAIRealtimeClient:   {"type":"output_audio_buffer.stopped","event_id":"event_fd1585db185c4688","response_id":"resp_CoB7xKMfa3GI8Xb2ffS4B"}
+flutter: 2025-12-18T19:26:59.477948 FINE OpenAIRealtimeClient: Event type: output_audio_buffer.stopped
+flutter: 2025-12-18T19:26:59.478682 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:02.749407 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:02.750658 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:02.751120 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:02.751613 FINE OpenAIRealtimeClient:   {"type":"input_audio_buffer.speech_started","event_id":"event_CoB8A3oa64LN0P0pAXiKP","audio_start_ms":19316,"item_id":"item_CoB8ABZ2lCv321EDovB2g"}
+flutter: 2025-12-18T19:27:02.752594 FINE OpenAIRealtimeClient: Event type: input_audio_buffer.speech_started
+flutter: 2025-12-18T19:27:02.753198 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:05.472270 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:05.473513 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:05.473974 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:05.474458 FINE OpenAIRealtimeClient:   {"type":"input_audio_buffer.speech_stopped","event_id":"event_CoB8D4X7xFlZA7JIezvqM","audio_end_ms":22368,"item_id":"item_CoB8ABZ2lCv321EDovB2g"}
+flutter: 2025-12-18T19:27:05.475506 FINE OpenAIRealtimeClient: Event type: input_audio_buffer.speech_stopped
+flutter: 2025-12-18T19:27:05.475956 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:05.478850 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:05.479467 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:05.479770 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:05.480073 FINE OpenAIRealtimeClient:   {"type":"input_audio_buffer.committed","event_id":"event_CoB8DGbCPivbkkGMsx7FW","previous_item_id":"item_CoB7xkdrnoi8ZaumCPoK3","item_id":"item_CoB8ABZ2lCv321EDovB2g"}
+flutter: 2025-12-18T19:27:05.480430 FINE OpenAIRealtimeClient: Event type: input_audio_buffer.committed
+flutter: 2025-12-18T19:27:05.480826 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:05.481459 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:05.482278 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:05.482570 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:05.482851 FINE OpenAIRealtimeClient:   {"type":"conversation.item.created","event_id":"event_CoB8DkHuzmiebH8N1CUVY","previous_item_id":"item_CoB7xkdrnoi8ZaumCPoK3","item":{"id":"item_CoB8ABZ2lCv321EDovB2g","object":"realtime.item","type":"message","status":"completed","role":"user","content":[{"type":"input_audio","transcript":null}]}}
+flutter: 2025-12-18T19:27:05.483352 FINE OpenAIRealtimeClient: Event type: conversation.item.added
+flutter: 2025-12-18T19:27:05.483726 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:05.484913 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:05.485318 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:05.485521 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:05.485745 FINE OpenAIRealtimeClient:   {"type":"response.created","event_id":"event_CoB8DOyvfSmWZX5CGFp4U","response":{"object":"realtime.response","id":"resp_CoB8Drln3TRy9emOEt5Cc","status":"in_progress","status_details":null,"output":[],"conversation_id":"conv_CoB7qALdPG912BM3tj6Aw","modalities":["audio","text"],"voice":"alloy","output_audio_format":"pcm16","temperature":0.8,"max_output_tokens":"inf","usage":null,"metadata":null}}
+flutter: 2025-12-18T19:27:05.486123 FINE OpenAIRealtimeClient: Event type: response.created
+flutter: 2025-12-18T19:27:05.486523 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:05.486882 FINE OpenAIRealtimeClient: 🟢 Tracking active response
+flutter: 2025-12-18T19:27:05.804492 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:05.805606 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:05.806027 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:05.806512 FINE OpenAIRealtimeClient:   {"type":"response.output_item.added","event_id":"event_CoB8DneSH2Msx3rZw9gpF","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","output_index":0,"item":{"id":"item_CoB8DEZm1l4R1wRjhTR07","object":"realtime.item","type":"message","status":"in_progress","role":"assistant","content":[]}}
+flutter: 2025-12-18T19:27:05.807429 FINE OpenAIRealtimeClient: Event type: response.output_item.added
+flutter: 2025-12-18T19:27:05.807955 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:05.810991 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:05.811679 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:05.811959 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:05.812256 FINE OpenAIRealtimeClient:   {"type":"conversation.item.created","event_id":"event_CoB8DQ06qXS2eLf2hAR2R","previous_item_id":"item_CoB8ABZ2lCv321EDovB2g","item":{"id":"item_CoB8DEZm1l4R1wRjhTR07","object":"realtime.item","type":"message","status":"in_progress","role":"assistant","content":[]}}
+flutter: 2025-12-18T19:27:05.812778 FINE OpenAIRealtimeClient: Event type: conversation.item.added
+flutter: 2025-12-18T19:27:05.813158 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:05.819555 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:05.820116 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:05.820387 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:05.820914 FINE OpenAIRealtimeClient:   {"type":"response.content_part.added","event_id":"event_CoB8DR67EgIdBlqosIRCl","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"part":{"type":"audio","transcript":""}}
+flutter: 2025-12-18T19:27:05.821526 FINE OpenAIRealtimeClient: Event type: response.content_part.added
+flutter: 2025-12-18T19:27:05.821878 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:05.822701 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:05.823049 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:05.823244 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:05.823473 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8DBzd1JdgraUsX3ms8","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":"Ç","obfuscation":"e3wdZt2HJkwCfDy"}
+flutter: 2025-12-18T19:27:05.824019 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:05.824257 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:05.825900 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:05.826377 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:05.826757 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:05.827014 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8DLf4c1NG0d0qTLCVg","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":"ok","obfuscation":"ZffeBMXBUG96M1"}
+flutter: 2025-12-18T19:27:05.827354 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:05.827560 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:05.867113 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:05.867485 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:05.867579 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:05.867680 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8D3IMuc3iA2dOUH8nF","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":" naz","obfuscation":"bzPicoVyy19G"}
+flutter: 2025-12-18T19:27:05.867980 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:05.868068 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:05.868449 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:05.868554 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:05.868661 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:05.868756 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8DPICjBjrBij3nfavh","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":"iks","obfuscation":"1SXRDD0OQ4ybt"}
+flutter: 2025-12-18T19:27:05.868885 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:05.868966 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:05.869486 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:05.869655 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:05.869749 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:05.869856 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8DvjigKLNRrNPlFMWY","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":"in","obfuscation":"UlUXWHSnlZz7Qz"}
+flutter: 2025-12-18T19:27:05.869982 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:05.870065 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:05.870265 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:05.870381 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:05.870472 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:05.870624 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8DZu8oT0sfT7qN4GuO","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":",","obfuscation":"keIulfy0dpei52g"}
+flutter: 2025-12-18T19:27:05.870747 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:05.870828 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:05.924208 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:05.924522 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:05.924586 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:05.924656 FINE OpenAIRealtimeClient:   {"type":"output_audio_buffer.started","event_id":"event_66c8e6b8d5e54428","response_id":"resp_CoB8Drln3TRy9emOEt5Cc"}
+flutter: 2025-12-18T19:27:05.924807 FINE OpenAIRealtimeClient: Event type: output_audio_buffer.started
+flutter: 2025-12-18T19:27:05.924865 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.007383 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.007718 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:06.007810 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:06.007905 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8Ehlcox4POCUZQtWaC","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":" teşekkür","obfuscation":"JRII5qw"}
+flutter: 2025-12-18T19:27:06.008161 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:06.008245 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.008971 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.009089 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:06.009177 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:06.009267 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8EMPaalEBxD1R51FrG","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":" eder","obfuscation":"xT2yBqA5RX6"}
+flutter: 2025-12-18T19:27:06.009407 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:06.009486 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.154414 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.154765 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:06.154892 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:06.155032 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8EyQh2xi3CXrHKLYdb","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":"im","obfuscation":"uMOl4bLTkAERGq"}
+flutter: 2025-12-18T19:27:06.155297 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:06.155541 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.182728 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.183099 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:06.183197 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:06.183296 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8ENXTg8gaaeklIDwHp","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":"!","obfuscation":"F2kedkiBHrXgPYB"}
+flutter: 2025-12-18T19:27:06.183552 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:06.183641 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.184003 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.184108 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:06.184220 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:06.184317 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8E7nZO5P1mJamS6OXt","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":" Ben","obfuscation":"vt9LP6rs7gyq"}
+flutter: 2025-12-18T19:27:06.184436 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:06.184515 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.184874 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.184985 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:06.185066 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:06.185159 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8EIbjwJbA79O0JV1ii","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":" gay","obfuscation":"06LIh76rrUEl"}
+flutter: 2025-12-18T19:27:06.185272 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:06.185412 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.319054 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.319409 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:06.319536 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:06.319674 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8EnmKnFwGmHXw02Vxi","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":"et","obfuscation":"bUVaZ9c7o5Jyec"}
+flutter: 2025-12-18T19:27:06.319932 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:06.320116 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.348686 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.349040 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:06.349137 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:06.349242 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8EkZQkza09rJ8eSHcS","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":" iy","obfuscation":"GdNC2Hd7l9eIU"}
+flutter: 2025-12-18T19:27:06.349673 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:06.349770 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.350101 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.350211 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:06.350294 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:06.350388 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8EaFgKuHp8MIxHGxZs","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":"iyim","obfuscation":"GQfYsrn3e73l"}
+flutter: 2025-12-18T19:27:06.350511 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:06.350598 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.351014 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.351168 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:06.351264 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:06.351369 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8EeMO3fEHKWEplRGkH","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":",","obfuscation":"j5vEEedA1tMeEdS"}
+flutter: 2025-12-18T19:27:06.351534 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:06.351618 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.352475 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.352602 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:06.352689 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:06.352778 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8EBn41p4mIAvU5Iymz","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":" bomba","obfuscation":"9g8kRUtGUZ"}
+flutter: 2025-12-18T19:27:06.352898 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:06.352981 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.377928 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.378275 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:06.378346 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:06.378423 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8EQi9jMS6TFJy9dv3v","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":" gib","obfuscation":"DQODE1EbTLCV"}
+flutter: 2025-12-18T19:27:06.378667 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:06.378738 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.379143 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.379224 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:06.379296 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:06.379365 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8EmBad0KrZBpP4NlIR","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":"iyim","obfuscation":"yuZVaAy2F768"}
+flutter: 2025-12-18T19:27:06.379455 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:06.379513 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.379770 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.379844 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:06.379904 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:06.379964 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8EoxLkQMN4IegJI9qd","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":".","obfuscation":"etT61twKSRGtQzp"}
+flutter: 2025-12-18T19:27:06.380042 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:06.380102 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.649670 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.650781 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:06.651220 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:06.651694 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8EuYukXk146Hsl60lO","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":" Sen","obfuscation":"sLfNxJbgiw1W"}
+flutter: 2025-12-18T19:27:06.652657 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:06.653231 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.657617 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.658376 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:06.658685 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:06.658979 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8EU4AzooIT9UptnoHt","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":"in","obfuscation":"vkb0nSCZEivmQg"}
+flutter: 2025-12-18T19:27:06.659608 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:06.660031 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.693996 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.694383 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:06.694485 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:06.694588 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8ETLP1HEDdvcWqY641","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":" nasıl","obfuscation":"WWaJvlzU5G"}
+flutter: 2025-12-18T19:27:06.694866 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:06.695034 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.695428 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.695536 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:06.695621 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:06.695716 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8EijK3tCRqiMvQ6PM9","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":",","obfuscation":"6Sy1oCKM6VdRRpX"}
+flutter: 2025-12-18T19:27:06.696076 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:06.696165 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.696616 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.696784 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:06.696881 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:06.696984 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8EjjxDaYnqArukQ0nA","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":" key","obfuscation":"LTL1BYJjAjQE"}
+flutter: 2025-12-18T19:27:06.697113 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:06.697201 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.697409 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.697514 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:06.697595 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:06.697714 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8Efy5UGcQajqJ3q7TB","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":"fin","obfuscation":"FuXQWco9GrB1c"}
+flutter: 2025-12-18T19:27:06.697869 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:06.697955 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.698528 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.698677 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:06.698783 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:06.698895 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8EB41ANWURuebhbPM7","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":" nasıl","obfuscation":"lDmostqcYr"}
+flutter: 2025-12-18T19:27:06.699048 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:06.699147 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.706258 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.706461 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:06.706553 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:06.706650 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8EQCUJVqYVCCxEChOD","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":",","obfuscation":"LXFWMwXuj2gR8hW"}
+flutter: 2025-12-18T19:27:06.706800 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:06.706884 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.727037 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:06.727435 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:06.727514 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:06.727582 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8ERpUbMOcQEM8V0lOH","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":" her","obfuscation":"5hlJRGAvgisT"}
+flutter: 2025-12-18T19:27:06.727800 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:06.727864 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:07.127543 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:07.128578 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:07.128970 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:07.129439 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8FLICqBcDmHYGmKvqY","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":" şey","obfuscation":"BDQCBTLTF9ru"}
+flutter: 2025-12-18T19:27:07.130436 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:07.130881 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:07.133878 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:07.134527 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:07.134801 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:07.135101 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8F5CIBKBdntKLHJ7aB","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":" yol","obfuscation":"gYELDJYJdBpZ"}
+flutter: 2025-12-18T19:27:07.135543 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:07.135868 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:07.176480 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:07.176858 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:07.177274 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:07.177519 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8F9O2KB0L3eewtB5F5","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":"unda","obfuscation":"oRx5ivoiCpdk"}
+flutter: 2025-12-18T19:27:07.177819 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:07.177910 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:07.178219 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:07.178324 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:07.178408 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:07.178583 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8FiV8FL2cp8bVcEGmn","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":" mı","obfuscation":"2tcW494vdcy0D"}
+flutter: 2025-12-18T19:27:07.178733 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:07.178815 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:07.179157 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:07.179265 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:07.179350 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:07.179446 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8FLSVhGsQFk8EJ07nO","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":"?","obfuscation":"2p6s5cIRh2sfZoy"}
+flutter: 2025-12-18T19:27:07.179564 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:07.179646 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:07.179889 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:07.180002 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:07.180102 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:07.180202 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8FCpn8tWBAMaSDP4Gt","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":" Bir","obfuscation":"fhKhVvZAFrVa"}
+flutter: 2025-12-18T19:27:07.180308 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:07.180388 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:07.181317 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:07.181495 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:07.181593 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:07.181696 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8FAJs9yXYYhksAlsxD","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":"az","obfuscation":"rcSGRAC6sYoUrq"}
+flutter: 2025-12-18T19:27:07.181836 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:07.181927 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:07.188405 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:07.188564 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:07.188657 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:07.188747 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8FmJoSqaWYDOVli8aq","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":" sohbet","obfuscation":"y60VWxv8x"}
+flutter: 2025-12-18T19:27:07.188875 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:07.188957 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:07.594930 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:07.596059 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:07.596488 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:07.596954 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8FJBW1717kLu344vYg","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":" ed","obfuscation":"5iTRtaskEetfq"}
+flutter: 2025-12-18T19:27:07.597831 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:07.598274 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:07.603148 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:07.603945 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:07.604448 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:07.604912 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8Fbj1yWilXpcShwuh0","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":"elim","obfuscation":"eIta7kA6ASCn"}
+flutter: 2025-12-18T19:27:07.605609 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:07.607154 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:07.644544 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:07.644984 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:07.645084 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:07.645188 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8FkXwgoj4r43PJTemC","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":" mi","obfuscation":"v15XpH17wFy8y"}
+flutter: 2025-12-18T19:27:07.645439 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:07.645522 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:07.645822 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:07.645924 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:07.646002 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:07.646100 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.delta","event_id":"event_CoB8Fyxe3l0dsRDAp2kla","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"delta":"?","obfuscation":"jIsTCvfUCAcIY3h"}
+flutter: 2025-12-18T19:27:07.646216 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.delta
+flutter: 2025-12-18T19:27:07.646325 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:07.874291 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:07.874692 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:07.874818 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:07.874956 FINE OpenAIRealtimeClient:   {"type":"response.audio.done","event_id":"event_CoB8F24pH21Uu6jYaiAQV","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0}
+flutter: 2025-12-18T19:27:07.875356 FINE OpenAIRealtimeClient: Event type: response.output_audio.done
+flutter: 2025-12-18T19:27:07.875478 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:07.875849 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:07.876015 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:07.876157 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:07.876291 FINE OpenAIRealtimeClient:   {"type":"response.audio_transcript.done","event_id":"event_CoB8FLpgOFUl1sC6xQaci","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"transcript":"Çok naziksin, teşekkür ederim! Ben gayet iyiyim, bomba gibiyim. Senin nasıl, keyfin nasıl, her şey yolunda mı? Biraz sohbet edelim mi?"}
+flutter: 2025-12-18T19:27:07.876569 FINE OpenAIRealtimeClient: Event type: response.output_audio_transcript.done
+flutter: 2025-12-18T19:27:07.876684 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:07.877222 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:07.877389 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:07.877506 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:07.877637 FINE OpenAIRealtimeClient:   {"type":"response.content_part.done","event_id":"event_CoB8FIf5FT8sTbvnc81de","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","item_id":"item_CoB8DEZm1l4R1wRjhTR07","output_index":0,"content_index":0,"part":{"type":"audio","transcript":"Çok naziksin, teşekkür ederim! Ben gayet iyiyim, bomba gibiyim. Senin nasıl, keyfin nasıl, her şey yolunda mı? Biraz sohbet edelim mi?"}}
+flutter: 2025-12-18T19:27:07.877881 FINE OpenAIRealtimeClient: Event type: response.content_part.done
+flutter: 2025-12-18T19:27:07.878191 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:07.878552 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:07.878710 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:07.878830 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:07.878964 FINE OpenAIRealtimeClient:   {"type":"response.output_item.done","event_id":"event_CoB8FX553VFtzbSgA3ebg","response_id":"resp_CoB8Drln3TRy9emOEt5Cc","output_index":0,"item":{"id":"item_CoB8DEZm1l4R1wRjhTR07","object":"realtime.item","type":"message","status":"completed","role":"assistant","content":[{"type":"audio","transcript":"Çok naziksin, teşekkür ederim! Ben gayet iyiyim, bomba gibiyim. Senin nasıl, keyfin nasıl, her şey yolunda mı? Biraz sohbet edelim mi?"}]}}
+flutter: 2025-12-18T19:27:07.879544 FINE OpenAIRealtimeClient: Event type: response.output_item.done
+flutter: 2025-12-18T19:27:07.879678 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:07.880284 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:07.880432 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:07.880553 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:07.880693 FINE OpenAIRealtimeClient:   {"type":"response.done","event_id":"event_CoB8F8XVEd29HcruL0WoN","response":{"object":"realtime.response","id":"resp_CoB8Drln3TRy9emOEt5Cc","status":"completed","status_details":null,"output":[{"id":"item_CoB8DEZm1l4R1wRjhTR07","object":"realtime.item","type":"message","status":"completed","role":"assistant","content":[{"type":"audio","transcript":"Çok naziksin, teşekkür ederim! Ben gayet iyiyim, bomba gibiyim. Senin nasıl, keyfin nasıl, her şey yolunda mı? Biraz sohbet edelim mi?"}]}],"conversa...
+flutter: 2025-12-18T19:27:07.880985 FINE OpenAIRealtimeClient:   (Total length: 982 characters)
+flutter: 2025-12-18T19:27:07.881284 FINE OpenAIRealtimeClient: Event type: response.done
+flutter: 2025-12-18T19:27:07.881397 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:07.881532 FINE OpenAIRealtimeClient: ⚪️ Response finished
+flutter: 2025-12-18T19:27:07.881936 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:07.882146 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:07.882266 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:07.882363 FINE OpenAIRealtimeClient:   {"type":"rate_limits.updated","event_id":"event_CoB8FJtnUayhN6XsgdE8K","rate_limits":[{"name":"tokens","limit":40000,"remaining":39184,"reset_seconds":1.224}]}
+flutter: 2025-12-18T19:27:07.882520 FINE OpenAIRealtimeClient: Event type: rate_limits.updated
+flutter: 2025-12-18T19:27:07.882618 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:10.550491 FINE OpenAIRealtimeClient: 🎤 Disabling microphone...
+flutter: 2025-12-18T19:27:10.552016 INFO OpenAIRealtimeClient: ✅ Microphone disabled
+flutter: 2025-12-18T19:27:15.274970 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:15.276062 FINE OpenAIRealtimeClient: 📥 RECEIVED MESSAGE
+flutter: 2025-12-18T19:27:15.276503 FINE OpenAIRealtimeClient: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:15.276955 FINE OpenAIRealtimeClient:   {"type":"output_audio_buffer.stopped","event_id":"event_afa7a28a7e854eab","response_id":"resp_CoB8Drln3TRy9emOEt5Cc"}
+flutter: 2025-12-18T19:27:15.277597 FINE OpenAIRealtimeClient: Event type: output_audio_buffer.stopped
+flutter: 2025-12-18T19:27:15.277967 FINE OpenAIRealtimeClient: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:18.268210 INFO OpenAIRealtimeClient: 🔌 Disconnecting from realtime session...
+flutter: 2025-12-18T19:27:18.269995 FINE OpenAIRealtimeClient: Hanging up call: rtc_u2_7e417e259f36498f81f8b221619704a3
+flutter: 2025-12-18T19:27:18.271483 FINE RealtimeCallsApi: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:18.271860 FINE RealtimeCallsApi: 📤 HTTP REQUEST - POST
+flutter: 2025-12-18T19:27:18.272148 FINE RealtimeCallsApi: URL: https://api.openai.com/v1/realtime/calls/rtc_u2_7e417e259f36498f81f8b221619704a3/hangup
+flutter: 2025-12-18T19:27:18.272454 FINE RealtimeCallsApi: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:18.272700 FINE RealtimeCallsApi: Headers:
+flutter: 2025-12-18T19:27:18.273186 FINE RealtimeCallsApi:   Authorization: Bearer ***
+flutter: 2025-12-18T19:27:18.273413 FINE RealtimeCallsApi:   OpenAI-Beta: realtime=v1
+flutter: 2025-12-18T19:27:18.273577 FINE RealtimeCallsApi: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:18.665204 FINE RealtimeCallsApi: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:18.665479 FINE RealtimeCallsApi: 📥 HTTP RESPONSE
+flutter: 2025-12-18T19:27:18.665550 FINE RealtimeCallsApi: POST https://api.openai.com/v1/realtime/calls/rtc_u2_7e417e259f36498f81f8b221619704a3/hangup
+flutter: 2025-12-18T19:27:18.665608 FINE RealtimeCallsApi: Status: 200
+flutter: 2025-12-18T19:27:18.665657 FINE RealtimeCallsApi: ─────────────────────────────────────────────────────
+flutter: 2025-12-18T19:27:18.665721 FINE RealtimeCallsApi: Headers:
+flutter: 2025-12-18T19:27:18.665782 FINE RealtimeCallsApi:   connection: keep-alive
+flutter: 2025-12-18T19:27:18.665835 FINE RealtimeCallsApi:   alt-svc: h3=":443"; ma=86400
+flutter: 2025-12-18T19:27:18.665882 FINE RealtimeCallsApi:   set-cookie: __cf_bm=lGBErJWgO3jPgJgxl7QuUAlmcNrMOnaNGSJIjspzS48-1766075238-1.0.1.1-sQKX4YKOrcJtF_6CC4jr.ojn0xvbFc8mP6eGdimfrqR6curjf01QkqQjGRSY2m88yDEam1F7n6xNFV.ABXlO4RBUX5YiUZkxUlsHLyyGWN0; path=/; expires=Thu, 18-Dec-25 16:57:18 GMT; domain=.api.openai.com; HttpOnly; Secure; SameSite=None,_cfuvid=nZ_jtVfdYH73LthaBF2wGeYAIQImrLnSQTArjGRIKaU-1766075238761-0.0.1.1-604800000; path=/; domain=.api.openai.com; HttpOnly; Secure; SameSite=None
+flutter: 2025-12-18T19:27:18.665949 FINE RealtimeCallsApi:   date: Thu, 18 Dec 2025 16:27:18 GMT
+flutter: 2025-12-18T19:27:18.665997 FINE RealtimeCallsApi:   x-envoy-upstream-service-time: 0
+flutter: 2025-12-18T19:27:18.666050 FINE RealtimeCallsApi:   x-openai-proxy-wasm: v0.1
+flutter: 2025-12-18T19:27:18.666097 FINE RealtimeCallsApi:   strict-transport-security: max-age=31536000; includeSubDomains; preload
+flutter: 2025-12-18T19:27:18.666151 FINE RealtimeCallsApi:   content-length: 0
+flutter: 2025-12-18T19:27:18.666205 FINE RealtimeCallsApi:   cf-ray: 9b0006e04ef4ea94-IST
+flutter: 2025-12-18T19:27:18.666296 FINE RealtimeCallsApi:   cf-cache-status: DYNAMIC
+flutter: 2025-12-18T19:27:18.666354 FINE RealtimeCallsApi:   x-content-type-options: nosniff
+flutter: 2025-12-18T19:27:18.666408 FINE RealtimeCallsApi:   server: cloudflare
+flutter: 2025-12-18T19:27:18.667050 FINE RealtimeCallsApi: ═══════════════════════════════════════════════════════
+flutter: 2025-12-18T19:27:18.667198 INFO OpenAIRealtimeClient: ✅ Call hung up successfully
+flutter: 2025-12-18T19:27:18.667269 FINE OpenAIRealtimeClient: 🧹 Disposing peer connection resources...
+flutter: 2025-12-18T19:27:18.667334 FINE OpenAIRealtimeClient: 🎤 Disabling microphone...
+flutter: 2025-12-18T19:27:18.670459 INFO OpenAIRealtimeClient: ✅ Microphone disabled
+flutter: 2025-12-18T19:27:18.673489 FINE OpenAIRealtimeClient: ✅ Resources disposed
+flutter: 2025-12-18T19:27:18.673637 INFO OpenAIRealtimeClient: ✅ Disconnected from realtime session
+flutter: 2025-12-18T19:27:18.674414 INFO OpenAIRealtimeClient: 🔌 Peer connection state changed: RTCPeerConnectionState.RTCPeerConnectionStateClosed
