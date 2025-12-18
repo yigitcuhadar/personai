@@ -122,7 +122,6 @@ class HomeCubit extends Cubit<HomeState> {
         includeVoice: true,
         includeInstructions: true,
         inputAudioTranscription: const {
-          'enabled': true,
           'model': 'whisper-1',
         },
       );
