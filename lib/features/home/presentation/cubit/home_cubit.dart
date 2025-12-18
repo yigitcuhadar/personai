@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:formz/formz.dart';
 import 'package:openai_realtime/openai_realtime.dart';
 
@@ -27,8 +26,7 @@ class HomeCubit extends Cubit<HomeState> {
   OpenAIRealtimeClient? _client;
   StreamSubscription<RealtimeServerEvent>? _serverSubscription;
   StreamSubscription<RealtimeClientEvent>? _clientSubscription;
-  StreamSubscription<MediaStreamTrack>? _audioSubscription;
-  final StreamController<MediaStreamTrack> _remoteAudioTracks = StreamController<MediaStreamTrack>.broadcast();
+
   DateTime? _sessionCreatedAt;
   final Map<String, int> _messageIndexById = <String, int>{};
   final Set<String> _responseTextKeys = <String>{};
@@ -37,8 +35,6 @@ class HomeCubit extends Cubit<HomeState> {
   bool get _isConnecting => state.status == HomeStatus.connecting;
   bool get _isConnected => state.status == HomeStatus.connected;
   bool get _canChangeConfig => !_isConnecting && !_isConnected;
-
-  Stream<MediaStreamTrack> get remoteAudioTracks => _remoteAudioTracks.stream;
 
   void onApiKeyChanged(String value) {
     emit(state.copyWith(apiKey: ApiKeyInput.dirty(value), clearError: true));
@@ -108,7 +104,7 @@ class HomeCubit extends Cubit<HomeState> {
     if (state.debugLogging) {
       enableOpenAIRealtimeLogging();
     }
-    await _attachClientStreams(client);
+    await _attachSubscriptions(client);
 
     try {
       final session = RealtimeSessionConfig(
@@ -120,16 +116,7 @@ class HomeCubit extends Cubit<HomeState> {
         session: session,
       );
       _client = client;
-      await _stopMicrophone(updateSession: false);
-      emit(
-        state.copyWith(
-          status: HomeStatus.connected,
-          callId: client.callId,
-          micStatus: MicStatus.off,
-          isUserSpeaking: false,
-          clearError: true,
-        ),
-      );
+      emit(state.copyWith(status: HomeStatus.connected, clearError: true));
       await _sendSessionUpdate(includeVoice: true, includeInstructions: true);
       _appendEventLog(
         direction: LogDirection.client,
@@ -138,17 +125,9 @@ class HomeCubit extends Cubit<HomeState> {
         rawEvent: {'message': 'Connected', 'callId': client.callId},
       );
     } catch (err) {
-      await _detachClientStreams();
+      await _detachSubscriptions();
       await client.dispose();
-      emit(
-        state.copyWith(
-          status: HomeStatus.error,
-          callId: null,
-          micStatus: MicStatus.off,
-          isUserSpeaking: false,
-          lastError: '$err',
-        ),
-      );
+      emit(state.copyWith(status: HomeStatus.error, lastError: '$err'));
       _appendEventLog(
         direction: LogDirection.client,
         type: 'connection.error',
@@ -162,20 +141,11 @@ class HomeCubit extends Cubit<HomeState> {
     final client = _client;
     if (client == null) return;
     emit(state.copyWith(status: HomeStatus.disconnecting, clearError: true));
-    await _stopMicrophone(updateSession: false);
     await client.disconnect();
-    await _detachClientStreams();
+    await _detachSubscriptions();
     _client = null;
     _sessionCreatedAt = null;
-    emit(
-      state.copyWith(
-        status: HomeStatus.initial,
-        callId: null,
-        micStatus: MicStatus.off,
-        isUserSpeaking: false,
-        clearError: true,
-      ),
-    );
+    emit(state.copyWith(status: HomeStatus.initial, clearError: true));
     _appendEventLog(
       direction: LogDirection.client,
       type: 'connection',
@@ -196,77 +166,13 @@ class HomeCubit extends Cubit<HomeState> {
     await client.sendText(prompt);
   }
 
-  Future<void> toggleMicrophone() async {
-    if (state.micStatus == MicStatus.starting || state.micStatus == MicStatus.stopping) {
-      return;
-    }
-    if (state.micStatus == MicStatus.on) {
-      await disableMicrophone();
-    } else {
-      await enableMicrophone();
-    }
-  }
-
-  Future<void> enableMicrophone() async {
-    if (!_isConnected || _client == null) {
+  Future<void> openMic() async{
+    final client = _client;
+    if (client == null) {
       emit(state.copyWith(lastError: 'Connect first.'));
       return;
     }
-    if (state.micStatus == MicStatus.on || state.micStatus == MicStatus.starting) return;
-
-    emit(state.copyWith(micStatus: MicStatus.starting, clearError: true));
-    try {
-      //await _client!.enableMicrophone();
-      await _sendSessionUpdate(
-        includeVoice: true,
-        includeInstructions: false,
-        inputAudioTranscription: const {'model': 'whisper-1'},
-        outputModalities: const ['audio', 'text'],
-        turnDetection: const RealtimeTurnDetection(
-          type: 'server_vad',
-          createResponse: true,
-          interruptResponse: true,
-        ),
-      );
-      emit(state.copyWith(micStatus: MicStatus.on, clearError: true));
-      _appendEventLog(
-        direction: LogDirection.client,
-        type: 'microphone',
-        payload: {'enabled': true},
-        rawEvent: {'enabled': true},
-      );
-    } catch (err) {
-      await _stopMicrophone(updateSession: false);
-      emit(
-        state.copyWith(
-          micStatus: MicStatus.off,
-          lastError: 'Microphone error: $err',
-        ),
-      );
-    }
-  }
-
-  Future<void> disableMicrophone() async {
-    if (state.micStatus == MicStatus.off || state.micStatus == MicStatus.stopping) return;
-
-    emit(state.copyWith(micStatus: MicStatus.stopping, isUserSpeaking: false, clearError: true));
-    try {
-      await _stopMicrophone(updateSession: true);
-      emit(state.copyWith(micStatus: MicStatus.off, clearError: true));
-      _appendEventLog(
-        direction: LogDirection.client,
-        type: 'microphone',
-        payload: {'enabled': false},
-        rawEvent: {'enabled': false},
-      );
-    } catch (err) {
-      emit(
-        state.copyWith(
-          micStatus: MicStatus.off,
-          lastError: 'Microphone error: $err',
-        ),
-      );
-    }
+    await client.enableMicrophone();
   }
 
   void _handleServerEvent(RealtimeServerEvent event) {
@@ -327,13 +233,9 @@ class HomeCubit extends Cubit<HomeState> {
         );
         break;
       case InputAudioBufferSpeechStartedEvent():
-        _setUserSpeaking(true);
-        break;
       case InputAudioBufferClearedEvent():
       case InputAudioBufferSpeechStoppedEvent():
       case InputAudioBufferTimeoutTriggeredEvent():
-        _setUserSpeaking(false);
-        break;
       case ServerErrorEvent():
       case SessionUpdatedEvent():
       case ConversationItemAddedEvent():
@@ -449,8 +351,8 @@ class HomeCubit extends Cubit<HomeState> {
     await _client!.sendEvent(SessionUpdateEvent(session: session));
   }
 
-  Future<void> _attachClientStreams(OpenAIRealtimeClient client) async {
-    await _detachClientStreams();
+  Future<void> _attachSubscriptions(OpenAIRealtimeClient client) async {
+    await _detachSubscriptions();
     _sessionCreatedAt = null;
     _serverSubscription = client.serverEvents.listen(
       _handleServerEvent,
@@ -474,26 +376,13 @@ class HomeCubit extends Cubit<HomeState> {
         );
       },
     );
-    _audioSubscription = client.remoteAudioTracks.listen(
-      _remoteAudioTracks.add,
-      onError: (err, stack) {
-        _appendEventLog(
-          direction: LogDirection.client,
-          type: 'audio.error',
-          payload: {'error': '$err'},
-          rawEvent: err,
-        );
-      },
-    );
   }
 
-  Future<void> _detachClientStreams() async {
+  Future<void> _detachSubscriptions() async {
     await _serverSubscription?.cancel();
     await _clientSubscription?.cancel();
-    await _audioSubscription?.cancel();
     _serverSubscription = null;
     _clientSubscription = null;
-    _audioSubscription = null;
   }
 
   void _appendEventLog({
@@ -565,32 +454,6 @@ class HomeCubit extends Cubit<HomeState> {
     emit(state.copyWith(messages: messages));
   }
 
-  void _setUserSpeaking(bool value) {
-    if (state.isUserSpeaking == value) return;
-    emit(state.copyWith(isUserSpeaking: value));
-  }
-
-  Future<void> _stopMicrophone({required bool updateSession}) async {
-    try {
-      //await _client?.disableMicrophone();
-    } catch (err) {
-      _appendEventLog(
-        direction: LogDirection.client,
-        type: 'microphone.error',
-        payload: {'error': '$err'},
-        rawEvent: err,
-      );
-    }
-    if (updateSession) {
-      await _sendSessionUpdate(
-        includeVoice: false,
-        includeInstructions: false,
-        outputModalities: const ['text'],
-        turnDetection: const RealtimeTurnDetection(type: 'none'),
-      );
-    }
-  }
-
   String _nextClientMessageId() => 'client_${_messageCounter++}';
 
   String? _extractInputText(RealtimeItem item) {
@@ -613,10 +476,8 @@ class HomeCubit extends Cubit<HomeState> {
 
   @override
   Future<void> close() async {
-    await _stopMicrophone(updateSession: false);
-    await _detachClientStreams();
+    await _detachSubscriptions();
     await _client?.dispose();
-    await _remoteAudioTracks.close();
     return super.close();
   }
 }

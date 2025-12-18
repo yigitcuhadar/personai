@@ -5,7 +5,6 @@ import '../cubit/home_cubit.dart';
 import '../models/log_entry.dart';
 import '../models/message_entry.dart';
 import 'home_card_styles.dart';
-import 'realtime_audio_output.dart';
 import 'status_badge.dart';
 
 class ConversationCard extends StatelessWidget {
@@ -27,7 +26,6 @@ class ConversationCard extends StatelessWidget {
         ),
         child: Stack(
           children: [
-            const RealtimeAudioOutput(),
             Positioned(
               top: -70,
               right: -40,
@@ -405,77 +403,38 @@ class _MicButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<HomeCubit, HomeState>(
-      buildWhen: (p, c) => p.status != c.status || p.micStatus != c.micStatus || p.isUserSpeaking != c.isUserSpeaking,
+      buildWhen: (p, c) => p.status != c.status,
       builder: (context, state) {
         final isConnected = state.status == HomeStatus.connected;
         final isBusy = state.status == HomeStatus.connecting || state.status == HomeStatus.disconnecting;
-        final isMicBusy = state.micStatus == MicStatus.starting || state.micStatus == MicStatus.stopping;
-        final isActive = state.micStatus == MicStatus.on;
-        final isSpeaking = state.isUserSpeaking;
-        final isEnabled = isConnected && !isBusy && !isMicBusy;
+        final isEnabled = isConnected && !isBusy;
 
         Color backgroundColor;
         Color iconColor;
         if (!isConnected || isBusy) {
           backgroundColor = Colors.grey.shade200;
           iconColor = Colors.grey.shade500;
-        } else if (isActive) {
-          backgroundColor = const Color(0xFF2E9E65);
-          iconColor = Colors.white;
         } else {
           backgroundColor = Colors.white.withAlpha(230);
           iconColor = Colors.black54;
         }
 
-        final tooltip = !isConnected
-            ? 'Connect to use microphone'
-            : isActive
-            ? 'Disable microphone'
-            : 'Enable microphone';
-
-        return Tooltip(
-          message: tooltip,
-          child: SizedBox.square(
-            dimension: 40,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: isSpeaking && isActive
-                    ? [
-                        BoxShadow(
-                          color: const Color(0xFF2E9E65).withAlpha(80),
-                          blurRadius: 10,
-                          spreadRadius: 1,
-                        ),
-                      ]
-                    : [],
-              ),
-              child: Material(
-                color: backgroundColor,
-                shape: const CircleBorder(),
-                elevation: isActive ? 2 : 0,
-                child: InkWell(
-                  customBorder: const CircleBorder(),
-                  onTap: isEnabled ? () => context.read<HomeCubit>().toggleMicrophone() : null,
-                  child: Center(
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 180),
-                      child: isMicBusy
-                          ? SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(iconColor),
-                              ),
-                            )
-                          : Icon(
-                              isActive ? Icons.mic : Icons.mic_none,
-                              color: iconColor,
-                              size: 18,
-                            ),
-                    ),
+        return SizedBox.square(
+          dimension: 40,
+          child: Material(
+            color: backgroundColor,
+            shape: const CircleBorder(),
+            elevation: 2,
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: isEnabled ? () => context.read<HomeCubit>().openMic() : null,
+              child: Center(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 180),
+                  child: Icon(
+                    Icons.mic,
+                    color: iconColor,
+                    size: 18,
                   ),
                 ),
               ),
