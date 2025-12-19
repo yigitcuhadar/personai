@@ -7,7 +7,11 @@
         {
             "name": "personai",
             "request": "launch",
-            "type": "dart"
+            "type": "dart",
+            "program": "lib/app/bootstrap/main_dev.dart",
+            "args": [
+                "--dart-define-from-file=.env"
+            ]
         },
         {
             "name": "personai (profile mode)",

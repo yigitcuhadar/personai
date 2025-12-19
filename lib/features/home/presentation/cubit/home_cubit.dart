@@ -51,11 +51,21 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   void onInstructionsChanged(String value) {
-    emit(state.copyWith(instructions: InstructionsInput.dirty(value), clearError: true));
+    emit(
+      state.copyWith(
+        instructions: InstructionsInput.dirty(value),
+        clearError: true,
+      ),
+    );
   }
 
   void onInputAudioTranscriptionChanged(String value) {
-    emit(state.copyWith(inputAudioTranscription: InputAudioTranscriptionInput.dirty(value), clearError: true));
+    emit(
+      state.copyWith(
+        inputAudioTranscription: InputAudioTranscriptionInput.dirty(value),
+        clearError: true,
+      ),
+    );
   }
 
   void onVoiceChanged(String value) {
@@ -80,9 +90,16 @@ class HomeCubit extends Cubit<HomeState> {
 
     final apiKey = ApiKeyInput.dirty(state.apiKey.value.trim());
     final model = ModelInput.dirty(state.model.value.trim());
-    final inputAudioTranscription = InputAudioTranscriptionInput.dirty(state.inputAudioTranscription.value);
+    final inputAudioTranscription = InputAudioTranscriptionInput.dirty(
+      state.inputAudioTranscription.value,
+    );
     final voice = VoiceInput.dirty(state.voice.value);
-    final isValid = Formz.validate([apiKey, model, voice, inputAudioTranscription]);
+    final isValid = Formz.validate([
+      apiKey,
+      model,
+      voice,
+      inputAudioTranscription,
+    ]);
     if (!isValid) {
       emit(
         state.copyWith(
@@ -127,7 +144,11 @@ class HomeCubit extends Cubit<HomeState> {
       );
       _client = client;
       emit(
-        state.copyWith(status: HomeStatus.connected, micEnabled: false, clearError: true),
+        state.copyWith(
+          status: HomeStatus.connected,
+          micEnabled: false,
+          clearError: true,
+        ),
       );
       await _sendSessionUpdate(
         includeVoice: true,
@@ -163,7 +184,13 @@ class HomeCubit extends Cubit<HomeState> {
     await _detachSubscriptions();
     _client = null;
     _sessionCreatedAt = null;
-    emit(state.copyWith(status: HomeStatus.initial, micEnabled: false, clearError: true));
+    emit(
+      state.copyWith(
+        status: HomeStatus.initial,
+        micEnabled: false,
+        clearError: true,
+      ),
+    );
     _appendEventLog(
       direction: LogDirection.client,
       type: 'connection',
@@ -215,6 +242,7 @@ class HomeCubit extends Cubit<HomeState> {
           id: _inputTranscriptId(e.itemId, e.contentIndex),
           direction: LogDirection.client,
           delta: e.delta,
+          isFinal: false,
         );
         break;
       case ConversationItemInputTranscriptionCompleted e:
@@ -222,6 +250,15 @@ class HomeCubit extends Cubit<HomeState> {
           id: _inputTranscriptId(e.itemId, e.contentIndex),
           direction: LogDirection.client,
           text: e.transcript,
+          isFinal: true,
+        );
+        break;
+      case ConversationItemInputTranscriptionFailed e:
+        messageUpdate = _MessageUpdate.text(
+          id: _inputTranscriptId(e.itemId, e.contentIndex),
+          direction: LogDirection.client,
+          text: 'Transcription failed: ${e.error.message}',
+          isFinal: true,
         );
         break;
       case ResponseOutputTextDeltaEvent e:
@@ -231,6 +268,7 @@ class HomeCubit extends Cubit<HomeState> {
           id: _outputTextId(outputKey),
           direction: LogDirection.server,
           delta: e.delta,
+          isFinal: false,
         );
         break;
       case ResponseOutputTextDoneEvent e:
@@ -240,6 +278,7 @@ class HomeCubit extends Cubit<HomeState> {
           id: _outputTextId(outputKey),
           direction: LogDirection.server,
           text: e.text,
+          isFinal: true,
         );
         break;
       case ResponseOutputAudioTranscriptDeltaEvent e:
@@ -249,6 +288,7 @@ class HomeCubit extends Cubit<HomeState> {
           id: _outputAudioTranscriptId(outputKey),
           direction: LogDirection.server,
           delta: e.delta,
+          isFinal: false,
         );
         break;
       case ResponseOutputAudioTranscriptDoneEvent e:
@@ -258,6 +298,33 @@ class HomeCubit extends Cubit<HomeState> {
           id: _outputAudioTranscriptId(outputKey),
           direction: LogDirection.server,
           text: e.transcript,
+          isFinal: true,
+        );
+        break;
+      case ConversationItemAddedEvent e:
+        final item = e.item;
+        if (item.role == 'user') {
+          final inputText = item.content
+              .whereType<InputTextContent>()
+              .map((c) => c.text.trim())
+              .where((text) => text.isNotEmpty)
+              .join('\n');
+          messageUpdate = _MessageUpdate.text(
+            id: _inputTranscriptId(item.id ?? 'unknown', 0),
+            direction: LogDirection.client,
+            text: inputText,
+            isFinal: true,
+          );
+        }
+        break;
+      case ResponseOutputItemAddedEvent e:
+        final itemId = e.item.id ?? 'output_item_${e.outputIndex}';
+        final placeholderKey = _outputKey(itemId, e.outputIndex, 0);
+        messageUpdate = _MessageUpdate.text(
+          id: _outputAudioTranscriptId(placeholderKey),
+          direction: LogDirection.server,
+          text: '',
+          isFinal: true,
         );
         break;
       case InputAudioBufferSpeechStartedEvent():
@@ -266,11 +333,9 @@ class HomeCubit extends Cubit<HomeState> {
       case InputAudioBufferTimeoutTriggeredEvent():
       case ServerErrorEvent():
       case SessionUpdatedEvent():
-      case ConversationItemAddedEvent():
       case ConversationItemDoneEvent():
       case ConversationItemRetrievedEvent():
       case ConversationItemInputTranscriptionSegment():
-      case ConversationItemInputTranscriptionFailed():
       case ConversationItemTruncatedEvent():
       case ConversationItemDeletedEvent():
       case InputAudioBufferCommittedEvent():
@@ -280,7 +345,6 @@ class HomeCubit extends Cubit<HomeState> {
       case OutputAudioBufferClearedEvent():
       case ResponseCreatedEvent():
       case ResponseDoneEvent():
-      case ResponseOutputItemAddedEvent():
       case ResponseOutputItemDoneEvent():
       case ResponseContentPartAddedEvent():
       case ResponseContentPartDoneEvent():
@@ -306,6 +370,7 @@ class HomeCubit extends Cubit<HomeState> {
         direction: messageUpdate.direction,
         delta: messageUpdate.delta,
         text: messageUpdate.text,
+        isFinal: messageUpdate.isFinal,
       );
     }
     _appendEventLog(
@@ -318,12 +383,8 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   void _handleClientEvent(RealtimeClientEvent event) {
-    /*
-    String? inputText;
     switch (event) {
-      case ConversationItemCreateEvent e:
-        inputText = _extractInputText(e.item);
-        break;
+      case ConversationItemCreateEvent():
       case SessionUpdateEvent():
       case InputAudioBufferAppendEvent():
       case InputAudioBufferCommitEvent():
@@ -336,20 +397,12 @@ class HomeCubit extends Cubit<HomeState> {
       case OutputAudioBufferClearEvent():
         break;
     }
-    if (inputText != null) {
-      _applyMessageChange(
-        id: _nextClientMessageId(),
-        direction: LogDirection.client,
-        text: inputText,
-      );
-    }
     _appendEventLog(
       direction: LogDirection.client,
       type: event.type,
       payload: event.toJson(),
       rawEvent: event,
     );
-    */
   }
 
   Future<void> _sendSessionUpdate({
@@ -360,6 +413,8 @@ class HomeCubit extends Cubit<HomeState> {
     RealtimeTurnDetection? turnDetection,
   }) async {
     if (!_isConnected || _client == null) return;
+    final client = _client;
+    if (client == null) return;
     final session = RealtimeSessionConfig(
       voice: includeVoice ? state.voice.value.trim() : null,
       inputAudioTranscription: inputAudioTranscription,
@@ -378,7 +433,7 @@ class HomeCubit extends Cubit<HomeState> {
         session.turnDetection == null) {
       return;
     }
-    await _client!.sendEvent(SessionUpdateEvent(session: session));
+    await client.sendEvent(SessionUpdateEvent(session: session));
   }
 
   Future<void> _attachSubscriptions(OpenAIRealtimeClient client) async {
@@ -458,19 +513,31 @@ class HomeCubit extends Cubit<HomeState> {
     required LogDirection direction,
     String? delta,
     String? text,
+    bool isFinal = false,
   }) {
     final hasDelta = delta != null && delta.isNotEmpty;
     final hasText = text != null && text.isNotEmpty;
-    if (!hasDelta && !hasText) return;
+    final incoming = delta ?? text ?? '';
+    if (!hasDelta && !hasText && !isFinal) return;
 
-    final incoming = hasDelta ? delta : text!;
     final messages = List<MessageEntry>.from(state.messages);
     final index = _messageIndexById[id];
+    final nextStreaming = isFinal ? false : hasDelta;
     if (index != null && index < messages.length) {
       final existing = messages[index];
-      final nextText = hasDelta ? existing.text + incoming : incoming;
-      if (nextText == existing.text) return;
-      messages[index] = existing.copyWith(text: nextText);
+      final nextText = hasDelta
+          ? existing.text + incoming
+          : incoming.isEmpty
+          ? existing.text
+          : incoming;
+      final shouldStream = isFinal ? false : (hasDelta || existing.isStreaming);
+      if (nextText == existing.text && existing.isStreaming == shouldStream) {
+        return;
+      }
+      messages[index] = existing.copyWith(
+        text: nextText,
+        isStreaming: shouldStream,
+      );
     } else {
       _messageIndexById[id] = messages.length;
       messages.add(
@@ -478,6 +545,7 @@ class HomeCubit extends Cubit<HomeState> {
           id: id,
           direction: direction,
           text: incoming,
+          isStreaming: nextStreaming,
         ),
       );
     }
@@ -485,16 +553,6 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   String _nextClientMessageId() => 'client_${_messageCounter++}';
-
-  String? _extractInputText(RealtimeItem item) {
-    for (final content in item.content) {
-      if (content is InputTextContent) {
-        final text = content.text.trim();
-        if (text.isNotEmpty) return text;
-      }
-    }
-    return null;
-  }
 
   String _inputTranscriptId(String itemId, int contentIndex) => 'input_audio:$itemId:$contentIndex';
 
@@ -517,16 +575,19 @@ class _MessageUpdate {
     required this.id,
     required this.direction,
     required this.delta,
+    required this.isFinal,
   }) : text = null;
 
   const _MessageUpdate.text({
     required this.id,
     required this.direction,
     required this.text,
+    required this.isFinal,
   }) : delta = null;
 
   final String id;
   final LogDirection direction;
   final String? delta;
   final String? text;
+  final bool isFinal;
 }
