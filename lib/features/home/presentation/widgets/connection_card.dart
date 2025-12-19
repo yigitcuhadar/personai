@@ -57,6 +57,8 @@ class _ExpandedConnectionContent extends StatelessWidget {
         SizedBox(height: 8),
         _InstructionsField(),
         SizedBox(height: 8),
+        _InputTranscriptionDropdown(),
+        SizedBox(height: 8),
         _VoiceDropdown(),
         SizedBox(height: 8),
         _VerboseLoggingSwitch(),
@@ -227,6 +229,53 @@ class _InstructionsField extends StatelessWidget {
   }
 }
 
+class _InputTranscriptionDropdown extends StatelessWidget {
+  const _InputTranscriptionDropdown();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<HomeCubit, HomeState>(
+      buildWhen: (p, c) => p.inputAudioTranscription != c.inputAudioTranscription || p.status != c.status,
+      builder: (context, state) {
+        final isEnabled = state.status == HomeStatus.initial || state.status == HomeStatus.error;
+        final value = state.inputAudioTranscription.value.isNotEmpty
+            ? state.inputAudioTranscription.value
+            : realtimeTranscriptionModelNames.first;
+        return DropdownButtonFormField<String>(
+          key: const ValueKey('input-transcription-dropdown'),
+          initialValue: value,
+          onChanged: isEnabled
+              ? (value) => context.read<HomeCubit>().onInputAudioTranscriptionChanged(
+                  value ?? realtimeTranscriptionModelNames.first,
+                )
+              : null,
+          decoration: const InputDecoration(
+            labelText: 'Input transcription model',
+          ),
+          items: realtimeTranscriptionModelNames
+              .map(
+                (model) => DropdownMenuItem<String>(
+                  value: model,
+                  child: Row(
+                    children: [
+                      Text(model),
+                      if (realtimeFavoriteTranscriptionModels.contains(
+                        model,
+                      )) ...[
+                        const SizedBox(width: 6),
+                        const Icon(Icons.star, size: 14, color: Colors.amber),
+                      ],
+                    ],
+                  ),
+                ),
+              )
+              .toList(),
+        );
+      },
+    );
+  }
+}
+
 class _VoiceDropdown extends StatelessWidget {
   const _VoiceDropdown();
 
@@ -312,11 +361,17 @@ class _ConnectButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<HomeCubit, HomeState>(
-      buildWhen: (p, c) => p.status != c.status || p.apiKey != c.apiKey || p.model != c.model,
+      buildWhen: (p, c) =>
+          p.status != c.status ||
+          p.apiKey != c.apiKey ||
+          p.model != c.model ||
+          p.voice != c.voice ||
+          p.inputAudioTranscription != c.inputAudioTranscription,
       builder: (context, state) {
         final status = state.status;
         final isEnabled = status == HomeStatus.initial || status == HomeStatus.error;
-        final isValid = state.apiKey.isValid && state.model.isValid;
+        final isValid =
+            state.apiKey.isValid && state.model.isValid && state.voice.isValid && state.inputAudioTranscription.isValid;
         final isConnecting = status == HomeStatus.connecting;
         return ElevatedButton.icon(
           onPressed: isEnabled && isValid ? () => context.read<HomeCubit>().connect() : null,

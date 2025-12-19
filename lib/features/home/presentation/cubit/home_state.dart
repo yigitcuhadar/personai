@@ -14,6 +14,7 @@ class HomeState extends Equatable {
     this.prompt = const PromptInput.pure(),
     this.instructions = const InstructionsInput.pure(),
     this.voice = const VoiceInput.pure(),
+    this.inputAudioTranscription = const InputAudioTranscriptionInput.pure(),
   });
 
   final HomeStatus status;
@@ -28,6 +29,7 @@ class HomeState extends Equatable {
   final PromptInput prompt;
   final InstructionsInput instructions;
   final VoiceInput voice;
+  final InputAudioTranscriptionInput inputAudioTranscription;
 
   HomeState copyWith({
     HomeStatus? status,
@@ -42,6 +44,7 @@ class HomeState extends Equatable {
     PromptInput? prompt,
     InstructionsInput? instructions,
     VoiceInput? voice,
+    InputAudioTranscriptionInput? inputAudioTranscription,
     bool clearError = false,
   }) {
     return HomeState(
@@ -57,6 +60,8 @@ class HomeState extends Equatable {
       prompt: prompt ?? this.prompt,
       instructions: instructions ?? this.instructions,
       voice: voice ?? this.voice,
+      inputAudioTranscription:
+          inputAudioTranscription ?? this.inputAudioTranscription,
     );
   }
 
@@ -74,6 +79,7 @@ class HomeState extends Equatable {
     prompt,
     instructions,
     voice,
+    inputAudioTranscription,
   ];
 }
 

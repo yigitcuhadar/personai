@@ -39,6 +39,8 @@ abstract class RealtimeContent {
     }
     throw ArgumentError('Expected list for content array, got $json');
   }
+
+  void operator [](String other) {}
 }
 
 /// Represents user-supplied text.

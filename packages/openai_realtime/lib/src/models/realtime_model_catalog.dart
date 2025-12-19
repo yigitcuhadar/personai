@@ -13,7 +13,31 @@ const List<String> realtimeModelNames = [
 ];
 
 /// Supported realtime voices. Favorited voices are commonly recommended defaults.
-const List<String> realtimeVoiceNames = ['alloy', 'ash', 'ballad', 'coral', 'echo', 'sage', 'shimmer', 'verse', 'marin', 'cedar'];
+const List<String> realtimeVoiceNames = [
+  'alloy',
+  'ash',
+  'ballad',
+  'cedar',
+  'coral',
+  'echo',
+  'marin',
+  'sage',
+  'shimmer',
+  'verse',
+];
 
 /// Voices we highlight as preferred defaults in UIs.
 const Set<String> realtimeFavoriteVoices = {'marin', 'cedar'};
+
+/// Supported input transcription models for realtime sessions.
+const List<String> realtimeTranscriptionModelNames = [
+  'gpt-4o-mini-transcribe',
+  'gpt-4o-mini-transcribe-2025-03-20',
+  'gpt-4o-mini-transcribe-2025-12-15',
+  'gpt-4o-transcribe',
+  'gpt-4o-transcribe-diarize',
+  'whisper-1',
+];
+
+/// Transcription models we highlight as preferred defaults in UIs.
+const Set<String> realtimeFavoriteTranscriptionModels = {'whisper-1'};

@@ -7,6 +7,7 @@ import 'package:openai_realtime/openai_realtime.dart';
 
 import '../models/inputs/api_key_input.dart';
 import '../models/inputs/instructions_input.dart';
+import '../models/inputs/input_audio_transcription_input.dart';
 import '../models/inputs/model_input.dart';
 import '../models/inputs/prompt_input.dart';
 import '../models/inputs/voice_input.dart';
@@ -53,6 +54,10 @@ class HomeCubit extends Cubit<HomeState> {
     emit(state.copyWith(instructions: InstructionsInput.dirty(value), clearError: true));
   }
 
+  void onInputAudioTranscriptionChanged(String value) {
+    emit(state.copyWith(inputAudioTranscription: InputAudioTranscriptionInput.dirty(value), clearError: true));
+  }
+
   void onVoiceChanged(String value) {
     emit(state.copyWith(voice: VoiceInput.dirty(value), clearError: true));
   }
@@ -75,15 +80,17 @@ class HomeCubit extends Cubit<HomeState> {
 
     final apiKey = ApiKeyInput.dirty(state.apiKey.value.trim());
     final model = ModelInput.dirty(state.model.value.trim());
+    final inputAudioTranscription = InputAudioTranscriptionInput.dirty(state.inputAudioTranscription.value);
     final voice = VoiceInput.dirty(state.voice.value);
-    final isValid = Formz.validate([apiKey, model, voice]);
+    final isValid = Formz.validate([apiKey, model, voice, inputAudioTranscription]);
     if (!isValid) {
       emit(
         state.copyWith(
           apiKey: apiKey,
           model: model,
+          inputAudioTranscription: inputAudioTranscription,
           voice: voice,
-          lastError: 'API key and model are required.',
+          lastError: 'API key, model, voice, and input transcription model are required.',
         ),
       );
       return;
@@ -94,6 +101,8 @@ class HomeCubit extends Cubit<HomeState> {
         status: HomeStatus.connecting,
         apiKey: apiKey,
         model: model,
+        inputAudioTranscription: inputAudioTranscription,
+        voice: voice,
         clearError: true,
       ),
     );
@@ -117,12 +126,14 @@ class HomeCubit extends Cubit<HomeState> {
         session: session,
       );
       _client = client;
-      emit(state.copyWith(status: HomeStatus.connected, micEnabled: false, clearError: true));
+      emit(
+        state.copyWith(status: HomeStatus.connected, micEnabled: false, clearError: true),
+      );
       await _sendSessionUpdate(
         includeVoice: true,
         includeInstructions: true,
-        inputAudioTranscription: const {
-          'model': 'whisper-1',
+        inputAudioTranscription: {
+          'model': inputAudioTranscription.value,
         },
       );
       _appendEventLog(
@@ -307,6 +318,7 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   void _handleClientEvent(RealtimeClientEvent event) {
+    /*
     String? inputText;
     switch (event) {
       case ConversationItemCreateEvent e:
@@ -337,6 +349,7 @@ class HomeCubit extends Cubit<HomeState> {
       payload: event.toJson(),
       rawEvent: event,
     );
+    */
   }
 
   Future<void> _sendSessionUpdate({
