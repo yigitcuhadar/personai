@@ -5,6 +5,7 @@ import 'package:equatable/equatable.dart';
 import 'package:formz/formz.dart';
 import 'package:openai_realtime/openai_realtime.dart';
 
+import '../../../../app/config/app_config.dart';
 import '../models/inputs/api_key_input.dart';
 import '../models/inputs/instructions_input.dart';
 import '../models/inputs/input_audio_transcription_input.dart';
@@ -17,13 +18,15 @@ import '../models/message_entry.dart';
 part 'home_state.dart';
 
 class HomeCubit extends Cubit<HomeState> {
-  HomeCubit({String defaultApiKey = ''})
-    : super(
+  HomeCubit({required AppConfig config, String defaultApiKey = ''})
+    : _config = config,
+      super(
         HomeState(
           apiKey: ApiKeyInput.pure(defaultApiKey.trim()),
         ),
       );
 
+  final AppConfig _config;
   OpenAIRealtimeClient? _client;
   StreamSubscription<RealtimeServerEvent>? _serverSubscription;
   StreamSubscription<RealtimeClientEvent>? _clientSubscription;
@@ -35,7 +38,6 @@ class HomeCubit extends Cubit<HomeState> {
   bool get _isConnecting => state.status == HomeStatus.connecting;
   bool get _isConnected => state.status == HomeStatus.connected;
   bool get _isMicEnabled => state.micEnabled;
-  bool get _canChangeConfig => !_isConnecting && !_isConnected;
 
   void onApiKeyChanged(String value) {
     emit(state.copyWith(apiKey: ApiKeyInput.dirty(value), clearError: true));
@@ -79,11 +81,6 @@ class HomeCubit extends Cubit<HomeState> {
     emit(state.copyWith(logsReversed: !state.logsReversed));
   }
 
-  void setDebugLogging(bool value) {
-    if (!_canChangeConfig) return;
-    emit(state.copyWith(debugLogging: value, clearError: true));
-  }
-
   Future<void> connect() async {
     if (_isConnecting || _isConnected) return;
 
@@ -124,13 +121,11 @@ class HomeCubit extends Cubit<HomeState> {
       ),
     );
 
+    final debugLogging = _config.flavor == Flavor.dev;
     final client = OpenAIRealtimeClient(
       accessToken: apiKey.value,
-      debug: state.debugLogging,
+      debug: debugLogging,
     );
-    if (state.debugLogging) {
-      enableOpenAIRealtimeLogging();
-    }
     await _attachSubscriptions(client);
 
     try {

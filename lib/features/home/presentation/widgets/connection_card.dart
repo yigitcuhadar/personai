@@ -61,8 +61,6 @@ class _ExpandedConnectionContent extends StatelessWidget {
         SizedBox(height: 8),
         _VoiceDropdown(),
         SizedBox(height: 8),
-        _VerboseLoggingSwitch(),
-        SizedBox(height: 8),
         _ConnectButtons(),
       ],
     );
@@ -311,29 +309,6 @@ class _VoiceDropdown extends StatelessWidget {
                 ),
               )
               .toList(),
-        );
-      },
-    );
-  }
-}
-
-class _VerboseLoggingSwitch extends StatelessWidget {
-  const _VerboseLoggingSwitch();
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<HomeCubit, HomeState>(
-      buildWhen: (p, c) => p.debugLogging != c.debugLogging || p.status != c.status,
-      builder: (context, state) {
-        final debugLogging = state.debugLogging;
-        final status = state.status;
-        final isEnabled = status == HomeStatus.initial || status == HomeStatus.error;
-        return SwitchListTile(
-          value: debugLogging,
-          contentPadding: EdgeInsets.zero,
-          title: const Text('Verbose logging'),
-          subtitle: const Text('Print SDK, HTTP, and event traffic'),
-          onChanged: isEnabled ? (value) => context.read<HomeCubit>().setDebugLogging(value) : null,
         );
       },
     );

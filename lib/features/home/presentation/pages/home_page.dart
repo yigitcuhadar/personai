@@ -13,9 +13,11 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final config = getIt<AppConfig>();
     return BlocProvider(
       create: (_) => HomeCubit(
-        defaultApiKey: getIt<AppConfig>().openaiApiKey ?? '',
+        config: config,
+        defaultApiKey: config.openaiApiKey ?? '',
       ),
       child: const HomeView(),
     );

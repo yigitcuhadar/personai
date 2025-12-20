@@ -350,11 +350,9 @@ class _MessageBubble extends StatelessWidget {
                 if (group.isInterrupted) ...[
                   const SizedBox(height: 6),
                   Align(
-                    alignment: isServer
-                        ? Alignment.centerLeft
-                        : Alignment.centerRight,
+                    alignment: Alignment.centerLeft,
                     child: Text(
-                      'Interrupted!',
+                      'interrupted!',
                       style: TextStyle(
                         fontSize: 10,
                         fontStyle: FontStyle.italic,

@@ -7,7 +7,7 @@ import '../models/realtime_models.dart';
 
 /// HTTP client for Realtime call REST endpoints.
 class RealtimeCallsApi {
-  RealtimeCallsApi({required this.accessToken, Uri? baseUrl, http.Client? httpClient, Logger? logger, this.logFullHttp = true})
+  RealtimeCallsApi({required this.accessToken, Uri? baseUrl, http.Client? httpClient, Logger? logger, this.logFullHttp = false})
     : baseUrl = baseUrl ?? Uri.parse('https://api.openai.com/v1'),
       httpClient = httpClient ?? http.Client(),
       logger = logger ?? Logger('RealtimeCallsApi');

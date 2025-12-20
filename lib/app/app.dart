@@ -26,6 +26,7 @@ class PersonAIApp {
     HydratedBloc.storage = storage;
     await setupDependencies(config);
     final firstUser = await getIt<AuthenticationRepository>().user.first;
+    final isDev = config.flavor == Flavor.dev;
     runApp(
       MultiBlocProvider(
         providers: [
@@ -34,7 +35,7 @@ class PersonAIApp {
           ),
         ],
         child: MaterialApp(
-          debugShowCheckedModeBanner: config.flavor == Flavor.dev,
+          debugShowCheckedModeBanner: isDev,
           home: const AppHome(),
         ),
       ),

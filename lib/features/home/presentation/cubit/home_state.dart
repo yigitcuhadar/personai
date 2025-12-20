@@ -3,7 +3,6 @@ part of 'home_cubit.dart';
 class HomeState extends Equatable {
   const HomeState({
     this.status = HomeStatus.initial,
-    this.debugLogging = false,
     this.logs = const [],
     this.logsReversed = false,
     this.messages = const [],
@@ -18,7 +17,6 @@ class HomeState extends Equatable {
   });
 
   final HomeStatus status;
-  final bool debugLogging;
   final List<LogEntry> logs;
   final bool logsReversed;
   final List<MessageEntry> messages;
@@ -33,7 +31,6 @@ class HomeState extends Equatable {
 
   HomeState copyWith({
     HomeStatus? status,
-    bool? debugLogging,
     List<LogEntry>? logs,
     bool? logsReversed,
     List<MessageEntry>? messages,
@@ -49,7 +46,6 @@ class HomeState extends Equatable {
   }) {
     return HomeState(
       status: status ?? this.status,
-      debugLogging: debugLogging ?? this.debugLogging,
       logs: logs ?? this.logs,
       logsReversed: logsReversed ?? this.logsReversed,
       messages: messages ?? this.messages,
@@ -68,7 +64,6 @@ class HomeState extends Equatable {
   @override
   List<Object?> get props => [
     status,
-    debugLogging,
     logs,
     logsReversed,
     messages,
