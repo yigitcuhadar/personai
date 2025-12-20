@@ -34,16 +34,20 @@ class HomeCubit extends Cubit<HomeState> {
   DateTime? _sessionCreatedAt;
   final Map<String, int> _messageIndexById = <String, int>{};
   final Set<String> _responseTextKeys = <String>{};
+  String? _lastSentInstructions;
 
   bool get _isConnecting => state.status == HomeStatus.connecting;
   bool get _isConnected => state.status == HomeStatus.connected;
   bool get _isMicEnabled => state.micEnabled;
+  bool get hasPendingInstructionChanges => _isConnected && _hasInstructionsChanged(state.instructions.value);
 
   void onApiKeyChanged(String value) {
+    if (_isConnected) return;
     emit(state.copyWith(apiKey: ApiKeyInput.dirty(value), clearError: true));
   }
 
   void onModelChanged(String value) {
+    if (_isConnected) return;
     emit(state.copyWith(model: ModelInput.dirty(value), clearError: true));
   }
 
@@ -61,6 +65,7 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   void onInputAudioTranscriptionChanged(String value) {
+    if (_isConnected) return;
     emit(
       state.copyWith(
         inputAudioTranscription: InputAudioTranscriptionInput.dirty(value),
@@ -70,6 +75,7 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   void onVoiceChanged(String value) {
+    if (_isConnected) return;
     emit(state.copyWith(voice: VoiceInput.dirty(value), clearError: true));
   }
 
@@ -109,6 +115,7 @@ class HomeCubit extends Cubit<HomeState> {
       return;
     }
 
+    _lastSentInstructions = null;
     emit(
       state.copyWith(
         status: HomeStatus.connecting,
@@ -144,11 +151,7 @@ class HomeCubit extends Cubit<HomeState> {
           clearError: true,
         ),
       );
-      await _sendSessionUpdate(
-        includeVoice: true,
-        includeInstructions: true,
-        includeAudioTranscription: true,
-      );
+      await _sendSessionUpdate(forceAll: true);
       _appendEventLog(
         direction: LogDirection.client,
         type: 'connection',
@@ -176,6 +179,7 @@ class HomeCubit extends Cubit<HomeState> {
     await _detachSubscriptions();
     _client = null;
     _sessionCreatedAt = null;
+    _lastSentInstructions = null;
     emit(
       state.copyWith(
         status: HomeStatus.initial,
@@ -220,6 +224,16 @@ class HomeCubit extends Cubit<HomeState> {
     } catch (err) {
       emit(state.copyWith(lastError: '$err'));
     }
+  }
+
+  Future<void> saveSessionChanges() async {
+    if (!_isConnected || _client == null) {
+      emit(state.copyWith(lastError: 'Connect first.'));
+      return;
+    }
+    final hasChanges = _hasInstructionsChanged(state.instructions.value);
+    if (!hasChanges) return;
+    await _sendSessionUpdate(instructionsChanged: true);
   }
 
   void _handleServerEvent(RealtimeServerEvent event) {
@@ -404,28 +418,37 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   Future<void> _sendSessionUpdate({
-    required bool includeVoice,
-    required bool includeInstructions,
-    required bool includeAudioTranscription,
+    bool forceAll = false,
+    bool instructionsChanged = false,
   }) async {
     if (!_isConnected || _client == null) return;
     final client = _client;
     if (client == null) return;
-    String? voice = includeVoice ? state.voice.value : null;
-    String? instructions = includeInstructions && state.instructions.value.trim().isNotEmpty
-        ? state.instructions.value.trim()
-        : null;
-    JsonMap? audioTranscription = includeAudioTranscription ? {'model': state.inputAudioTranscription.value} : null;
+
+    final includeInstructions = forceAll || instructionsChanged;
+    final includeVoice = forceAll;
+    final includeAudioTranscription = forceAll;
+
+    if (!includeInstructions && !includeVoice && !includeAudioTranscription) return;
+
+    final normalizedInstructions = state.instructions.value.trim();
     final session = RealtimeSessionConfig(
-      voice: voice,
-      instructions: instructions,
-      inputAudioTranscription: audioTranscription,
+      voice: includeVoice ? state.voice.value : null,
+      instructions: includeInstructions ? normalizedInstructions : null,
+      inputAudioTranscription:
+          includeAudioTranscription ? {'model': state.inputAudioTranscription.value} : null,
     );
     if (session.voice == null && session.instructions == null && session.inputAudioTranscription == null) {
       return;
     }
     await client.sendEvent(SessionUpdateEvent(session: session));
+    if (includeInstructions) {
+      _lastSentInstructions = normalizedInstructions;
+      emit(state.copyWith());
+    }
   }
+
+  bool _hasInstructionsChanged(String next) => _lastSentInstructions != next.trim();
 
   Future<void> _attachSubscriptions(OpenAIRealtimeClient client) async {
     await _detachSubscriptions();

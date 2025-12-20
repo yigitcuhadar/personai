@@ -285,7 +285,8 @@ class _InstructionsField extends StatelessWidget {
     return BlocBuilder<HomeCubit, HomeState>(
       buildWhen: (p, c) => p.instructions != c.instructions || p.status != c.status,
       builder: (context, state) {
-        final isEnabled = state.status == HomeStatus.initial || state.status == HomeStatus.error;
+        final isEnabled =
+            state.status == HomeStatus.initial || state.status == HomeStatus.error || state.status == HomeStatus.connected;
         return TextFormField(
           key: const ValueKey('instructions-field'),
           autocorrect: false,
@@ -393,6 +394,7 @@ class _VoiceDropdown extends StatelessWidget {
     );
   }
 }
+
 class _ConnectButtons extends StatelessWidget {
   const _ConnectButtons();
 
@@ -419,15 +421,33 @@ class _ConnectButton extends StatelessWidget {
           p.apiKey != c.apiKey ||
           p.model != c.model ||
           p.voice != c.voice ||
-          p.inputAudioTranscription != c.inputAudioTranscription,
+          p.inputAudioTranscription != c.inputAudioTranscription ||
+          p.instructions != c.instructions,
       builder: (context, state) {
+        final cubit = context.read<HomeCubit>();
         final status = state.status;
-        final isEnabled = status == HomeStatus.initial || status == HomeStatus.error;
+        final isInitialOrError = status == HomeStatus.initial || status == HomeStatus.error;
+        final isConnected = status == HomeStatus.connected;
+        final isConnecting = status == HomeStatus.connecting;
         final isValid =
             state.apiKey.isValid && state.model.isValid && state.voice.isValid && state.inputAudioTranscription.isValid;
-        final isConnecting = status == HomeStatus.connecting;
+
+        if (isConnected) {
+          final hasPendingInstructions = cubit.hasPendingInstructionChanges;
+          return ElevatedButton.icon(
+            onPressed: hasPendingInstructions ? () => cubit.saveSessionChanges() : null,
+            icon: const Icon(Icons.save_outlined),
+            label: const Text('Save'),
+          );
+        }
+
         return ElevatedButton.icon(
-          onPressed: isEnabled && isValid ? () => context.read<HomeCubit>().connect() : null,
+          onPressed: isInitialOrError && isValid
+              ? () async {
+                  Navigator.of(context).maybePop();
+                  await cubit.connect();
+                }
+              : null,
           icon: isConnecting ? CircularProgressIndicator.adaptive() : const Icon(Icons.play_arrow),
           label: Text('Connect'),
         );
