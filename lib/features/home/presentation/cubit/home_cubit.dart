@@ -103,8 +103,7 @@ class HomeCubit extends Cubit<HomeState> {
           model: model,
           inputAudioTranscription: inputAudioTranscription,
           voice: voice,
-          lastError:
-              'API key, model, voice, and input transcription model are required.',
+          lastError: 'API key, model, voice, and input transcription model are required.',
         ),
       );
       return;
@@ -148,9 +147,7 @@ class HomeCubit extends Cubit<HomeState> {
       await _sendSessionUpdate(
         includeVoice: true,
         includeInstructions: true,
-        inputAudioTranscription: {
-          'model': inputAudioTranscription.value,
-        },
+        includeAudioTranscription: true,
       );
       _appendEventLog(
         direction: LogDirection.client,
@@ -409,29 +406,22 @@ class HomeCubit extends Cubit<HomeState> {
   Future<void> _sendSessionUpdate({
     required bool includeVoice,
     required bool includeInstructions,
-    JsonMap? inputAudioTranscription,
-    List<String>? outputModalities,
-    RealtimeTurnDetection? turnDetection,
+    required bool includeAudioTranscription,
   }) async {
     if (!_isConnected || _client == null) return;
     final client = _client;
     if (client == null) return;
+    String? voice = includeVoice ? state.voice.value : null;
+    String? instructions = includeInstructions && state.instructions.value.trim().isNotEmpty
+        ? state.instructions.value.trim()
+        : null;
+    JsonMap? audioTranscription = includeAudioTranscription ? {'model': state.inputAudioTranscription.value} : null;
     final session = RealtimeSessionConfig(
-      voice: includeVoice ? state.voice.value.trim() : null,
-      inputAudioTranscription: inputAudioTranscription,
-      outputModalities: outputModalities,
-      turnDetection: turnDetection,
-      instructions: includeInstructions
-          ? state.instructions.value.trim().isEmpty
-                ? null
-                : state.instructions.value.trim()
-          : null,
+      voice: voice,
+      instructions: instructions,
+      inputAudioTranscription: audioTranscription,
     );
-    if (session.voice == null &&
-        session.instructions == null &&
-        session.inputAudioTranscription == null &&
-        session.outputModalities == null &&
-        session.turnDetection == null) {
+    if (session.voice == null && session.instructions == null && session.inputAudioTranscription == null) {
       return;
     }
     await client.sendEvent(SessionUpdateEvent(session: session));
@@ -479,11 +469,8 @@ class HomeCubit extends Cubit<HomeState> {
     Object? rawEvent,
   }) {
     final now = timestamp ?? DateTime.now();
-    final normalizedPayload = Map<String, dynamic>.from(payload)
-      ..putIfAbsent('type', () => type);
-    final elapsed = _sessionCreatedAt != null
-        ? now.difference(_sessionCreatedAt!)
-        : null;
+    final normalizedPayload = Map<String, dynamic>.from(payload)..putIfAbsent('type', () => type);
+    final elapsed = _sessionCreatedAt != null ? now.difference(_sessionCreatedAt!) : null;
     final detail = LogEventDetail(
       payload: normalizedPayload,
       timestamp: now,
@@ -495,8 +482,7 @@ class HomeCubit extends Cubit<HomeState> {
     if (logs.isNotEmpty) {
       final last = logs.last;
       if (last.type == type && last.direction == direction) {
-        final updatedDetails = List<LogEventDetail>.from(last.details)
-          ..add(detail);
+        final updatedDetails = List<LogEventDetail>.from(last.details)..add(detail);
         logs[logs.length - 1] = last.copyWith(details: updatedDetails);
         emit(state.copyWith(logs: logs));
         return;
@@ -538,9 +524,7 @@ class HomeCubit extends Cubit<HomeState> {
           : incoming;
       final shouldStream = isFinal ? false : (hasDelta || existing.isStreaming);
       final shouldInterrupt = interrupt || existing.isInterrupted;
-      if (nextText == existing.text &&
-          existing.isStreaming == shouldStream &&
-          existing.isInterrupted == shouldInterrupt) {
+      if (nextText == existing.text && existing.isStreaming == shouldStream && existing.isInterrupted == shouldInterrupt) {
         return;
       }
       messages[index] = existing.copyWith(
@@ -563,11 +547,9 @@ class HomeCubit extends Cubit<HomeState> {
     emit(state.copyWith(messages: messages));
   }
 
-  String _inputTranscriptId(String itemId, int contentIndex) =>
-      'input_audio:$itemId:$contentIndex';
+  String _inputTranscriptId(String itemId, int contentIndex) => 'input_audio:$itemId:$contentIndex';
 
-  String _outputKey(String itemId, int outputIndex, int contentIndex) =>
-      '$itemId:$outputIndex:$contentIndex';
+  String _outputKey(String itemId, int outputIndex, int contentIndex) => '$itemId:$outputIndex:$contentIndex';
 
   String _outputTextId(String key) => 'output_text:$key';
 
