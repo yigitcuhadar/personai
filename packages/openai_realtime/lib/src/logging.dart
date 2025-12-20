@@ -25,14 +25,14 @@ void _defaultPrinter(LogRecord record) {
   // ignore: avoid_print
   debugPrint(
     '${record.time.toIso8601String()} '
-    '${record.level.name} ${record.loggerName}: ${record.message}'
+    '${record.level.name} ${record.loggerName}: ${record.message}', wrapWidth: 1024
   );
   if (record.error != null) {
     // ignore: avoid_print
-    debugPrint('Error: ${record.error}');
+    debugPrint('Error: ${record.error}', wrapWidth: 1024);
   }
   if (record.stackTrace != null) {
     // ignore: avoid_print
-    debugPrint('Stack trace: ${record.stackTrace}');
+    debugPrint('Stack trace: ${record.stackTrace}', wrapWidth: 1024);
   }
 }

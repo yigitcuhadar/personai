@@ -38,7 +38,7 @@ class ConnectionDrawer extends StatelessWidget {
               Column(
                 children: [
                   const Padding(
-                    padding: EdgeInsets.fromLTRB(16, 12, 16, 10),
+                    padding: EdgeInsets.fromLTRB(16, 12, 16, 12),
                     child: _DrawerHeader(),
                   ),
                   Expanded(

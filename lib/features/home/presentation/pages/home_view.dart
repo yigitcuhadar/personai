@@ -2,22 +2,42 @@ import 'package:authentication_repository/authentication_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../app/config/app_config.dart';
 import '../../../../app/di/injector.dart';
 import '../cubit/home_cubit.dart';
 import '../widgets/connection_drawer.dart';
 import '../widgets/conversation_card.dart';
-import '../widgets/logs_sheet.dart';
+import '../widgets/logs_drawer.dart';
 
-class HomeView extends StatelessWidget {
+class HomeView extends StatefulWidget {
   const HomeView({super.key});
 
-  static const double _logMinSize = 0.12;
-  static const double _logInitialSize = 0.22;
-  static const double _logMaxSize = 0.7;
+  @override
+  State<HomeView> createState() => _HomeViewState();
+}
+
+class _HomeViewState extends State<HomeView> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  late final AppConfig _config;
+
+  @override
+  void initState() {
+    super.initState();
+    _config = getIt<AppConfig>();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _scaffoldKey.currentState?.openDrawer();
+    });
+  }
+
+  void _openLogsDrawer() {
+    _scaffoldKey.currentState?.openEndDrawer();
+  }
 
   @override
   Widget build(BuildContext context) {
     final keyboardInset = MediaQuery.of(context).viewInsets.bottom;
+    final isDebug = _config.flavor == Flavor.dev;
     return MultiBlocListener(
       listeners: [
         BlocListener<HomeCubit, HomeState>(
@@ -42,9 +62,16 @@ class HomeView extends StatelessWidget {
         onTap: () => FocusScope.of(context).unfocus(),
         behavior: HitTestBehavior.translucent,
         child: Scaffold(
+          key: _scaffoldKey,
           appBar: AppBar(
             title: const Text('Realtime Playground'),
             actions: [
+              if (isDebug)
+                IconButton(
+                  tooltip: 'Logs',
+                  onPressed: _openLogsDrawer,
+                  icon: const Icon(Icons.receipt_long_outlined),
+                ),
               TextButton(
                 onPressed: () => getIt<AuthenticationRepository>().logOut(),
                 child: const Text('Logout'),
@@ -52,34 +79,18 @@ class HomeView extends StatelessWidget {
             ],
           ),
           drawer: const ConnectionDrawer(),
+          endDrawer: isDebug ? const LogsDrawer() : null,
+          endDrawerEnableOpenDragGesture: isDebug,
           body: SafeArea(
             bottom: false,
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final basePadding = constraints.maxHeight * _logMinSize + 16;
-                final bottomPadding = keyboardInset > 0 ? 16.0 : basePadding;
-                return Stack(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(16, 16, 16, bottomPadding),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: const [
-                          Expanded(child: ConversationCard()),
-                        ],
-                      ),
-                    ),
-                    const Align(
-                      alignment: Alignment.bottomCenter,
-                      child: LogsSheet(
-                        minChildSize: _logMinSize,
-                        initialChildSize: _logInitialSize,
-                        maxChildSize: _logMaxSize,
-                      ),
-                    ),
-                  ],
-                );
-              },
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(16, 16, 16, keyboardInset > 0 ? keyboardInset + 16 : 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: const [
+                  Expanded(child: ConversationCard()),
+                ],
+              ),
             ),
           ),
         ),
