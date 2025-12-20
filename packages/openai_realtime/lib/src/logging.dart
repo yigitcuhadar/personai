@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
 
 /// Enable verbose logging for this package and downstream users.
@@ -22,16 +23,16 @@ void enableOpenAIRealtimeLogging() {
 
 void _defaultPrinter(LogRecord record) {
   // ignore: avoid_print
-  print(
+  debugPrint(
     '${record.time.toIso8601String()} '
-    '${record.level.name} ${record.loggerName}: ${record.message}',
+    '${record.level.name} ${record.loggerName}: ${record.message}'
   );
   if (record.error != null) {
     // ignore: avoid_print
-    print('Error: ${record.error}');
+    debugPrint('Error: ${record.error}');
   }
   if (record.stackTrace != null) {
     // ignore: avoid_print
-    print('Stack trace: ${record.stackTrace}');
+    debugPrint('Stack trace: ${record.stackTrace}');
   }
 }

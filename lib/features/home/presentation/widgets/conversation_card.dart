@@ -183,16 +183,40 @@ class _MessagePanelSlot extends StatelessWidget {
   }
 }
 
-class _MessageList extends StatelessWidget {
+class _MessageList extends StatefulWidget {
   const _MessageList();
+
+  @override
+  State<_MessageList> createState() => _MessageListState();
+}
+
+class _MessageListState extends State<_MessageList> {
+  final ScrollController _controller = ScrollController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _scrollToBottom() {
+    if (!_controller.hasClients) return;
+    final position = _controller.position;
+    _controller.animateTo(
+      position.maxScrollExtent,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<HomeCubit, HomeState>(
       buildWhen: (p, c) => p.messages != c.messages,
       builder: (context, state) {
-        final messages = state.messages;
-        if (messages.isEmpty) {
+        final grouped = _groupMessages(state.messages);
+        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+        if (grouped.isEmpty) {
           return const Center(
             child: Text(
               'No messages yet.',
@@ -201,11 +225,12 @@ class _MessageList extends StatelessWidget {
           );
         }
         return ListView.separated(
+          controller: _controller,
           padding: EdgeInsets.zero,
-          itemCount: messages.length,
+          itemCount: grouped.length,
           separatorBuilder: (_, _) => const SizedBox(height: 8),
           itemBuilder: (context, index) {
-            return _MessageBubble(entry: messages[index]);
+            return _MessageBubble(group: grouped[index]);
           },
         );
       },
@@ -214,13 +239,13 @@ class _MessageList extends StatelessWidget {
 }
 
 class _MessageBubble extends StatelessWidget {
-  const _MessageBubble({required this.entry});
+  const _MessageBubble({required this.group});
 
-  final MessageEntry entry;
+  final _MessageGroup group;
 
   @override
   Widget build(BuildContext context) {
-    final isServer = entry.direction == LogDirection.server;
+    final isServer = group.direction == LogDirection.server;
     final alignment = isServer ? Alignment.centerLeft : Alignment.centerRight;
     final bubbleColor = isServer
         ? const Color(0xFFEAF2FF)
@@ -233,7 +258,7 @@ class _MessageBubble extends StatelessWidget {
         ? const Color(0xFF3D7BFF)
         : const Color(0xFF2E9E65);
 
-    return Align(
+    final bubble = Align(
       alignment: alignment,
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 680),
@@ -285,11 +310,21 @@ class _MessageBubble extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 6),
-                SelectableText(
-                  entry.text,
-                  style: const TextStyle(fontSize: 12, height: 1.35),
+                Column(
+                  crossAxisAlignment: isServer
+                      ? CrossAxisAlignment.start
+                      : CrossAxisAlignment.end,
+                  children: [
+                    for (int i = 0; i < group.entries.length; i++) ...[
+                      if (i > 0) const SizedBox(height: 4),
+                      SelectableText(
+                        group.entries[i].text,
+                        style: const TextStyle(fontSize: 12, height: 1.35),
+                      ),
+                    ],
+                  ],
                 ),
-                if (entry.isStreaming) ...[
+                if (group.isStreaming) ...[
                   const SizedBox(height: 6),
                   Row(
                     mainAxisSize: MainAxisSize.min,
@@ -312,13 +347,61 @@ class _MessageBubble extends StatelessWidget {
                     ],
                   ),
                 ],
+                if (group.isInterrupted) ...[
+                  const SizedBox(height: 6),
+                  Align(
+                    alignment: isServer
+                        ? Alignment.centerLeft
+                        : Alignment.centerRight,
+                    child: Text(
+                      'Interrupted!',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontStyle: FontStyle.italic,
+                        color: Colors.black54,
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
         ),
       ),
     );
+
+    return bubble;
   }
+}
+
+class _MessageGroup {
+  const _MessageGroup({required this.direction, required this.entries});
+
+  final LogDirection direction;
+  final List<MessageEntry> entries;
+
+  bool get isStreaming => entries.any((e) => e.isStreaming);
+  bool get isInterrupted => entries.any((e) => e.isInterrupted);
+}
+
+List<_MessageGroup> _groupMessages(List<MessageEntry> messages) {
+  final List<_MessageGroup> grouped = [];
+  for (final entry in messages) {
+    final isClient = entry.direction == LogDirection.client;
+    if (isClient &&
+        grouped.isNotEmpty &&
+        grouped.last.direction == LogDirection.client) {
+      grouped.last.entries.add(entry);
+      continue;
+    }
+    grouped.add(
+      _MessageGroup(
+        direction: entry.direction,
+        entries: [entry],
+      ),
+    );
+  }
+  return grouped;
 }
 
 class _PromptComposer extends StatefulWidget {

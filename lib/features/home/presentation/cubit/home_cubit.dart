@@ -31,7 +31,6 @@ class HomeCubit extends Cubit<HomeState> {
   DateTime? _sessionCreatedAt;
   final Map<String, int> _messageIndexById = <String, int>{};
   final Set<String> _responseTextKeys = <String>{};
-  int _messageCounter = 0;
 
   bool get _isConnecting => state.status == HomeStatus.connecting;
   bool get _isConnected => state.status == HomeStatus.connected;
@@ -107,7 +106,8 @@ class HomeCubit extends Cubit<HomeState> {
           model: model,
           inputAudioTranscription: inputAudioTranscription,
           voice: voice,
-          lastError: 'API key, model, voice, and input transcription model are required.',
+          lastError:
+              'API key, model, voice, and input transcription model are required.',
         ),
       );
       return;
@@ -301,6 +301,13 @@ class HomeCubit extends Cubit<HomeState> {
           isFinal: true,
         );
         break;
+      case ResponseOutputItemDoneEvent e:
+        if (e.item.status == 'incomplete') {
+          final baseKey = _outputKey(e.item.id ?? 'unknown', e.outputIndex, 0);
+          _markMessageInterrupted(_outputAudioTranscriptId(baseKey));
+          _markMessageInterrupted(_outputTextId(baseKey));
+        }
+        break;
       case ConversationItemAddedEvent e:
         final item = e.item;
         if (item.role == 'user') {
@@ -345,7 +352,6 @@ class HomeCubit extends Cubit<HomeState> {
       case OutputAudioBufferClearedEvent():
       case ResponseCreatedEvent():
       case ResponseDoneEvent():
-      case ResponseOutputItemDoneEvent():
       case ResponseContentPartAddedEvent():
       case ResponseContentPartDoneEvent():
       case ResponseOutputAudioDeltaEvent():
@@ -478,8 +484,11 @@ class HomeCubit extends Cubit<HomeState> {
     Object? rawEvent,
   }) {
     final now = timestamp ?? DateTime.now();
-    final normalizedPayload = Map<String, dynamic>.from(payload)..putIfAbsent('type', () => type);
-    final elapsed = _sessionCreatedAt != null ? now.difference(_sessionCreatedAt!) : null;
+    final normalizedPayload = Map<String, dynamic>.from(payload)
+      ..putIfAbsent('type', () => type);
+    final elapsed = _sessionCreatedAt != null
+        ? now.difference(_sessionCreatedAt!)
+        : null;
     final detail = LogEventDetail(
       payload: normalizedPayload,
       timestamp: now,
@@ -491,7 +500,8 @@ class HomeCubit extends Cubit<HomeState> {
     if (logs.isNotEmpty) {
       final last = logs.last;
       if (last.type == type && last.direction == direction) {
-        final updatedDetails = List<LogEventDetail>.from(last.details)..add(detail);
+        final updatedDetails = List<LogEventDetail>.from(last.details)
+          ..add(detail);
         logs[logs.length - 1] = last.copyWith(details: updatedDetails);
         emit(state.copyWith(logs: logs));
         return;
@@ -514,6 +524,7 @@ class HomeCubit extends Cubit<HomeState> {
     String? delta,
     String? text,
     bool isFinal = false,
+    bool interrupt = false,
   }) {
     final hasDelta = delta != null && delta.isNotEmpty;
     final hasText = text != null && text.isNotEmpty;
@@ -531,12 +542,16 @@ class HomeCubit extends Cubit<HomeState> {
           ? existing.text
           : incoming;
       final shouldStream = isFinal ? false : (hasDelta || existing.isStreaming);
-      if (nextText == existing.text && existing.isStreaming == shouldStream) {
+      final shouldInterrupt = interrupt || existing.isInterrupted;
+      if (nextText == existing.text &&
+          existing.isStreaming == shouldStream &&
+          existing.isInterrupted == shouldInterrupt) {
         return;
       }
       messages[index] = existing.copyWith(
         text: nextText,
         isStreaming: shouldStream,
+        isInterrupted: shouldInterrupt,
       );
     } else {
       _messageIndexById[id] = messages.length;
@@ -546,21 +561,34 @@ class HomeCubit extends Cubit<HomeState> {
           direction: direction,
           text: incoming,
           isStreaming: nextStreaming,
+          isInterrupted: interrupt,
         ),
       );
     }
     emit(state.copyWith(messages: messages));
   }
 
-  String _nextClientMessageId() => 'client_${_messageCounter++}';
+  String _inputTranscriptId(String itemId, int contentIndex) =>
+      'input_audio:$itemId:$contentIndex';
 
-  String _inputTranscriptId(String itemId, int contentIndex) => 'input_audio:$itemId:$contentIndex';
-
-  String _outputKey(String itemId, int outputIndex, int contentIndex) => '$itemId:$outputIndex:$contentIndex';
+  String _outputKey(String itemId, int outputIndex, int contentIndex) =>
+      '$itemId:$outputIndex:$contentIndex';
 
   String _outputTextId(String key) => 'output_text:$key';
 
   String _outputAudioTranscriptId(String key) => 'output_audio_transcript:$key';
+
+  void _markMessageInterrupted(String id) {
+    final index = _messageIndexById[id];
+    if (index == null || index >= state.messages.length) return;
+    final direction = state.messages[index].direction;
+    _applyMessageChange(
+      id: id,
+      direction: direction,
+      interrupt: true,
+      isFinal: true,
+    );
+  }
 
   @override
   Future<void> close() async {
