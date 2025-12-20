@@ -76,7 +76,7 @@ class ConversationCard extends StatelessWidget {
             BlocBuilder<HomeCubit, HomeState>(
               buildWhen: (p, c) => p.status != c.status,
               builder: (context, state) {
-                final isConnected = state.status == HomeStatus.connected;
+                final isConnected = state.isConnected;
                 if (isConnected) {
                   return const SizedBox.shrink();
                 }
@@ -102,7 +102,7 @@ class _ConversationHeader extends StatelessWidget {
     return BlocBuilder<HomeCubit, HomeState>(
       buildWhen: (p, c) => p.status != c.status,
       builder: (context, state) {
-        final info = _statusInfo(state.status);
+        final info = StatusInfo.fromStatus(state.status);
         return Row(
           children: [
             const Expanded(
@@ -164,7 +164,7 @@ class _MessagePanelSlot extends StatelessWidget {
       child: BlocBuilder<HomeCubit, HomeState>(
         buildWhen: (p, c) => p.status != c.status,
         builder: (context, state) {
-          final isConnected = state.status == HomeStatus.connected;
+          final isConnected = state.isConnected;
           return AnimatedSize(
             duration: const Duration(milliseconds: 500),
             curve: Curves.easeInOut,
@@ -316,21 +316,7 @@ class _MessageBubble extends StatelessWidget {
                 ),
                 if (group.isStreaming) ...[
                   const SizedBox(height: 6),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(
-                        width: 12,
-                        height: 12,
-                        child: CircularProgressIndicator.adaptive(),
-                      ),
-                      const SizedBox(width: 6),
-                      const Text(
-                        'Streaming...',
-                        style: TextStyle(fontSize: 10, color: Colors.black54),
-                      ),
-                    ],
-                  ),
+                  CircularProgressIndicator.adaptive(),
                 ],
                 if (group.isInterrupted) ...[
                   const SizedBox(height: 6),
@@ -408,9 +394,8 @@ class _PromptComposerState extends State<_PromptComposer> {
   }
 
   void _submit(HomeState state) {
-    final isConnected = state.status == HomeStatus.connected;
-    final isBusy = state.status == HomeStatus.connecting || state.status == HomeStatus.disconnecting;
-    if (!isConnected || isBusy || !state.prompt.isValid) return;
+    final isConnected = state.isConnected;
+    if (!isConnected || !state.prompt.isValid) return;
     context.read<HomeCubit>().sendPrompt();
     _controller.clear();
     context.read<HomeCubit>().onPromptChanged('');
@@ -422,8 +407,8 @@ class _PromptComposerState extends State<_PromptComposer> {
     return BlocBuilder<HomeCubit, HomeState>(
       buildWhen: (p, c) => p.status != c.status || p.prompt.value != c.prompt.value,
       builder: (context, state) {
-        final isConnected = state.status == HomeStatus.connected;
-        final isBusy = state.status == HomeStatus.connecting || state.status == HomeStatus.disconnecting;
+        final isConnected = state.isConnected;
+        final isBusy = !isConnected;
         final isPromptValid = state.prompt.isValid;
         final isPromptEnabled = isConnected && !isBusy;
         if (state.prompt.value.isEmpty && _controller.text.isNotEmpty) {
@@ -473,28 +458,6 @@ class _PromptComposerState extends State<_PromptComposer> {
   }
 }
 
-class _StatusInfo {
-  const _StatusInfo(this.label, this.color);
-
-  final String label;
-  final Color color;
-}
-
-_StatusInfo _statusInfo(HomeStatus status) {
-  switch (status) {
-    case HomeStatus.connected:
-      return _StatusInfo('Connected', Colors.green);
-    case HomeStatus.connecting:
-      return _StatusInfo('Connecting', Colors.orange);
-    case HomeStatus.disconnecting:
-      return _StatusInfo('Disconnecting', Colors.orange);
-    case HomeStatus.error:
-      return _StatusInfo('Error', Colors.red);
-    case HomeStatus.initial:
-      return _StatusInfo('Ready', Colors.blueGrey);
-  }
-}
-
 class _MicButton extends StatelessWidget {
   const _MicButton();
 
@@ -503,8 +466,8 @@ class _MicButton extends StatelessWidget {
     return BlocBuilder<HomeCubit, HomeState>(
       buildWhen: (p, c) => p.status != c.status || p.micEnabled != c.micEnabled,
       builder: (context, state) {
-        final isConnected = state.status == HomeStatus.connected;
-        final isBusy = state.status == HomeStatus.connecting || state.status == HomeStatus.disconnecting;
+        final isConnected = state.isConnected;
+        final isBusy = !state.isConnected;
         final isEnabled = isConnected && !isBusy;
         final micEnabled = state.micEnabled;
 

@@ -18,19 +18,26 @@ class HomeView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final keyboardInset = MediaQuery.of(context).viewInsets.bottom;
-    return BlocListener<HomeCubit, HomeState>(
-      listenWhen: (p, c) => p.status != c.status || p.lastError != c.lastError,
-      listener: (context, state) {
-        final status = state.status;
-        final lastError = state.lastError;
-        if (status == HomeStatus.error) {
-          if (lastError != null && lastError.isNotEmpty) {
-            ScaffoldMessenger.of(context)
-              ..hideCurrentSnackBar()
-              ..showSnackBar(SnackBar(content: Text(lastError)));
-          }
-        }
-      },
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<HomeCubit, HomeState>(
+          listenWhen: (p, c) => p.lastError != c.lastError,
+          listener: (context, state) {
+            final lastError = state.lastError;
+            if (lastError != null && lastError.isNotEmpty) {
+              ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showSnackBar(SnackBar(content: Text(lastError)));
+            }
+          },
+        ),
+        BlocListener<HomeCubit, HomeState>(
+          listenWhen: (p, c) => (p.isSaving && c.isConnected) || (p.isConnecting && c.isConnected),
+          listener: (context, state) {
+            Navigator.of(context).maybePop();
+          },
+        ),
+      ],
       child: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         behavior: HitTestBehavior.translucent,

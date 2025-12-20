@@ -10,10 +10,10 @@ class HomeState extends Equatable {
     this.micEnabled = false,
     this.apiKey = const ApiKeyInput.pure(),
     this.model = const ModelInput.pure(),
-    this.prompt = const PromptInput.pure(),
-    this.instructions = const InstructionsInput.pure(),
-    this.voice = const VoiceInput.pure(),
     this.inputAudioTranscription = const InputAudioTranscriptionInput.pure(),
+    this.voice = const VoiceInput.pure(),
+    this.instructions = const InstructionsInput.pure(),
+    this.prompt = const PromptInput.pure(),
   });
 
   final HomeStatus status;
@@ -24,10 +24,24 @@ class HomeState extends Equatable {
   final bool micEnabled;
   final ApiKeyInput apiKey;
   final ModelInput model;
-  final PromptInput prompt;
-  final InstructionsInput instructions;
-  final VoiceInput voice;
   final InputAudioTranscriptionInput inputAudioTranscription;
+  final VoiceInput voice;
+  final InstructionsInput instructions;
+  final PromptInput prompt;
+
+  bool get isValid => apiKey.isValid && model.isValid && voice.isValid && instructions.isValid && inputAudioTranscription.isValid;
+
+  bool get isInitial => status == HomeStatus.initial;
+  bool get isConnecting => status == HomeStatus.connecting;
+  bool get isConnected => status == HomeStatus.connected;
+  bool get isDisconnecting => status == HomeStatus.disconnecting;
+  bool get isSaving => status == HomeStatus.saving;
+
+  bool get canFixedFieldsChange => isInitial;
+  bool get canUnfixedFieldsChange => isInitial || isConnected;
+  bool get canConnect => isInitial;
+  bool get canSave => isConnected;
+  bool get canDisconnect => isConnected;
 
   HomeState copyWith({
     HomeStatus? status,
@@ -42,22 +56,20 @@ class HomeState extends Equatable {
     InstructionsInput? instructions,
     VoiceInput? voice,
     InputAudioTranscriptionInput? inputAudioTranscription,
-    bool clearError = false,
   }) {
     return HomeState(
       status: status ?? this.status,
       logs: logs ?? this.logs,
       logsReversed: logsReversed ?? this.logsReversed,
       messages: messages ?? this.messages,
-      lastError: clearError ? null : lastError ?? this.lastError,
+      lastError: lastError ?? this.lastError,
       micEnabled: micEnabled ?? this.micEnabled,
       apiKey: apiKey ?? this.apiKey,
       model: model ?? this.model,
       prompt: prompt ?? this.prompt,
       instructions: instructions ?? this.instructions,
       voice: voice ?? this.voice,
-      inputAudioTranscription:
-          inputAudioTranscription ?? this.inputAudioTranscription,
+      inputAudioTranscription: inputAudioTranscription ?? this.inputAudioTranscription,
     );
   }
 
@@ -83,5 +95,5 @@ enum HomeStatus {
   connecting,
   connected,
   disconnecting,
-  error,
+  saving,
 }

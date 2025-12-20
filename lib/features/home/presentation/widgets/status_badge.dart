@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../cubit/home_cubit.dart';
+
 class StatusBadge extends StatelessWidget {
   const StatusBadge({
     super.key,
@@ -47,4 +49,25 @@ class StatusBadge extends StatelessWidget {
       ),
     );
   }
+}
+
+class StatusInfo {
+  const StatusInfo(this.label, this.color);
+  factory StatusInfo.fromStatus(HomeStatus status) {
+    switch (status) {
+      case HomeStatus.connected:
+        return StatusInfo('Connected', Colors.green);
+      case HomeStatus.connecting:
+        return StatusInfo('Connecting', Colors.orange);
+      case HomeStatus.initial:
+        return StatusInfo('Ready', Colors.blueGrey);
+      case HomeStatus.disconnecting:
+        return StatusInfo('Disconnecting', Colors.pinkAccent);
+      case HomeStatus.saving:
+        return StatusInfo('Saving', Colors.yellow);
+    }
+  }
+
+  final String label;
+  final Color color;
 }

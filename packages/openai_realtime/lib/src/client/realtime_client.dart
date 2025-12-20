@@ -72,14 +72,14 @@ class OpenAIRealtimeClient {
       _peerConnection != null && _peerConnection!.connectionState != RTCPeerConnectionState.RTCPeerConnectionStateClosed;
 
   /// Establish the WebRTC connection and Realtime data channel.
-  Future<void> connect({required String model, RealtimeSessionConfig? session}) async {
+  Future<void> connect({RealtimeSessionConfig? session}) async {
     _logger.info('🔄 Initiating WebRTC connection...');
     await _hangupActiveCall();
     await _disposePeer();
     await _createPeerConnection();
     await _primeLocalAudioTrack();
     await _prepareDataChannel();
-    await _exchangeOffer(model, session);
+    await _exchangeOffer(session);
     _logger.info('✅ WebRTC connection established successfully');
   }
 
@@ -171,11 +171,7 @@ class OpenAIRealtimeClient {
 
     // Track is primed during connect. If permissions changed, refresh the stream.
     if (_localAudioTrack == null) {
-      await _primeLocalAudioTrack(
-        enabled: true,
-        echoCancellation: echoCancellation,
-        noiseSuppression: noiseSuppression,
-      );
+      await _primeLocalAudioTrack(enabled: true, echoCancellation: echoCancellation, noiseSuppression: noiseSuppression);
       return _localAudioTrack!;
     }
     _localAudioTrack!.enabled = true;
@@ -225,7 +221,7 @@ class OpenAIRealtimeClient {
     _logger.fine('✅ Data channel created');
   }
 
-  Future<void> _exchangeOffer(String model, RealtimeSessionConfig? session) async {
+  Future<void> _exchangeOffer(RealtimeSessionConfig? session) async {
     if (_peerConnection == null) {
       throw StateError('Peer connection is not available.');
     }
@@ -241,7 +237,7 @@ class OpenAIRealtimeClient {
     }
 
     _logger.fine('Local SDP length: ${localDescription!.sdp!.length} characters');
-    final sessionConfig = _prepareSessionConfig(model, session);
+    final sessionConfig = _prepareSessionConfig(session);
     final answer = await callsApi.createCall(offerSdp: localDescription.sdp!, session: sessionConfig);
     _callId = answer.callId;
     _logger.info('✅ Call created. Call ID: $_callId');
@@ -399,13 +395,10 @@ class OpenAIRealtimeClient {
     }
   }
 
-  RealtimeSessionConfig _prepareSessionConfig(String model, RealtimeSessionConfig? session) {
+  RealtimeSessionConfig _prepareSessionConfig(RealtimeSessionConfig? session) {
     final provided = session ?? const RealtimeSessionConfig();
-    if (provided.model != null && provided.model != model) {
-      throw ArgumentError('connect() model "$model" does not match provided session model "${provided.model}".');
-    }
     final type = provided.type ?? 'realtime';
-    return provided.copyWith(model: model, type: type);
+    return provided.copyWith(type: type);
   }
 
   Future<void> _waitForDataChannelOpen(RTCDataChannel channel) async {
@@ -452,11 +445,7 @@ class OpenAIRealtimeClient {
 
   /// Pre-create a disabled local audio track so the initial SDP includes an
   /// upstream sender; toggling the mic later won't require renegotiation.
-  Future<void> _primeLocalAudioTrack({
-    bool enabled = false,
-    bool echoCancellation = true,
-    bool noiseSuppression = true,
-  }) async {
+  Future<void> _primeLocalAudioTrack({bool enabled = false, bool echoCancellation = true, bool noiseSuppression = true}) async {
     if (_audioTransceiver == null) {
       throw StateError('Audio transceiver missing. Call connect() first.');
     }

@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:formz/formz.dart';
 import 'package:openai_realtime/openai_realtime.dart';
 
 import '../../../../app/config/app_config.dart';
@@ -34,49 +33,29 @@ class HomeCubit extends Cubit<HomeState> {
   DateTime? _sessionCreatedAt;
   final Map<String, int> _messageIndexById = <String, int>{};
   final Set<String> _responseTextKeys = <String>{};
-  String? _lastSentInstructions;
-
-  bool get _isConnecting => state.status == HomeStatus.connecting;
-  bool get _isConnected => state.status == HomeStatus.connected;
-  bool get _isMicEnabled => state.micEnabled;
-  bool get hasPendingInstructionChanges => _isConnected && _hasInstructionsChanged(state.instructions.value);
 
   void onApiKeyChanged(String value) {
-    if (_isConnected) return;
-    emit(state.copyWith(apiKey: ApiKeyInput.dirty(value), clearError: true));
+    if (state.canFixedFieldsChange) emit(state.copyWith(apiKey: ApiKeyInput.dirty(value)));
   }
 
   void onModelChanged(String value) {
-    if (_isConnected) return;
-    emit(state.copyWith(model: ModelInput.dirty(value), clearError: true));
-  }
-
-  void onPromptChanged(String value) {
-    emit(state.copyWith(prompt: PromptInput.dirty(value), clearError: true));
-  }
-
-  void onInstructionsChanged(String value) {
-    emit(
-      state.copyWith(
-        instructions: InstructionsInput.dirty(value),
-        clearError: true,
-      ),
-    );
+    if (state.canFixedFieldsChange) emit(state.copyWith(model: ModelInput.dirty(value)));
   }
 
   void onInputAudioTranscriptionChanged(String value) {
-    if (_isConnected) return;
-    emit(
-      state.copyWith(
-        inputAudioTranscription: InputAudioTranscriptionInput.dirty(value),
-        clearError: true,
-      ),
-    );
+    if (state.canFixedFieldsChange) emit(state.copyWith(inputAudioTranscription: InputAudioTranscriptionInput.dirty(value)));
   }
 
   void onVoiceChanged(String value) {
-    if (_isConnected) return;
-    emit(state.copyWith(voice: VoiceInput.dirty(value), clearError: true));
+    if (state.canFixedFieldsChange) emit(state.copyWith(voice: VoiceInput.dirty(value)));
+  }
+
+  void onInstructionsChanged(String value) {
+    if (state.canUnfixedFieldsChange) emit(state.copyWith(instructions: InstructionsInput.dirty(value)));
+  }
+
+  void onPromptChanged(String value) {
+    if (state.isConnected) emit(state.copyWith(prompt: PromptInput.dirty(value)));
   }
 
   void clearLogs() {
@@ -88,80 +67,42 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   Future<void> connect() async {
-    if (_isConnecting || _isConnected) return;
+    if (!state.canConnect && !state.isValid) return;
 
-    final apiKey = ApiKeyInput.dirty(state.apiKey.value.trim());
-    final model = ModelInput.dirty(state.model.value.trim());
-    final inputAudioTranscription = InputAudioTranscriptionInput.dirty(
-      state.inputAudioTranscription.value,
-    );
-    final voice = VoiceInput.dirty(state.voice.value);
-    final isValid = Formz.validate([
-      apiKey,
-      model,
-      voice,
-      inputAudioTranscription,
-    ]);
-    if (!isValid) {
-      emit(
-        state.copyWith(
-          apiKey: apiKey,
-          model: model,
-          inputAudioTranscription: inputAudioTranscription,
-          voice: voice,
-          lastError: 'API key, model, voice, and input transcription model are required.',
-        ),
-      );
-      return;
-    }
-
-    _lastSentInstructions = null;
-    emit(
-      state.copyWith(
-        status: HomeStatus.connecting,
-        apiKey: apiKey,
-        model: model,
-        inputAudioTranscription: inputAudioTranscription,
-        voice: voice,
-        clearError: true,
-      ),
-    );
+    emit(state.copyWith(status: HomeStatus.connecting));
 
     final debugLogging = _config.flavor == Flavor.dev;
-    final client = OpenAIRealtimeClient(
-      accessToken: apiKey.value,
+     _client = OpenAIRealtimeClient(
+      accessToken: state.apiKey.value,
       debug: debugLogging,
     );
-    await _attachSubscriptions(client);
+    await _attachSubscriptions();
 
     try {
       final session = RealtimeSessionConfig(
         type: 'realtime',
-        model: model.value,
+        model: state.model.value,
       );
-      await client.connect(
-        model: model.value,
+      await _client!.connect(
         session: session,
       );
-      _client = client;
       emit(
         state.copyWith(
           status: HomeStatus.connected,
           micEnabled: false,
-          clearError: true,
         ),
       );
       await _sendSessionUpdate(forceAll: true);
       _appendEventLog(
         direction: LogDirection.client,
         type: 'connection',
-        payload: {'message': 'Connected', 'callId': client.callId},
-        rawEvent: {'message': 'Connected', 'callId': client.callId},
+        payload: {'message': 'Connected', 'callId': _client!.callId},
+        rawEvent: {'message': 'Connected', 'callId': _client!.callId},
       );
     } catch (err) {
       await _detachSubscriptions();
-      await client.dispose();
-      emit(state.copyWith(status: HomeStatus.error, lastError: '$err'));
+      await _client!.dispose();
+      emit(state.copyWith(lastError: '$err'));
       _appendEventLog(
         direction: LogDirection.client,
         type: 'connection.error',
@@ -172,19 +113,16 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   Future<void> disconnect() async {
-    final client = _client;
-    if (client == null) return;
-    emit(state.copyWith(status: HomeStatus.disconnecting, clearError: true));
-    await client.disconnect();
+    if (_client == null || !state.isConnected) return;
+    emit(state.copyWith(status: HomeStatus.disconnecting));
+    await _client!.disconnect();
     await _detachSubscriptions();
     _client = null;
     _sessionCreatedAt = null;
-    _lastSentInstructions = null;
     emit(
       state.copyWith(
         status: HomeStatus.initial,
         micEnabled: false,
-        clearError: true,
       ),
     );
     _appendEventLog(
@@ -196,44 +134,36 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   Future<void> sendPrompt() async {
-    if (!state.prompt.isValid) return;
+    if (!state.prompt.isValid || _client == null) return;
     final prompt = state.prompt.value.trim();
-
-    final client = _client;
-    if (client == null) {
-      emit(state.copyWith(lastError: 'Connect first.'));
-      return;
-    }
-    await client.sendText(prompt);
+    await _client!.sendText(prompt);
   }
 
   Future<void> toggleMic() async {
-    final client = _client;
-    if (client == null) {
-      emit(state.copyWith(lastError: 'Connect first.'));
-      return;
-    }
-    final enable = !_isMicEnabled;
+    if (_client == null) return;
     try {
-      if (enable) {
-        await client.enableMicrophone();
+      if (!state.micEnabled) {
+        await _client!.enableMicrophone();
       } else {
-        await client.disableMicrophone();
+        await _client!.disableMicrophone();
       }
-      emit(state.copyWith(micEnabled: enable, clearError: true));
+      emit(state.copyWith(micEnabled: !state.micEnabled));
     } catch (err) {
       emit(state.copyWith(lastError: '$err'));
     }
   }
 
-  Future<void> saveSessionChanges() async {
-    if (!_isConnected || _client == null) {
-      emit(state.copyWith(lastError: 'Connect first.'));
-      return;
+  Future<bool> saveSessionChanges() async {
+    if (!state.isConnected || _client == null) return false;
+    emit(state.copyWith(status: HomeStatus.saving));
+    try {
+      await _sendSessionUpdate(instructionsChanged: true);
+      emit(state.copyWith(status: HomeStatus.connected));
+      return true;
+    } catch (err) {
+      emit(state.copyWith(status: HomeStatus.connected, lastError: '$err'));
+      return false;
     }
-    final hasChanges = _hasInstructionsChanged(state.instructions.value);
-    if (!hasChanges) return;
-    await _sendSessionUpdate(instructionsChanged: true);
   }
 
   void _handleServerEvent(RealtimeServerEvent event) {
@@ -421,39 +351,27 @@ class HomeCubit extends Cubit<HomeState> {
     bool forceAll = false,
     bool instructionsChanged = false,
   }) async {
-    if (!_isConnected || _client == null) return;
-    final client = _client;
-    if (client == null) return;
+    if (_client == null) return;
 
     final includeInstructions = forceAll || instructionsChanged;
     final includeVoice = forceAll;
     final includeAudioTranscription = forceAll;
 
-    if (!includeInstructions && !includeVoice && !includeAudioTranscription) return;
-
-    final normalizedInstructions = state.instructions.value.trim();
     final session = RealtimeSessionConfig(
       voice: includeVoice ? state.voice.value : null,
-      instructions: includeInstructions ? normalizedInstructions : null,
-      inputAudioTranscription:
-          includeAudioTranscription ? {'model': state.inputAudioTranscription.value} : null,
+      instructions: includeInstructions ? state.instructions.value.trim() : null,
+      inputAudioTranscription: includeAudioTranscription ? {'model': state.inputAudioTranscription.value} : null,
     );
     if (session.voice == null && session.instructions == null && session.inputAudioTranscription == null) {
       return;
     }
-    await client.sendEvent(SessionUpdateEvent(session: session));
-    if (includeInstructions) {
-      _lastSentInstructions = normalizedInstructions;
-      emit(state.copyWith());
-    }
+    await _client!.sendEvent(SessionUpdateEvent(session: session));
   }
 
-  bool _hasInstructionsChanged(String next) => _lastSentInstructions != next.trim();
-
-  Future<void> _attachSubscriptions(OpenAIRealtimeClient client) async {
+  Future<void> _attachSubscriptions() async {
     await _detachSubscriptions();
     _sessionCreatedAt = null;
-    _serverSubscription = client.serverEvents.listen(
+    _serverSubscription = _client!.serverEvents.listen(
       _handleServerEvent,
       onError: (err, stack) {
         _appendEventLog(
@@ -464,7 +382,7 @@ class HomeCubit extends Cubit<HomeState> {
         );
       },
     );
-    _clientSubscription = client.clientEvents.listen(
+    _clientSubscription = _client!.clientEvents.listen(
       _handleClientEvent,
       onError: (err, stack) {
         _appendEventLog(

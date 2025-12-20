@@ -93,7 +93,7 @@ class _DrawerHeader extends StatelessWidget {
     return BlocBuilder<HomeCubit, HomeState>(
       buildWhen: (p, c) => p.status != c.status,
       builder: (context, state) {
-        final info = _connectionStatusInfo(state.status);
+        final info = StatusInfo.fromStatus(state.status);
         return Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -188,38 +188,16 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
-class _ConnectionStatusInfo {
-  const _ConnectionStatusInfo(this.label, this.color);
-
-  final String label;
-  final Color color;
-}
-
-_ConnectionStatusInfo _connectionStatusInfo(HomeStatus status) {
-  switch (status) {
-    case HomeStatus.connected:
-      return const _ConnectionStatusInfo('Connected', Colors.green);
-    case HomeStatus.connecting:
-      return const _ConnectionStatusInfo('Connecting', Colors.orange);
-    case HomeStatus.disconnecting:
-      return const _ConnectionStatusInfo('Disconnecting', Colors.orange);
-    case HomeStatus.error:
-      return const _ConnectionStatusInfo('Error', Colors.red);
-    case HomeStatus.initial:
-      return const _ConnectionStatusInfo('Ready', Colors.blueGrey);
-  }
-}
-
 class _ApiKeyField extends StatelessWidget {
   const _ApiKeyField();
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<HomeCubit, HomeState>(
-      buildWhen: (p, c) => p.apiKey.displayError != c.apiKey.displayError || p.status != c.status,
+      buildWhen: (p, c) => p.apiKey.displayError != c.apiKey.displayError || p.canFixedFieldsChange != c.canFixedFieldsChange,
       builder: (context, state) {
         final displayError = state.apiKey.displayError;
-        final isEnabled = state.status == HomeStatus.initial || state.status == HomeStatus.error;
+        final isEnabled = state.canFixedFieldsChange;
         return TextFormField(
           key: const ValueKey('api-key-field'),
           initialValue: state.apiKey.value,
@@ -245,10 +223,13 @@ class _ModelDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<HomeCubit, HomeState>(
-      buildWhen: (p, c) => p.model.displayError != c.model.displayError || p.status != c.status || p.model.value != c.model.value,
+      buildWhen: (p, c) =>
+          p.model.displayError != c.model.displayError ||
+          p.canFixedFieldsChange != c.canFixedFieldsChange ||
+          p.model.value != c.model.value,
       builder: (context, state) {
         final displayError = state.model.displayError;
-        final isEnabled = state.status == HomeStatus.initial || state.status == HomeStatus.error;
+        final isEnabled = state.canFixedFieldsChange;
         final value = state.model.value.isNotEmpty ? state.model.value : realtimeModelNames.first;
         return DropdownButtonFormField<String>(
           isExpanded: true,
@@ -283,10 +264,9 @@ class _InstructionsField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<HomeCubit, HomeState>(
-      buildWhen: (p, c) => p.instructions != c.instructions || p.status != c.status,
+      buildWhen: (p, c) => p.instructions != c.instructions || p.canUnfixedFieldsChange != c.canUnfixedFieldsChange,
       builder: (context, state) {
-        final isEnabled =
-            state.status == HomeStatus.initial || state.status == HomeStatus.error || state.status == HomeStatus.connected;
+        final isEnabled = state.canUnfixedFieldsChange;
         return TextFormField(
           key: const ValueKey('instructions-field'),
           autocorrect: false,
@@ -311,9 +291,10 @@ class _InputTranscriptionDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<HomeCubit, HomeState>(
-      buildWhen: (p, c) => p.inputAudioTranscription != c.inputAudioTranscription || p.status != c.status,
+      buildWhen: (p, c) =>
+          p.inputAudioTranscription != c.inputAudioTranscription || p.canFixedFieldsChange != c.canFixedFieldsChange,
       builder: (context, state) {
-        final isEnabled = state.status == HomeStatus.initial || state.status == HomeStatus.error;
+        final isEnabled = state.canFixedFieldsChange;
         final value = state.inputAudioTranscription.value.isNotEmpty
             ? state.inputAudioTranscription.value
             : realtimeTranscriptionModelNames.first;
@@ -359,9 +340,9 @@ class _VoiceDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<HomeCubit, HomeState>(
-      buildWhen: (p, c) => p.voice != c.voice || p.status != c.status,
+      buildWhen: (p, c) => p.voice != c.voice || p.canFixedFieldsChange != c.canFixedFieldsChange,
       builder: (context, state) {
-        final isEnabled = state.status == HomeStatus.initial || state.status == HomeStatus.error;
+        final isEnabled = state.canFixedFieldsChange;
         final value = state.voice.value.isNotEmpty ? state.voice.value : realtimeFavoriteVoices.first;
         return DropdownButtonFormField<String>(
           isExpanded: true,
@@ -400,12 +381,18 @@ class _ConnectButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: const [
-        Expanded(child: _ConnectButton()),
-        SizedBox(width: 10),
-        Expanded(child: _DisconnectButton()),
-      ],
+    return BlocBuilder<HomeCubit, HomeState>(
+      buildWhen: (p, c) => p.status != c.status,
+      builder: (context, state) {
+        final showConnectButton = state.isInitial || state.isConnecting;
+        return Row(
+          children: [
+            Expanded(child: showConnectButton ? _ConnectButton() : _SaveButton()),
+            SizedBox(width: 10),
+            const Expanded(child: _DisconnectButton()),
+          ],
+        );
+      },
     );
   }
 }
@@ -416,40 +403,36 @@ class _ConnectButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<HomeCubit, HomeState>(
-      buildWhen: (p, c) =>
-          p.status != c.status ||
-          p.apiKey != c.apiKey ||
-          p.model != c.model ||
-          p.voice != c.voice ||
-          p.inputAudioTranscription != c.inputAudioTranscription ||
-          p.instructions != c.instructions,
+      buildWhen: (p, c) => p.status != c.status,
       builder: (context, state) {
-        final cubit = context.read<HomeCubit>();
-        final status = state.status;
-        final isInitialOrError = status == HomeStatus.initial || status == HomeStatus.error;
-        final isConnected = status == HomeStatus.connected;
-        final isConnecting = status == HomeStatus.connecting;
-        final isValid =
-            state.apiKey.isValid && state.model.isValid && state.voice.isValid && state.inputAudioTranscription.isValid;
-
-        if (isConnected) {
-          final hasPendingInstructions = cubit.hasPendingInstructionChanges;
-          return ElevatedButton.icon(
-            onPressed: hasPendingInstructions ? () => cubit.saveSessionChanges() : null,
-            icon: const Icon(Icons.save_outlined),
-            label: const Text('Save'),
-          );
-        }
-
-        return ElevatedButton.icon(
-          onPressed: isInitialOrError && isValid
-              ? () async {
-                  Navigator.of(context).maybePop();
-                  await cubit.connect();
-                }
-              : null,
+        final isEnabled = state.canConnect;
+        final isValid = state.isValid;
+        final isConnecting = state.isConnecting;
+        return OutlinedButton.icon(
+          onPressed: isEnabled && isValid ? () => context.read<HomeCubit>().connect() : null,
           icon: isConnecting ? CircularProgressIndicator.adaptive() : const Icon(Icons.play_arrow),
           label: Text('Connect'),
+        );
+      },
+    );
+  }
+}
+
+class _SaveButton extends StatelessWidget {
+  const _SaveButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<HomeCubit, HomeState>(
+      buildWhen: (p, c) => p.status != c.status,
+      builder: (context, state) {
+        final isEnabled = state.canSave;
+        final isValid = state.isValid;
+        final isSaving = state.isSaving;
+        return OutlinedButton.icon(
+          onPressed: isEnabled && isValid ? () => context.read<HomeCubit>().saveSessionChanges() : null,
+          icon: isSaving ? CircularProgressIndicator.adaptive() : const Icon(Icons.save),
+          label: Text('Save'),
         );
       },
     );
@@ -464,9 +447,8 @@ class _DisconnectButton extends StatelessWidget {
     return BlocBuilder<HomeCubit, HomeState>(
       buildWhen: (p, c) => p.status != c.status,
       builder: (context, state) {
-        final status = state.status;
-        final isEnabled = status == HomeStatus.connected;
-        final isDisconnecting = status == HomeStatus.disconnecting;
+        final isEnabled = state.canDisconnect;
+        final isDisconnecting = state.isDisconnecting;
         return OutlinedButton.icon(
           onPressed: isEnabled ? () => context.read<HomeCubit>().disconnect() : null,
           icon: isDisconnecting ? CircularProgressIndicator.adaptive() : const Icon(Icons.stop),
