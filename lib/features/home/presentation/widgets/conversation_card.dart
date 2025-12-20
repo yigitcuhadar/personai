@@ -247,16 +247,10 @@ class _MessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final isServer = group.direction == LogDirection.server;
     final alignment = isServer ? Alignment.centerLeft : Alignment.centerRight;
-    final bubbleColor = isServer
-        ? const Color(0xFFEAF2FF)
-        : const Color(0xFFE9F9EF);
-    final accentColor = isServer
-        ? const Color(0xFF3D7BFF)
-        : const Color(0xFF2E9E65);
+    final bubbleColor = isServer ? const Color(0xFFEAF2FF) : const Color(0xFFE9F9EF);
+    final accentColor = isServer ? const Color(0xFF3D7BFF) : const Color(0xFF2E9E65);
     final label = isServer ? 'Server' : 'You';
-    final labelColor = isServer
-        ? const Color(0xFF3D7BFF)
-        : const Color(0xFF2E9E65);
+    final labelColor = isServer ? const Color(0xFF3D7BFF) : const Color(0xFF2E9E65);
 
     final bubble = Align(
       alignment: alignment,
@@ -283,9 +277,7 @@ class _MessageBubble extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(10),
             child: Column(
-              crossAxisAlignment: isServer
-                  ? CrossAxisAlignment.start
-                  : CrossAxisAlignment.end,
+              crossAxisAlignment: isServer ? CrossAxisAlignment.start : CrossAxisAlignment.end,
               children: [
                 Row(
                   mainAxisSize: MainAxisSize.min,
@@ -311,9 +303,7 @@ class _MessageBubble extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Column(
-                  crossAxisAlignment: isServer
-                      ? CrossAxisAlignment.start
-                      : CrossAxisAlignment.end,
+                  crossAxisAlignment: isServer ? CrossAxisAlignment.start : CrossAxisAlignment.end,
                   children: [
                     for (int i = 0; i < group.entries.length; i++) ...[
                       if (i > 0) const SizedBox(height: 4),
@@ -332,12 +322,7 @@ class _MessageBubble extends StatelessWidget {
                       SizedBox(
                         width: 12,
                         height: 12,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            accentColor,
-                          ),
-                        ),
+                        child: CircularProgressIndicator.adaptive(),
                       ),
                       const SizedBox(width: 6),
                       const Text(
@@ -386,9 +371,7 @@ List<_MessageGroup> _groupMessages(List<MessageEntry> messages) {
   final List<_MessageGroup> grouped = [];
   for (final entry in messages) {
     final isClient = entry.direction == LogDirection.client;
-    if (isClient &&
-        grouped.isNotEmpty &&
-        grouped.last.direction == LogDirection.client) {
+    if (isClient && grouped.isNotEmpty && grouped.last.direction == LogDirection.client) {
       grouped.last.entries.add(entry);
       continue;
     }
@@ -426,9 +409,7 @@ class _PromptComposerState extends State<_PromptComposer> {
 
   void _submit(HomeState state) {
     final isConnected = state.status == HomeStatus.connected;
-    final isBusy =
-        state.status == HomeStatus.connecting ||
-        state.status == HomeStatus.disconnecting;
+    final isBusy = state.status == HomeStatus.connecting || state.status == HomeStatus.disconnecting;
     if (!isConnected || isBusy || !state.prompt.isValid) return;
     context.read<HomeCubit>().sendPrompt();
     _controller.clear();
@@ -439,13 +420,10 @@ class _PromptComposerState extends State<_PromptComposer> {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<HomeCubit, HomeState>(
-      buildWhen: (p, c) =>
-          p.status != c.status || p.prompt.value != c.prompt.value,
+      buildWhen: (p, c) => p.status != c.status || p.prompt.value != c.prompt.value,
       builder: (context, state) {
         final isConnected = state.status == HomeStatus.connected;
-        final isBusy =
-            state.status == HomeStatus.connecting ||
-            state.status == HomeStatus.disconnecting;
+        final isBusy = state.status == HomeStatus.connecting || state.status == HomeStatus.disconnecting;
         final isPromptValid = state.prompt.isValid;
         final isPromptEnabled = isConnected && !isBusy;
         if (state.prompt.value.isEmpty && _controller.text.isNotEmpty) {
@@ -461,11 +439,8 @@ class _PromptComposerState extends State<_PromptComposer> {
                 maxLines: 1,
                 textInputAction: TextInputAction.send,
                 enabled: isPromptEnabled,
-                onChanged: (value) =>
-                    context.read<HomeCubit>().onPromptChanged(value),
-                onFieldSubmitted: isConnected && isPromptValid && !isBusy
-                    ? (_) => _submit(state)
-                    : null,
+                onChanged: (value) => context.read<HomeCubit>().onPromptChanged(value),
+                onFieldSubmitted: isConnected && isPromptValid && !isBusy ? (_) => _submit(state) : null,
                 decoration: InputDecoration(
                   hintText: 'Type a question...',
                   contentPadding: const EdgeInsets.symmetric(
@@ -484,9 +459,7 @@ class _PromptComposerState extends State<_PromptComposer> {
             SizedBox(
               height: 40,
               child: ElevatedButton.icon(
-                onPressed: isPromptValid && isConnected && !isBusy
-                    ? () => _submit(state)
-                    : null,
+                onPressed: isPromptValid && isConnected && !isBusy ? () => _submit(state) : null,
                 icon: const Icon(Icons.send),
                 label: const Text(
                   'Send',
@@ -531,9 +504,7 @@ class _MicButton extends StatelessWidget {
       buildWhen: (p, c) => p.status != c.status || p.micEnabled != c.micEnabled,
       builder: (context, state) {
         final isConnected = state.status == HomeStatus.connected;
-        final isBusy =
-            state.status == HomeStatus.connecting ||
-            state.status == HomeStatus.disconnecting;
+        final isBusy = state.status == HomeStatus.connecting || state.status == HomeStatus.disconnecting;
         final isEnabled = isConnected && !isBusy;
         final micEnabled = state.micEnabled;
 
@@ -543,9 +514,7 @@ class _MicButton extends StatelessWidget {
           backgroundColor = Colors.grey.shade200;
           iconColor = Colors.grey.shade500;
         } else {
-          backgroundColor = micEnabled
-              ? const Color(0xFFE9F9EF)
-              : Colors.white.withAlpha(230);
+          backgroundColor = micEnabled ? const Color(0xFFE9F9EF) : Colors.white.withAlpha(230);
           iconColor = micEnabled ? const Color(0xFF2E9E65) : Colors.black54;
         }
 
@@ -557,9 +526,7 @@ class _MicButton extends StatelessWidget {
             elevation: 2,
             child: InkWell(
               customBorder: const CircleBorder(),
-              onTap: isEnabled
-                  ? () => context.read<HomeCubit>().toggleMic()
-                  : null,
+              onTap: isEnabled ? () => context.read<HomeCubit>().toggleMic() : null,
               child: Center(
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 180),

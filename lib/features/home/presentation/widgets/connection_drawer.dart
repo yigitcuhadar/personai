@@ -3,88 +3,90 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:openai_realtime/openai_realtime.dart';
 
 import '../cubit/home_cubit.dart';
-import 'home_card_styles.dart';
 import 'status_badge.dart';
 
-class ConnectionCard extends StatelessWidget {
-  const ConnectionCard({super.key});
+class ConnectionDrawer extends StatelessWidget {
+  const ConnectionDrawer({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<HomeCubit, HomeState>(
-      buildWhen: (p, c) => p.status != c.status,
-      builder: (context, state) {
-        final isCollapsed = state.status == HomeStatus.connected || state.status == HomeStatus.disconnecting;
-        return Material(
-          elevation: 3,
-          borderRadius: BorderRadius.circular(kHomeCardRadius),
-          clipBehavior: Clip.antiAlias,
-          child: AnimatedSize(
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.easeInOut,
-            alignment: Alignment.topCenter,
-            child: Container(
-              padding: const EdgeInsets.all(kHomeCardPadding),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFFF6F7FB), Color(0xFFF2F8F2)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: isCollapsed ? const _CollapsedConnectionContent() : const _ExpandedConnectionContent(),
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    return Drawer(
+      width: 380,
+      elevation: 14,
+      child: SafeArea(
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFFF7F9FB), Color(0xFFE9F2FF)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
           ),
-        );
-      },
+          child: Stack(
+            children: [
+              Positioned(
+                top: -60,
+                right: -20,
+                child: _blurCircle(color: const Color(0x33A5BEE5), size: 160),
+              ),
+              Positioned(
+                bottom: -50,
+                left: -10,
+                child: _blurCircle(color: const Color(0x33C6ECD9), size: 140),
+              ),
+              Column(
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(16, 12, 16, 10),
+                    child: _DrawerHeader(),
+                  ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.fromLTRB(16, 0, 16, bottomInset > 0 ? bottomInset + 20 : 24),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: Colors.white.withAlpha(160)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withAlpha(12),
+                              blurRadius: 16,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
+                        ),
+                        child: const Padding(
+                          padding: EdgeInsets.fromLTRB(16, 18, 16, 16),
+                          child: _DrawerFields(),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
 
-class _ExpandedConnectionContent extends StatelessWidget {
-  const _ExpandedConnectionContent();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: const [
-        _ConnectionHeader(),
-        SizedBox(height: 10),
-        _ApiKeyField(),
-        SizedBox(height: 8),
-        _ModelDropdown(),
-        SizedBox(height: 8),
-        _InstructionsField(),
-        SizedBox(height: 8),
-        _InputTranscriptionDropdown(),
-        SizedBox(height: 8),
-        _VoiceDropdown(),
-        SizedBox(height: 8),
-        _ConnectButtons(),
-      ],
-    );
-  }
+Widget _blurCircle({required Color color, required double size}) {
+  return Container(
+    width: size,
+    height: size,
+    decoration: BoxDecoration(
+      color: color,
+      shape: BoxShape.circle,
+    ),
+  );
 }
 
-class _CollapsedConnectionContent extends StatelessWidget {
-  const _CollapsedConnectionContent();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _ConnectionHeader(),
-        SizedBox(height: 8),
-        _ConnectButtons(),
-      ],
-    );
-  }
-}
-
-class _ConnectionHeader extends StatelessWidget {
-  const _ConnectionHeader();
+class _DrawerHeader extends StatelessWidget {
+  const _DrawerHeader();
 
   @override
   Widget build(BuildContext context) {
@@ -92,22 +94,96 @@ class _ConnectionHeader extends StatelessWidget {
       buildWhen: (p, c) => p.status != c.status,
       builder: (context, state) {
         final info = _connectionStatusInfo(state.status);
-        return Row(
-          children: [
-            const Expanded(
-              child: Text(
-                'Connection setup',
-                style: kHomeCardTitleTextStyle,
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: Colors.white.withAlpha(180)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withAlpha(12),
+                blurRadius: 14,
+                offset: const Offset(0, 8),
               ),
-            ),
-            StatusBadge(
-              label: info.label,
-              color: info.color,
-              showDot: true,
-            ),
-          ],
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE6F0FF),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.settings_input_antenna_rounded,
+                  color: Color(0xFF2563EB),
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Connection', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                    SizedBox(height: 4),
+                    Text(
+                      'Configure the settings and start the session.',
+                      style: TextStyle(fontSize: 12, color: Colors.black54),
+                    ),
+                  ],
+                ),
+              ),
+              StatusBadge(label: info.label, color: info.color, showDot: true),
+            ],
+          ),
         );
       },
+    );
+  }
+}
+
+class _DrawerFields extends StatelessWidget {
+  const _DrawerFields();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: const [
+        _SectionTitle('Credentials'),
+        SizedBox(height: 8),
+        _ApiKeyField(),
+        SizedBox(height: 16),
+        _SectionTitle('Models & voice'),
+        SizedBox(height: 8),
+        _ModelDropdown(),
+        SizedBox(height: 10),
+        _InputTranscriptionDropdown(),
+        SizedBox(height: 10),
+        _VoiceDropdown(),
+        SizedBox(height: 16),
+        _SectionTitle('Instructions'),
+        SizedBox(height: 8),
+        _InstructionsField(),
+        SizedBox(height: 20),
+        _ConnectButtons(),
+      ],
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle(this.label);
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      label,
+      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
     );
   }
 }
@@ -145,7 +221,7 @@ class _ApiKeyField extends StatelessWidget {
         final displayError = state.apiKey.displayError;
         final isEnabled = state.status == HomeStatus.initial || state.status == HomeStatus.error;
         return TextFormField(
-          key: ValueKey('api-key-field'),
+          key: const ValueKey('api-key-field'),
           initialValue: state.apiKey.value,
           enabled: isEnabled,
           autocorrect: false,
@@ -175,6 +251,7 @@ class _ModelDropdown extends StatelessWidget {
         final isEnabled = state.status == HomeStatus.initial || state.status == HomeStatus.error;
         final value = state.model.value.isNotEmpty ? state.model.value : realtimeModelNames.first;
         return DropdownButtonFormField<String>(
+          isExpanded: true,
           key: const ValueKey('model-dropdown'),
           initialValue: value,
           items: realtimeModelNames
@@ -240,6 +317,7 @@ class _InputTranscriptionDropdown extends StatelessWidget {
             ? state.inputAudioTranscription.value
             : realtimeTranscriptionModelNames.first;
         return DropdownButtonFormField<String>(
+          isExpanded: true,
           key: const ValueKey('input-transcription-dropdown'),
           initialValue: value,
           onChanged: isEnabled
@@ -285,6 +363,7 @@ class _VoiceDropdown extends StatelessWidget {
         final isEnabled = state.status == HomeStatus.initial || state.status == HomeStatus.error;
         final value = state.voice.value.isNotEmpty ? state.voice.value : realtimeFavoriteVoices.first;
         return DropdownButtonFormField<String>(
+          isExpanded: true,
           key: const ValueKey('voice-dropdown'),
           initialValue: value,
           onChanged: isEnabled
@@ -314,7 +393,6 @@ class _VoiceDropdown extends StatelessWidget {
     );
   }
 }
-
 class _ConnectButtons extends StatelessWidget {
   const _ConnectButtons();
 
@@ -323,7 +401,7 @@ class _ConnectButtons extends StatelessWidget {
     return Row(
       children: const [
         Expanded(child: _ConnectButton()),
-        SizedBox(width: 8),
+        SizedBox(width: 10),
         Expanded(child: _DisconnectButton()),
       ],
     );
@@ -350,10 +428,8 @@ class _ConnectButton extends StatelessWidget {
         final isConnecting = status == HomeStatus.connecting;
         return ElevatedButton.icon(
           onPressed: isEnabled && isValid ? () => context.read<HomeCubit>().connect() : null,
-          icon: const Icon(Icons.play_arrow),
-          label: Text(
-            isConnecting ? 'Connecting...' : 'Connect',
-          ),
+          icon: isConnecting ? CircularProgressIndicator.adaptive() : const Icon(Icons.play_arrow),
+          label: Text('Connect'),
         );
       },
     );
@@ -373,8 +449,8 @@ class _DisconnectButton extends StatelessWidget {
         final isDisconnecting = status == HomeStatus.disconnecting;
         return OutlinedButton.icon(
           onPressed: isEnabled ? () => context.read<HomeCubit>().disconnect() : null,
-          icon: const Icon(Icons.stop),
-          label: Text(isDisconnecting ? 'Disconnecting...' : 'Disconnect'),
+          icon: isDisconnecting ? CircularProgressIndicator.adaptive() : const Icon(Icons.stop),
+          label: Text('Disconnect'),
         );
       },
     );

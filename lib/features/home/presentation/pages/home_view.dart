@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../app/di/injector.dart';
 import '../cubit/home_cubit.dart';
-import '../widgets/connection_card.dart';
+import '../widgets/connection_drawer.dart';
 import '../widgets/conversation_card.dart';
 import '../widgets/logs_sheet.dart';
 
@@ -44,6 +44,7 @@ class HomeView extends StatelessWidget {
               ),
             ],
           ),
+          drawer: const ConnectionDrawer(),
           body: SafeArea(
             bottom: false,
             child: LayoutBuilder(
@@ -57,8 +58,6 @@ class HomeView extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: const [
-                          ConnectionCard(),
-                          SizedBox(height: 12),
                           Expanded(child: ConversationCard()),
                         ],
                       ),
