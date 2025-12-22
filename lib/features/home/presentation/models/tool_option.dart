@@ -55,6 +55,42 @@ const List<ToolOption> kToolOptions = [
       "required": ["symbol"],
     },
   ),
+  ToolOption(
+    name: 'get_sports_scores',
+    label: 'Get sports scores',
+    description: 'Get fixtures/scores for a league on a given date',
+    parameters: {
+      "type": "object",
+      "properties": {
+        "league_id": {
+          "type": "string",
+          "description": "League id (api-football.com)",
+        },
+        "date": {
+          "type": "string",
+          "description": "Date in YYYY-MM-DD; defaults to today",
+        },
+      },
+      "additionalProperties": false,
+      "required": ["league_id"],
+    },
+  ),
+  ToolOption(
+    name: 'get_livescore',
+    label: 'Live scores (AllSports)',
+    description: 'Fetch live scores for a country (soccer/football)',
+    parameters: {
+      "type": "object",
+      "properties": {
+        "country": {
+          "type": "string",
+          "description": "Country name in English (e.g., England)",
+        },
+      },
+      "additionalProperties": false,
+      "required": ["country"],
+    },
+  ),
 ];
 
 Map<String, bool> defaultToolToggles() => {

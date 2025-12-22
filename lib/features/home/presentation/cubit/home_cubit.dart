@@ -23,6 +23,8 @@ class HomeCubit extends Cubit<HomeState> {
   HomeCubit({required AppConfig config, String defaultApiKey = ''})
     : _config = config,
       _alphaVantageApiKey = config.alphaVantageApiKey,
+      _apiFootballApiKey = config.apiFootballApiKey,
+      _allSportsApiKey = config.allSportsApiKey,
       super(
         HomeState(
           apiKey: ApiKeyInput.pure(defaultApiKey.trim()),
@@ -32,6 +34,8 @@ class HomeCubit extends Cubit<HomeState> {
 
   final AppConfig _config;
   final String? _alphaVantageApiKey;
+  final String? _apiFootballApiKey;
+  final String? _allSportsApiKey;
   OpenAIRealtimeClient? _client;
   StreamSubscription<RealtimeServerEvent>? _serverSubscription;
   StreamSubscription<RealtimeClientEvent>? _clientSubscription;
@@ -411,6 +415,12 @@ class HomeCubit extends Cubit<HomeState> {
           case 'get_stock_price':
             output = await _executeGetStockPrice(args);
             break;
+          case 'get_sports_scores':
+            output = await _executeGetSportsScores(args);
+            break;
+          case 'get_livescore':
+            output = await _executeGetLiveScore(args);
+            break;
           default:
             output = {'error': 'Tool "$toolName" is not implemented yet'};
             break;
@@ -477,6 +487,7 @@ class HomeCubit extends Cubit<HomeState> {
     );
 
     final res = await http.get(uri);
+    _logHttp('stocks:global_quote', uri, res);
     if (res.statusCode != 200) {
       throw Exception('Stock fetch failed (${res.statusCode})');
     }
@@ -504,6 +515,189 @@ class HomeCubit extends Cubit<HomeState> {
     };
   }
 
+  Future<Map<String, dynamic>> _executeGetSportsScores(
+    Map<String, dynamic> args,
+  ) async {
+    final apiKey = _apiFootballApiKey;
+    if (apiKey == null || apiKey.isEmpty) {
+      throw Exception('API-Football API key not configured');
+    }
+
+    final leagueIdRaw = args['league_id'];
+    final leagueId =
+        (leagueIdRaw is num ? leagueIdRaw.toString() : leagueIdRaw as String?)
+            ?.trim();
+    if (leagueId == null || leagueId.isEmpty) {
+      throw ArgumentError('league_id is required');
+    }
+    final date = ((args['date'] as String?) ?? '').trim();
+    final today = DateTime.now();
+    final fallbackDate =
+        '${today.year.toString().padLeft(4, '0')}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+    final targetDate = date.isNotEmpty ? date : fallbackDate;
+
+    final uri = Uri.parse(
+      'https://apiv3.apifootball.com/'
+      '?action=get_events'
+      '&from=$targetDate'
+      '&to=$targetDate'
+      '&league_id=$leagueId'
+      '&APIkey=$apiKey',
+    );
+
+    final res = await http.get(uri);
+    _logHttp('sports_scores:get_events', uri, res);
+    if (res.statusCode != 200) {
+      throw Exception('API-Football fetch failed (${res.statusCode})');
+    }
+
+    final parsed = jsonDecode(res.body);
+    if (parsed is Map && parsed['error'] != null) {
+      throw Exception('API-Football error: ${parsed['error']}');
+    }
+    if (parsed is! List) throw Exception('Unexpected API-Football response');
+
+    List<Map<String, dynamic>> events = [];
+    for (final item in parsed) {
+      if (item is! Map) continue;
+      final data = item.cast<String, dynamic>();
+      events.add({
+        'event_id': data['match_id'],
+        'league_id': data['league_id'],
+        'league_name': data['league_name'],
+        'country': data['country_name'],
+        'status': data['match_status'],
+        'start_time': data['match_time'],
+        'start_date': data['match_date'],
+        'home_team': data['match_hometeam_name'],
+        'away_team': data['match_awayteam_name'],
+        'score': {
+          'home': data['match_hometeam_score'],
+          'away': data['match_awayteam_score'],
+          'ht_home': data['match_hometeam_halftime_score'],
+          'ht_away': data['match_awayteam_halftime_score'],
+        },
+        'round': data['round'],
+      });
+    }
+
+    return {
+      'date': targetDate,
+      'league_id': leagueId,
+      'count': events.length,
+      'events': events,
+      'source': 'api-football.com',
+    };
+  }
+
+  Future<Map<String, dynamic>> _executeGetLiveScore(
+    Map<String, dynamic> args,
+  ) async {
+    final apiKey = _allSportsApiKey;
+    if (apiKey == null || apiKey.isEmpty) {
+      throw Exception('AllSports API key not configured');
+    }
+
+    final countryName = (args['country'] as String?)?.trim();
+    if (countryName == null || countryName.isEmpty) {
+      throw ArgumentError('country is required');
+    }
+
+    final countriesUri = Uri.parse(
+      'https://apiv2.allsportsapi.com/football?met=Countries&APIkey=$apiKey',
+    );
+    final countriesRes = await http.get(countriesUri);
+    _logHttp('allsports:countries', countriesUri, countriesRes);
+    if (countriesRes.statusCode != 200) {
+      throw Exception('Failed to fetch countries (${countriesRes.statusCode})');
+    }
+    final countriesJson = jsonDecode(countriesRes.body);
+    final countriesList =
+        countriesJson is Map && countriesJson['result'] is List
+        ? (countriesJson['result'] as List)
+        : (countriesJson is List ? countriesJson : null);
+    if (countriesList == null) {
+      throw Exception('Unexpected Countries response');
+    }
+
+    Map<String, dynamic>? matched;
+    for (final item in countriesList) {
+      if (item is! Map) continue;
+      final map = item.cast<String, dynamic>();
+      final name = (map['country_name'] as String?) ?? '';
+      if (name.toLowerCase() == countryName.toLowerCase()) {
+        matched = map;
+        break;
+      }
+    }
+    matched ??= countriesList
+        .cast<Map>()
+        .cast<Map<String, dynamic>>()
+        .firstWhere(
+          (map) =>
+              ((map['country_name'] as String?) ?? '').toLowerCase().contains(
+                countryName.toLowerCase(),
+              ),
+          orElse: () => <String, dynamic>{},
+        );
+    if (matched == null || matched.isEmpty) {
+      throw Exception('Country not found for "$countryName"');
+    }
+
+    final countryId = matched['country_key'];
+    if (countryId == null) {
+      throw Exception('country_key missing for "$countryName"');
+    }
+
+    final liveUri = Uri.parse(
+      'https://apiv2.allsportsapi.com/football'
+      '?met=Livescore'
+      '&APIkey=$apiKey'
+      '&countryId=$countryId',
+    );
+    final liveRes = await http.get(liveUri);
+    _logHttp('allsports:livescore', liveUri, liveRes);
+    if (liveRes.statusCode != 200) {
+      throw Exception('Failed to fetch livescore (${liveRes.statusCode})');
+    }
+
+    final liveJson = jsonDecode(liveRes.body);
+    if (liveJson is Map && liveJson['error'] != null) {
+      throw Exception('Livescore error: ${liveJson['error']}');
+    }
+    final result = liveJson is Map ? liveJson['result'] : null;
+    if (result is! List) {
+      throw Exception('Unexpected Livescore response');
+    }
+
+    final events = result
+        .whereType<Map>()
+        .map((raw) => raw.cast<String, dynamic>())
+        .map((map) {
+          return {
+            'event_key': map['event_key'],
+            'event_date': map['event_date'],
+            'event_time': map['event_time'],
+            'league_key': map['league_key'],
+            'league_name': map['league_name'],
+            'home_team': map['event_home_team'],
+            'away_team': map['event_away_team'],
+            'home_score': map['event_home_final_result'],
+            'away_score': map['event_away_final_result'],
+            'status': map['event_status'],
+          };
+        })
+        .toList();
+
+    return {
+      'country': matched,
+      'country_id': countryId,
+      'count': events.length,
+      'events': events,
+      'source': 'allsportsapi.com',
+    };
+  }
+
   Future<Map<String, dynamic>> getWeatherOpenMeteo(String city) async {
     // 1) Geocoding
     final geoUri = Uri.parse(
@@ -511,6 +705,7 @@ class HomeCubit extends Cubit<HomeState> {
       '?name=${Uri.encodeComponent(city)}&count=1&language=en&format=json',
     );
     final geoRes = await http.get(geoUri);
+    _logHttp('weather:geocode', geoUri, geoRes);
     if (geoRes.statusCode != 200) throw Exception('Geocoding failed');
     final geoJson = jsonDecode(geoRes.body) as Map<String, dynamic>;
     final results = (geoJson['results'] as List?) ?? [];
@@ -528,6 +723,7 @@ class HomeCubit extends Cubit<HomeState> {
       '&timezone=auto',
     );
     final wxRes = await http.get(wxUri);
+    _logHttp('weather:forecast', wxUri, wxRes);
     if (wxRes.statusCode != 200) throw Exception('Weather fetch failed');
     final wxJson = jsonDecode(wxRes.body) as Map<String, dynamic>;
 
@@ -759,6 +955,24 @@ class HomeCubit extends Cubit<HomeState> {
       interrupt: true,
       isFinal: true,
     );
+  }
+
+  bool get _isDebug => _config.flavor == Flavor.dev;
+
+  String _sanitizeUri(Uri uri) {
+    final filtered = Map<String, String>.from(uri.queryParameters);
+    filtered.removeWhere(
+      (k, v) => k.toLowerCase().contains('key'),
+    );
+    return uri.replace(queryParameters: filtered).toString();
+  }
+
+  void _logHttp(String label, Uri uri, http.Response res) {
+    if (!_isDebug) return;
+    final sanitized = _sanitizeUri(uri);
+    final body = res.body;
+    final preview = body.length > 400 ? '${body.substring(0, 400)}...' : body;
+    print('[HTTP] $label ${res.statusCode} $sanitized body: $preview');
   }
 
   @override
