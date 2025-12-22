@@ -45,7 +45,12 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   void onInputAudioTranscriptionChanged(String value) {
-    if (state.canFixedFieldsChange) emit(state.copyWith(inputAudioTranscription: InputAudioTranscriptionInput.dirty(value)));
+    if (state.canFixedFieldsChange)
+      emit(
+        state.copyWith(
+          inputAudioTranscription: InputAudioTranscriptionInput.dirty(value),
+        ),
+      );
   }
 
   void onVoiceChanged(String value) {
@@ -263,14 +268,33 @@ class HomeCubit extends Cubit<HomeState> {
         }
         break;
       case ResponseOutputItemAddedEvent e:
-        final itemId = e.item.id ?? 'output_item_${e.outputIndex}';
-        final placeholderKey = _outputKey(itemId, e.outputIndex, 0);
-        messageUpdate = _MessageUpdate.text(
-          id: _outputAudioTranscriptId(placeholderKey),
-          direction: LogDirection.server,
-          text: '',
-          isFinal: true,
-        );
+        final item = e.item;
+        if (item.type == 'message') {
+          final itemId = item.id ?? 'output_item_${e.outputIndex}';
+          final outputKey = _outputKey(itemId, e.outputIndex, 0);
+          final initialText = item.content
+              .whereType<OutputTextContent>()
+              .map((c) => c.text.trim())
+              .where((text) => text.isNotEmpty)
+              .join('\n');
+          final initialTranscript = item.content
+              .whereType<OutputAudioContent>()
+              .map((c) => c.transcript?.trim() ?? '')
+              .where((text) => text.isNotEmpty)
+              .join('\n');
+
+          final seedText = initialText.isNotEmpty ? initialText : initialTranscript;
+          if (seedText.isEmpty) break;
+
+          final useTextId = initialText.isNotEmpty;
+          if (useTextId) _responseTextKeys.add(outputKey);
+          messageUpdate = _MessageUpdate.text(
+            id: useTextId ? _outputTextId(outputKey) : _outputAudioTranscriptId(outputKey),
+            direction: LogDirection.server,
+            text: seedText,
+            isFinal: item.status == 'completed',
+          );
+        }
         break;
       case ResponseFunctionCallArgumentsDoneEvent e:
         _handleToolCall(e);
@@ -435,7 +459,10 @@ class HomeCubit extends Cubit<HomeState> {
           parameters: {
             "type": "object",
             "properties": {
-              "location": {"type": "string", "description": "The city and state e.g. San Francisco, CA"},
+              "location": {
+                "type": "string",
+                "description": "The city and state e.g. San Francisco, CA",
+              },
               "unit": {
                 "type": "string",
                 "enum": ["c", "f"],
