@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:openai_realtime/openai_realtime.dart';
 
 import '../cubit/home_cubit.dart';
+import '../models/tool_option.dart';
 import 'status_badge.dart';
 
 class ConnectionDrawer extends StatelessWidget {
@@ -43,12 +44,19 @@ class ConnectionDrawer extends StatelessWidget {
                   ),
                   Expanded(
                     child: SingleChildScrollView(
-                      padding: EdgeInsets.fromLTRB(16, 0, 16, bottomInset > 0 ? bottomInset + 20 : 24),
+                      padding: EdgeInsets.fromLTRB(
+                        16,
+                        0,
+                        16,
+                        bottomInset > 0 ? bottomInset + 20 : 24,
+                      ),
                       child: Container(
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.9),
                           borderRadius: BorderRadius.circular(18),
-                          border: Border.all(color: Colors.white.withAlpha(160)),
+                          border: Border.all(
+                            color: Colors.white.withAlpha(160),
+                          ),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withAlpha(12),
@@ -126,7 +134,13 @@ class _DrawerHeader extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Connection', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                    Text(
+                      'Connection',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
+                      ),
+                    ),
                     SizedBox(height: 4),
                     Text(
                       'Configure the settings and start the session.',
@@ -168,6 +182,10 @@ class _DrawerFields extends StatelessWidget {
         SizedBox(height: 8),
         _InstructionsField(),
         SizedBox(height: 20),
+        _SectionTitle('Tools'),
+        SizedBox(height: 8),
+        _ToolToggleList(),
+        SizedBox(height: 20),
         _ConnectButtons(),
       ],
     );
@@ -194,7 +212,9 @@ class _ApiKeyField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<HomeCubit, HomeState>(
-      buildWhen: (p, c) => p.apiKey.displayError != c.apiKey.displayError || p.canFixedFieldsChange != c.canFixedFieldsChange,
+      buildWhen: (p, c) =>
+          p.apiKey.displayError != c.apiKey.displayError ||
+          p.canFixedFieldsChange != c.canFixedFieldsChange,
       builder: (context, state) {
         final displayError = state.apiKey.displayError;
         final isEnabled = state.canFixedFieldsChange;
@@ -203,7 +223,8 @@ class _ApiKeyField extends StatelessWidget {
           initialValue: state.apiKey.value,
           enabled: isEnabled,
           autocorrect: false,
-          onChanged: (value) => context.read<HomeCubit>().onApiKeyChanged(value),
+          onChanged: (value) =>
+              context.read<HomeCubit>().onApiKeyChanged(value),
           decoration: InputDecoration(
             labelText: 'OpenAI API Key',
             hintText: 'sk-...',
@@ -230,7 +251,9 @@ class _ModelDropdown extends StatelessWidget {
       builder: (context, state) {
         final displayError = state.model.displayError;
         final isEnabled = state.canFixedFieldsChange;
-        final value = state.model.value.isNotEmpty ? state.model.value : realtimeModelNames.first;
+        final value = state.model.value.isNotEmpty
+            ? state.model.value
+            : realtimeModelNames.first;
         return DropdownButtonFormField<String>(
           isExpanded: true,
           key: const ValueKey('model-dropdown'),
@@ -264,7 +287,9 @@ class _InstructionsField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<HomeCubit, HomeState>(
-      buildWhen: (p, c) => p.instructions != c.instructions || p.canUnfixedFieldsChange != c.canUnfixedFieldsChange,
+      buildWhen: (p, c) =>
+          p.instructions != c.instructions ||
+          p.canUnfixedFieldsChange != c.canUnfixedFieldsChange,
       builder: (context, state) {
         final isEnabled = state.canUnfixedFieldsChange;
         return TextFormField(
@@ -274,7 +299,8 @@ class _InstructionsField extends StatelessWidget {
           enabled: isEnabled,
           minLines: 2,
           maxLines: 4,
-          onChanged: (value) => context.read<HomeCubit>().onInstructionsChanged(value),
+          onChanged: (value) =>
+              context.read<HomeCubit>().onInstructionsChanged(value),
           decoration: const InputDecoration(
             labelText: 'Instructions (optional)',
             hintText: 'Assistant behavior...',
@@ -292,7 +318,8 @@ class _InputTranscriptionDropdown extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<HomeCubit, HomeState>(
       buildWhen: (p, c) =>
-          p.inputAudioTranscription != c.inputAudioTranscription || p.canFixedFieldsChange != c.canFixedFieldsChange,
+          p.inputAudioTranscription != c.inputAudioTranscription ||
+          p.canFixedFieldsChange != c.canFixedFieldsChange,
       builder: (context, state) {
         final isEnabled = state.canFixedFieldsChange;
         final value = state.inputAudioTranscription.value.isNotEmpty
@@ -303,9 +330,10 @@ class _InputTranscriptionDropdown extends StatelessWidget {
           key: const ValueKey('input-transcription-dropdown'),
           initialValue: value,
           onChanged: isEnabled
-              ? (value) => context.read<HomeCubit>().onInputAudioTranscriptionChanged(
-                  value ?? realtimeTranscriptionModelNames.first,
-                )
+              ? (value) =>
+                    context.read<HomeCubit>().onInputAudioTranscriptionChanged(
+                      value ?? realtimeTranscriptionModelNames.first,
+                    )
               : null,
           decoration: const InputDecoration(
             labelText: 'Input transcription model',
@@ -340,10 +368,14 @@ class _VoiceDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<HomeCubit, HomeState>(
-      buildWhen: (p, c) => p.voice != c.voice || p.canFixedFieldsChange != c.canFixedFieldsChange,
+      buildWhen: (p, c) =>
+          p.voice != c.voice ||
+          p.canFixedFieldsChange != c.canFixedFieldsChange,
       builder: (context, state) {
         final isEnabled = state.canFixedFieldsChange;
-        final value = state.voice.value.isNotEmpty ? state.voice.value : realtimeFavoriteVoices.first;
+        final value = state.voice.value.isNotEmpty
+            ? state.voice.value
+            : realtimeFavoriteVoices.first;
         return DropdownButtonFormField<String>(
           isExpanded: true,
           key: const ValueKey('voice-dropdown'),
@@ -376,6 +408,53 @@ class _VoiceDropdown extends StatelessWidget {
   }
 }
 
+class _ToolToggleList extends StatelessWidget {
+  const _ToolToggleList();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<HomeCubit, HomeState>(
+      buildWhen: (p, c) =>
+          p.toolToggles != c.toolToggles ||
+          p.canUnfixedFieldsChange != c.canUnfixedFieldsChange,
+      builder: (context, state) {
+        final isEnabled = state.canUnfixedFieldsChange;
+        final toggles = {
+          for (final tool in kToolOptions) tool.name: true,
+          ...state.toolToggles,
+        };
+
+        return Column(
+          children: [
+            for (final tool in kToolOptions) ...[
+              SwitchListTile.adaptive(
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                title: Text(
+                  tool.label,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: Text(
+                  tool.description,
+                  style: const TextStyle(fontSize: 12, color: Colors.black54),
+                ),
+                value: toggles[tool.name] ?? true,
+                onChanged: isEnabled
+                    ? (value) => context.read<HomeCubit>().onToolToggled(
+                        tool.name,
+                        value,
+                      )
+                    : null,
+              ),
+              const Divider(height: 1),
+            ],
+          ],
+        );
+      },
+    );
+  }
+}
+
 class _ConnectButtons extends StatelessWidget {
   const _ConnectButtons();
 
@@ -387,7 +466,9 @@ class _ConnectButtons extends StatelessWidget {
         final showConnectButton = state.isInitial || state.isConnecting;
         return Row(
           children: [
-            Expanded(child: showConnectButton ? _ConnectButton() : _SaveButton()),
+            Expanded(
+              child: showConnectButton ? _ConnectButton() : _SaveButton(),
+            ),
             SizedBox(width: 10),
             const Expanded(child: _DisconnectButton()),
           ],
@@ -409,8 +490,12 @@ class _ConnectButton extends StatelessWidget {
         final isValid = state.isValid;
         final isConnecting = state.isConnecting;
         return OutlinedButton.icon(
-          onPressed: isEnabled && isValid ? () => context.read<HomeCubit>().connect() : null,
-          icon: isConnecting ? CircularProgressIndicator.adaptive() : const Icon(Icons.play_arrow),
+          onPressed: isEnabled && isValid
+              ? () => context.read<HomeCubit>().connect()
+              : null,
+          icon: isConnecting
+              ? CircularProgressIndicator.adaptive()
+              : const Icon(Icons.play_arrow),
           label: Text('Connect'),
         );
       },
@@ -430,8 +515,12 @@ class _SaveButton extends StatelessWidget {
         final isValid = state.isValid;
         final isSaving = state.isSaving;
         return OutlinedButton.icon(
-          onPressed: isEnabled && isValid ? () => context.read<HomeCubit>().saveSessionChanges() : null,
-          icon: isSaving ? CircularProgressIndicator.adaptive() : const Icon(Icons.save),
+          onPressed: isEnabled && isValid
+              ? () => context.read<HomeCubit>().saveSessionChanges()
+              : null,
+          icon: isSaving
+              ? CircularProgressIndicator.adaptive()
+              : const Icon(Icons.save),
           label: Text('Save'),
         );
       },
@@ -450,8 +539,12 @@ class _DisconnectButton extends StatelessWidget {
         final isEnabled = state.canDisconnect;
         final isDisconnecting = state.isDisconnecting;
         return OutlinedButton.icon(
-          onPressed: isEnabled ? () => context.read<HomeCubit>().disconnect() : null,
-          icon: isDisconnecting ? CircularProgressIndicator.adaptive() : const Icon(Icons.stop),
+          onPressed: isEnabled
+              ? () => context.read<HomeCubit>().disconnect()
+              : null,
+          icon: isDisconnecting
+              ? CircularProgressIndicator.adaptive()
+              : const Icon(Icons.stop),
           label: Text('Disconnect'),
         );
       },

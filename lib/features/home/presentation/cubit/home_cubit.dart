@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:http/http.dart' as http;
 import 'package:openai_realtime/openai_realtime.dart';
 
 import '../../../../app/config/app_config.dart';
@@ -14,7 +15,7 @@ import '../models/inputs/prompt_input.dart';
 import '../models/inputs/voice_input.dart';
 import '../models/log_entry.dart';
 import '../models/message_entry.dart';
-import 'package:http/http.dart' as http;
+import '../models/tool_option.dart';
 
 part 'home_state.dart';
 
@@ -24,6 +25,7 @@ class HomeCubit extends Cubit<HomeState> {
       super(
         HomeState(
           apiKey: ApiKeyInput.pure(defaultApiKey.trim()),
+          toolToggles: defaultToolToggles(),
         ),
       );
 
@@ -35,13 +37,16 @@ class HomeCubit extends Cubit<HomeState> {
   DateTime? _sessionCreatedAt;
   final Map<String, int> _messageIndexById = <String, int>{};
   final Set<String> _responseTextKeys = <String>{};
+  final Map<String, String> _toolNameByCallId = <String, String>{};
 
   void onApiKeyChanged(String value) {
-    if (state.canFixedFieldsChange) emit(state.copyWith(apiKey: ApiKeyInput.dirty(value)));
+    if (state.canFixedFieldsChange)
+      emit(state.copyWith(apiKey: ApiKeyInput.dirty(value)));
   }
 
   void onModelChanged(String value) {
-    if (state.canFixedFieldsChange) emit(state.copyWith(model: ModelInput.dirty(value)));
+    if (state.canFixedFieldsChange)
+      emit(state.copyWith(model: ModelInput.dirty(value)));
   }
 
   void onInputAudioTranscriptionChanged(String value) {
@@ -54,15 +59,25 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   void onVoiceChanged(String value) {
-    if (state.canFixedFieldsChange) emit(state.copyWith(voice: VoiceInput.dirty(value)));
+    if (state.canFixedFieldsChange)
+      emit(state.copyWith(voice: VoiceInput.dirty(value)));
   }
 
   void onInstructionsChanged(String value) {
-    if (state.canUnfixedFieldsChange) emit(state.copyWith(instructions: InstructionsInput.dirty(value)));
+    if (state.canUnfixedFieldsChange)
+      emit(state.copyWith(instructions: InstructionsInput.dirty(value)));
+  }
+
+  void onToolToggled(String name, bool enabled) {
+    if (!state.canUnfixedFieldsChange) return;
+    final nextToggles = _normalizedToolToggles(state.toolToggles)
+      ..[name] = enabled;
+    emit(state.copyWith(toolToggles: nextToggles));
   }
 
   void onPromptChanged(String value) {
-    if (state.isConnected) emit(state.copyWith(prompt: PromptInput.dirty(value)));
+    if (state.isConnected)
+      emit(state.copyWith(prompt: PromptInput.dirty(value)));
   }
 
   void clearLogs() {
@@ -77,6 +92,9 @@ class HomeCubit extends Cubit<HomeState> {
     if (!state.canConnect && !state.isValid) return;
 
     emit(state.copyWith(status: HomeStatus.connecting));
+    _toolNameByCallId.clear();
+    _responseTextKeys.clear();
+    _messageIndexById.clear();
 
     final debugLogging = _config.flavor == Flavor.dev;
     _client = OpenAIRealtimeClient(
@@ -126,6 +144,9 @@ class HomeCubit extends Cubit<HomeState> {
     await _detachSubscriptions();
     _client = null;
     _sessionCreatedAt = null;
+    _toolNameByCallId.clear();
+    _responseTextKeys.clear();
+    _messageIndexById.clear();
     emit(
       state.copyWith(
         status: HomeStatus.initial,
@@ -164,7 +185,7 @@ class HomeCubit extends Cubit<HomeState> {
     if (!state.isConnected || _client == null) return false;
     emit(state.copyWith(status: HomeStatus.saving));
     try {
-      await _sendSessionUpdate(instructionsChanged: true);
+      await _sendSessionUpdate(instructionsChanged: true, toolsChanged: true);
       emit(state.copyWith(status: HomeStatus.connected));
       return true;
     } catch (err) {
@@ -269,6 +290,14 @@ class HomeCubit extends Cubit<HomeState> {
         break;
       case ResponseOutputItemAddedEvent e:
         final item = e.item;
+        if (item.type == 'function_call') {
+          final callId = item.callId;
+          final name = item.name;
+          if (callId != null && name != null) {
+            _toolNameByCallId[callId] = name;
+          }
+          break;
+        }
         if (item.type == 'message') {
           final itemId = item.id ?? 'output_item_${e.outputIndex}';
           final outputKey = _outputKey(itemId, e.outputIndex, 0);
@@ -283,13 +312,17 @@ class HomeCubit extends Cubit<HomeState> {
               .where((text) => text.isNotEmpty)
               .join('\n');
 
-          final seedText = initialText.isNotEmpty ? initialText : initialTranscript;
+          final seedText = initialText.isNotEmpty
+              ? initialText
+              : initialTranscript;
           if (seedText.isEmpty) break;
 
           final useTextId = initialText.isNotEmpty;
           if (useTextId) _responseTextKeys.add(outputKey);
           messageUpdate = _MessageUpdate.text(
-            id: useTextId ? _outputTextId(outputKey) : _outputAudioTranscriptId(outputKey),
+            id: useTextId
+                ? _outputTextId(outputKey)
+                : _outputAudioTranscriptId(outputKey),
             direction: LogDirection.server,
             text: seedText,
             isFinal: item.status == 'completed',
@@ -355,25 +388,67 @@ class HomeCubit extends Cubit<HomeState> {
   Future<void> _handleToolCall(
     ResponseFunctionCallArgumentsDoneEvent event,
   ) async {
+    final callId = event.callId;
+    final toolName = _toolNameByCallId[callId] ?? 'unknown_tool';
+    final toggles = _normalizedToolToggles(state.toolToggles);
+    final isEnabled = toggles[toolName] ?? false;
+
+    Map<String, dynamic> output;
     try {
       final params = event.arguments;
       final args = jsonDecode(params) as Map<String, dynamic>;
-      if (true) {
-        final location = (args['location'] as String);
-        await _client?.sendEvent(
-          ConversationItemCreateEvent(
-            item: RealtimeItem(
-              type: 'function_call_output',
-              output: jsonEncode(await getWeatherOpenMeteo(location)),
-              callId: event.callId,
-            ),
-          ),
-        );
-        await _client?.sendEvent(ResponseCreateEvent());
+      if (toolName == 'unknown_tool') {
+        output = {'error': 'Tool not recognized for call "$callId"'};
+      } else if (!isEnabled) {
+        output = {'error': 'Tool "$toolName" is disabled by the user'};
+      } else {
+        switch (toolName) {
+          case 'get_weather':
+            output = await _executeGetWeather(args);
+            break;
+          default:
+            output = {'error': 'Tool "$toolName" is not implemented yet'};
+            break;
+        }
       }
-    } catch (_) {}
+    } catch (err) {
+      output = {'error': '$err'};
+    }
 
-    return;
+    await _sendToolOutput(callId, output);
+    await _client?.sendEvent(ResponseCreateEvent());
+  }
+
+  Future<Map<String, dynamic>> _executeGetWeather(
+    Map<String, dynamic> args,
+  ) async {
+    final location = (args['location'] as String?)?.trim();
+    if (location == null || location.isEmpty)
+      throw ArgumentError('location is required');
+
+    final requestedUnit = ((args['unit'] as String?) ?? 'c').toLowerCase();
+    final base = await getWeatherOpenMeteo(location);
+    final result = {...base, 'unit': requestedUnit == 'f' ? 'f' : 'c'};
+    final tempC = base['temp_c'];
+    if (requestedUnit == 'f' && tempC is num) {
+      result['temp_f'] = (tempC * 9 / 5) + 32;
+    }
+    return result;
+  }
+
+  Future<void> _sendToolOutput(
+    String callId,
+    Map<String, dynamic> payload,
+  ) async {
+    await _client?.sendEvent(
+      ConversationItemCreateEvent(
+        item: RealtimeItem(
+          type: 'function_call_output',
+          output: jsonEncode(payload),
+          callId: callId,
+        ),
+      ),
+    );
   }
 
   Future<Map<String, dynamic>> getWeatherOpenMeteo(String city) async {
@@ -440,54 +515,32 @@ class HomeCubit extends Cubit<HomeState> {
   Future<void> _sendSessionUpdate({
     bool forceAll = false,
     bool instructionsChanged = false,
+    bool toolsChanged = false,
   }) async {
     if (_client == null) return;
 
     final includeInstructions = forceAll || instructionsChanged;
     final includeVoice = forceAll;
     final includeAudioTranscription = forceAll;
+    final includeTools = forceAll || toolsChanged;
+    final tools = includeTools
+        ? _enabledRealtimeTools(state.toolToggles)
+        : null;
 
     final session = RealtimeSessionConfig(
       voice: includeVoice ? state.voice.value : null,
-      instructions: includeInstructions ? state.instructions.value.trim() : null,
-      inputAudioTranscription: includeAudioTranscription ? {'model': state.inputAudioTranscription.value} : null,
-      tools: [
-        RealtimeTool(
-          type: 'function',
-          name: 'get_weather',
-          description: 'Determine weather in my location',
-          parameters: {
-            "type": "object",
-            "properties": {
-              "location": {
-                "type": "string",
-                "description": "The city and state e.g. San Francisco, CA",
-              },
-              "unit": {
-                "type": "string",
-                "enum": ["c", "f"],
-              },
-            },
-            "additionalProperties": false,
-            "required": ["location", "unit"],
-          },
-        ),
-        RealtimeTool(
-          type: 'function',
-          name: 'get_stock_price',
-          description: 'Get the current stock price',
-          parameters: {
-            "type": "object",
-            "properties": {
-              "symbol": {"type": "string", "description": "The stock symbol"},
-            },
-            "additionalProperties": false,
-            "required": ["symbol"],
-          },
-        ),
-      ],
+      instructions: includeInstructions
+          ? state.instructions.value.trim()
+          : null,
+      inputAudioTranscription: includeAudioTranscription
+          ? {'model': state.inputAudioTranscription.value}
+          : null,
+      tools: tools,
     );
-    if (session.voice == null && session.instructions == null && session.inputAudioTranscription == null) {
+    if (session.voice == null &&
+        session.instructions == null &&
+        session.inputAudioTranscription == null &&
+        session.tools == null) {
       return;
     }
     await _client!.sendEvent(SessionUpdateEvent(session: session));
@@ -535,8 +588,11 @@ class HomeCubit extends Cubit<HomeState> {
     Object? rawEvent,
   }) {
     final now = timestamp ?? DateTime.now();
-    final normalizedPayload = Map<String, dynamic>.from(payload)..putIfAbsent('type', () => type);
-    final elapsed = _sessionCreatedAt != null ? now.difference(_sessionCreatedAt!) : null;
+    final normalizedPayload = Map<String, dynamic>.from(payload)
+      ..putIfAbsent('type', () => type);
+    final elapsed = _sessionCreatedAt != null
+        ? now.difference(_sessionCreatedAt!)
+        : null;
     final detail = LogEventDetail(
       payload: normalizedPayload,
       timestamp: now,
@@ -548,7 +604,8 @@ class HomeCubit extends Cubit<HomeState> {
     if (logs.isNotEmpty) {
       final last = logs.last;
       if (last.type == type && last.direction == direction) {
-        final updatedDetails = List<LogEventDetail>.from(last.details)..add(detail);
+        final updatedDetails = List<LogEventDetail>.from(last.details)
+          ..add(detail);
         logs[logs.length - 1] = last.copyWith(details: updatedDetails);
         emit(state.copyWith(logs: logs));
         return;
@@ -590,7 +647,9 @@ class HomeCubit extends Cubit<HomeState> {
           : incoming;
       final shouldStream = isFinal ? false : (hasDelta || existing.isStreaming);
       final shouldInterrupt = interrupt || existing.isInterrupted;
-      if (nextText == existing.text && existing.isStreaming == shouldStream && existing.isInterrupted == shouldInterrupt) {
+      if (nextText == existing.text &&
+          existing.isStreaming == shouldStream &&
+          existing.isInterrupted == shouldInterrupt) {
         return;
       }
       messages[index] = existing.copyWith(
@@ -613,9 +672,25 @@ class HomeCubit extends Cubit<HomeState> {
     emit(state.copyWith(messages: messages));
   }
 
-  String _inputTranscriptId(String itemId, int contentIndex) => 'input_audio:$itemId:$contentIndex';
+  Map<String, bool> _normalizedToolToggles(Map<String, bool> toggles) {
+    final merged = defaultToolToggles();
+    merged.addAll(toggles);
+    return merged;
+  }
 
-  String _outputKey(String itemId, int outputIndex, int contentIndex) => '$itemId:$outputIndex:$contentIndex';
+  List<RealtimeTool> _enabledRealtimeTools(Map<String, bool> toggles) {
+    final merged = _normalizedToolToggles(toggles);
+    return kToolOptions
+        .where((tool) => merged[tool.name] ?? false)
+        .map((tool) => tool.toRealtimeTool())
+        .toList();
+  }
+
+  String _inputTranscriptId(String itemId, int contentIndex) =>
+      'input_audio:$itemId:$contentIndex';
+
+  String _outputKey(String itemId, int outputIndex, int contentIndex) =>
+      '$itemId:$outputIndex:$contentIndex';
 
   String _outputTextId(String key) => 'output_text:$key';
 

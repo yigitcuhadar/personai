@@ -14,6 +14,7 @@ class HomeState extends Equatable {
     this.voice = const VoiceInput.pure(),
     this.instructions = const InstructionsInput.pure(),
     this.prompt = const PromptInput.pure(),
+    this.toolToggles = const {},
   });
 
   final HomeStatus status;
@@ -28,8 +29,14 @@ class HomeState extends Equatable {
   final VoiceInput voice;
   final InstructionsInput instructions;
   final PromptInput prompt;
+  final Map<String, bool> toolToggles;
 
-  bool get isValid => apiKey.isValid && model.isValid && voice.isValid && instructions.isValid && inputAudioTranscription.isValid;
+  bool get isValid =>
+      apiKey.isValid &&
+      model.isValid &&
+      voice.isValid &&
+      instructions.isValid &&
+      inputAudioTranscription.isValid;
 
   bool get isInitial => status == HomeStatus.initial;
   bool get isConnecting => status == HomeStatus.connecting;
@@ -56,6 +63,7 @@ class HomeState extends Equatable {
     InstructionsInput? instructions,
     VoiceInput? voice,
     InputAudioTranscriptionInput? inputAudioTranscription,
+    Map<String, bool>? toolToggles,
   }) {
     return HomeState(
       status: status ?? this.status,
@@ -69,7 +77,9 @@ class HomeState extends Equatable {
       prompt: prompt ?? this.prompt,
       instructions: instructions ?? this.instructions,
       voice: voice ?? this.voice,
-      inputAudioTranscription: inputAudioTranscription ?? this.inputAudioTranscription,
+      inputAudioTranscription:
+          inputAudioTranscription ?? this.inputAudioTranscription,
+      toolToggles: toolToggles ?? this.toolToggles,
     );
   }
 
@@ -87,6 +97,7 @@ class HomeState extends Equatable {
     instructions,
     voice,
     inputAudioTranscription,
+    toolToggles,
   ];
 }
 
