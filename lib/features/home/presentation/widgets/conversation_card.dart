@@ -252,87 +252,92 @@ class _MessageBubble extends StatelessWidget {
     final label = isServer ? 'Server' : 'You';
     final labelColor = isServer ? const Color(0xFF3D7BFF) : const Color(0xFF2E9E65);
 
-    final bubble = Align(
-      alignment: alignment,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 680),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: bubbleColor,
-            borderRadius: BorderRadius.only(
-              topLeft: const Radius.circular(16),
-              topRight: const Radius.circular(16),
-              bottomLeft: Radius.circular(isServer ? 6 : 16),
-              bottomRight: Radius.circular(isServer ? 16 : 6),
-            ),
-            border: Border.all(color: accentColor.withAlpha(90)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withAlpha(12),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+    final bubble = GestureDetector(
+      onTap: () {
+        print('Tapped on ${group.entries[0].id} ${group.entries[0].text}');
+      },
+      child: Align(
+        alignment: alignment,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 680),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: bubbleColor,
+              borderRadius: BorderRadius.only(
+                topLeft: const Radius.circular(16),
+                topRight: const Radius.circular(16),
+                bottomLeft: Radius.circular(isServer ? 6 : 16),
+                bottomRight: Radius.circular(isServer ? 16 : 6),
               ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(10),
-            child: Column(
-              crossAxisAlignment: isServer ? CrossAxisAlignment.start : CrossAxisAlignment.end,
-              children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: accentColor,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      label,
-                      style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w600,
-                        color: labelColor,
-                      ),
-                    ),
-                  ],
+              border: Border.all(color: accentColor.withAlpha(90)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(12),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
                 ),
-                const SizedBox(height: 6),
-                Column(
-                  crossAxisAlignment: isServer ? CrossAxisAlignment.start : CrossAxisAlignment.end,
-                  children: [
-                    for (int i = 0; i < group.entries.length; i++) ...[
-                      if (i > 0) const SizedBox(height: 4),
-                      SelectableText(
-                        group.entries[i].text,
-                        style: const TextStyle(fontSize: 12, height: 1.35),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: isServer ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: accentColor,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w600,
+                          color: labelColor,
+                        ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 6),
+                  Column(
+                    crossAxisAlignment: isServer ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+                    children: [
+                      for (int i = 0; i < group.entries.length; i++) ...[
+                        if (i > 0) const SizedBox(height: 4),
+                        SelectableText(
+                          group.entries[i].text,
+                          style: const TextStyle(fontSize: 12, height: 1.35),
+                        ),
+                      ],
+                    ],
+                  ),
+                  if (group.isStreaming) ...[
+                    const SizedBox(height: 6),
+                    CircularProgressIndicator.adaptive(),
                   ],
-                ),
-                if (group.isStreaming) ...[
-                  const SizedBox(height: 6),
-                  CircularProgressIndicator.adaptive(),
-                ],
-                if (group.isInterrupted) ...[
-                  const SizedBox(height: 6),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'interrupted!',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontStyle: FontStyle.italic,
-                        color: Colors.black54,
+                  if (group.isInterrupted) ...[
+                    const SizedBox(height: 6),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'interrupted!',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontStyle: FontStyle.italic,
+                          color: Colors.black54,
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),

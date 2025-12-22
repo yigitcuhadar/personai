@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
@@ -13,6 +14,7 @@ import '../models/inputs/prompt_input.dart';
 import '../models/inputs/voice_input.dart';
 import '../models/log_entry.dart';
 import '../models/message_entry.dart';
+import 'package:http/http.dart' as http;
 
 part 'home_state.dart';
 
@@ -72,7 +74,7 @@ class HomeCubit extends Cubit<HomeState> {
     emit(state.copyWith(status: HomeStatus.connecting));
 
     final debugLogging = _config.flavor == Flavor.dev;
-     _client = OpenAIRealtimeClient(
+    _client = OpenAIRealtimeClient(
       accessToken: state.apiKey.value,
       debug: debugLogging,
     );
@@ -270,6 +272,9 @@ class HomeCubit extends Cubit<HomeState> {
           isFinal: true,
         );
         break;
+      case ResponseFunctionCallArgumentsDoneEvent e:
+        _handleToolCall(e);
+        break;
       case InputAudioBufferSpeechStartedEvent():
       case InputAudioBufferClearedEvent():
       case InputAudioBufferSpeechStoppedEvent():
@@ -293,7 +298,6 @@ class HomeCubit extends Cubit<HomeState> {
       case ResponseOutputAudioDeltaEvent():
       case ResponseOutputAudioDoneEvent():
       case ResponseFunctionCallArgumentsDeltaEvent():
-      case ResponseFunctionCallArgumentsDoneEvent():
       case ResponseMcpCallArgumentsDeltaEvent():
       case ResponseMcpCallArgumentsDoneEvent():
       case ResponseMcpCallInProgressEvent():
@@ -322,6 +326,68 @@ class HomeCubit extends Cubit<HomeState> {
       timestamp: now,
       rawEvent: event,
     );
+  }
+
+  Future<void> _handleToolCall(
+    ResponseFunctionCallArgumentsDoneEvent event,
+  ) async {
+    try {
+      final params = event.arguments;
+      final args = jsonDecode(params) as Map<String, dynamic>;
+      if (true) {
+        final location = (args['location'] as String);
+        await _client?.sendEvent(
+          ConversationItemCreateEvent(
+            item: RealtimeItem(
+              type: 'function_call_output',
+              output: jsonEncode(await getWeatherOpenMeteo(location)),
+              callId: event.callId,
+            ),
+          ),
+        );
+        await _client?.sendEvent(ResponseCreateEvent());
+      }
+    } catch (_) {}
+
+    return;
+  }
+
+  Future<Map<String, dynamic>> getWeatherOpenMeteo(String city) async {
+    // 1) Geocoding
+    final geoUri = Uri.parse(
+      'https://geocoding-api.open-meteo.com/v1/search'
+      '?name=${Uri.encodeComponent(city)}&count=1&language=en&format=json',
+    );
+    final geoRes = await http.get(geoUri);
+    if (geoRes.statusCode != 200) throw Exception('Geocoding failed');
+    final geoJson = jsonDecode(geoRes.body) as Map<String, dynamic>;
+    final results = (geoJson['results'] as List?) ?? [];
+    if (results.isEmpty) throw Exception('City not found');
+
+    final first = results.first as Map<String, dynamic>;
+    final lat = first['latitude'];
+    final lon = first['longitude'];
+
+    // 2) Forecast / current
+    final wxUri = Uri.parse(
+      'https://api.open-meteo.com/v1/forecast'
+      '?latitude=$lat&longitude=$lon'
+      '&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m'
+      '&timezone=auto',
+    );
+    final wxRes = await http.get(wxUri);
+    if (wxRes.statusCode != 200) throw Exception('Weather fetch failed');
+    final wxJson = jsonDecode(wxRes.body) as Map<String, dynamic>;
+
+    // Realtime tool output olarak döneceğin “sade” payload
+    final current = (wxJson['current'] as Map<String, dynamic>?) ?? {};
+    return {
+      'location': {'name': first['name'], 'country': first['country']},
+      'temp_c': current['temperature_2m'],
+      'humidity': current['relative_humidity_2m'],
+      'weather_code': current['weather_code'],
+      'wind_kmh': current['wind_speed_10m'],
+    };
   }
 
   void _handleClientEvent(RealtimeClientEvent event) {
@@ -361,6 +427,38 @@ class HomeCubit extends Cubit<HomeState> {
       voice: includeVoice ? state.voice.value : null,
       instructions: includeInstructions ? state.instructions.value.trim() : null,
       inputAudioTranscription: includeAudioTranscription ? {'model': state.inputAudioTranscription.value} : null,
+      tools: [
+        RealtimeTool(
+          type: 'function',
+          name: 'get_weather',
+          description: 'Determine weather in my location',
+          parameters: {
+            "type": "object",
+            "properties": {
+              "location": {"type": "string", "description": "The city and state e.g. San Francisco, CA"},
+              "unit": {
+                "type": "string",
+                "enum": ["c", "f"],
+              },
+            },
+            "additionalProperties": false,
+            "required": ["location", "unit"],
+          },
+        ),
+        RealtimeTool(
+          type: 'function',
+          name: 'get_stock_price',
+          description: 'Get the current stock price',
+          parameters: {
+            "type": "object",
+            "properties": {
+              "symbol": {"type": "string", "description": "The stock symbol"},
+            },
+            "additionalProperties": false,
+            "required": ["symbol"],
+          },
+        ),
+      ],
     );
     if (session.voice == null && session.instructions == null && session.inputAudioTranscription == null) {
       return;

@@ -23,16 +23,16 @@ void enableOpenAIRealtimeLogging() {
 
 void _defaultPrinter(LogRecord record) {
   // ignore: avoid_print
-  debugPrint(
+  print(
     '${record.time.toIso8601String()} '
-    '${record.level.name} ${record.loggerName}: ${record.message}', wrapWidth: 1024
+    '${record.level.name} ${record.loggerName}: ${record.message}',
   );
   if (record.error != null) {
     // ignore: avoid_print
-    debugPrint('Error: ${record.error}', wrapWidth: 1024);
+    print('Error: ${record.error}');
   }
   if (record.stackTrace != null) {
     // ignore: avoid_print
-    debugPrint('Stack trace: ${record.stackTrace}', wrapWidth: 1024);
+    print('Stack trace: ${record.stackTrace}');
   }
 }
