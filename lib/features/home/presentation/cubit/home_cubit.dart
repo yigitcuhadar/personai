@@ -22,6 +22,7 @@ part 'home_state.dart';
 class HomeCubit extends Cubit<HomeState> {
   HomeCubit({required AppConfig config, String defaultApiKey = ''})
     : _config = config,
+      _alphaVantageApiKey = config.alphaVantageApiKey,
       super(
         HomeState(
           apiKey: ApiKeyInput.pure(defaultApiKey.trim()),
@@ -30,6 +31,7 @@ class HomeCubit extends Cubit<HomeState> {
       );
 
   final AppConfig _config;
+  final String? _alphaVantageApiKey;
   OpenAIRealtimeClient? _client;
   StreamSubscription<RealtimeServerEvent>? _serverSubscription;
   StreamSubscription<RealtimeClientEvent>? _clientSubscription;
@@ -406,6 +408,9 @@ class HomeCubit extends Cubit<HomeState> {
           case 'get_weather':
             output = await _executeGetWeather(args);
             break;
+          case 'get_stock_price':
+            output = await _executeGetStockPrice(args);
+            break;
           default:
             output = {'error': 'Tool "$toolName" is not implemented yet'};
             break;
@@ -449,6 +454,54 @@ class HomeCubit extends Cubit<HomeState> {
         ),
       ),
     );
+  }
+
+  Future<Map<String, dynamic>> _executeGetStockPrice(
+    Map<String, dynamic> args,
+  ) async {
+    final apiKey = _alphaVantageApiKey;
+    if (apiKey == null || apiKey.isEmpty) {
+      throw Exception('Alpha Vantage API key not configured');
+    }
+
+    final symbol = (args['symbol'] as String?)?.trim().toUpperCase();
+    if (symbol == null || symbol.isEmpty) {
+      throw ArgumentError('symbol is required');
+    }
+
+    final uri = Uri.parse(
+      'https://www.alphavantage.co/query'
+      '?function=GLOBAL_QUOTE'
+      '&symbol=$symbol'
+      '&apikey=$apiKey',
+    );
+
+    final res = await http.get(uri);
+    if (res.statusCode != 200) {
+      throw Exception('Stock fetch failed (${res.statusCode})');
+    }
+
+    final json = jsonDecode(res.body) as Map<String, dynamic>;
+    final quote = (json['Global Quote'] as Map?)?.cast<String, dynamic>() ?? {};
+    if (quote.isEmpty) throw Exception('Quote not found');
+
+    double? _num(String? raw) => raw == null ? null : double.tryParse(raw);
+    final price = _num(quote['05. price'] as String?);
+    final change = _num(quote['09. change'] as String?);
+    final changePercentRaw = (quote['10. change percent'] as String?) ?? '';
+    final changePercent = double.tryParse(
+      changePercentRaw.replaceAll('%', '').trim(),
+    );
+
+    return {
+      'symbol': quote['01. symbol'] ?? symbol,
+      'price': price ?? quote['05. price'],
+      'currency': 'USD',
+      'change': change,
+      'change_percent': changePercent ?? changePercentRaw,
+      'latest_trading_day': quote['07. latest trading day'],
+      'source': 'Alpha Vantage',
+    };
   }
 
   Future<Map<String, dynamic>> getWeatherOpenMeteo(String city) async {
