@@ -28,6 +28,12 @@
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Personai needs microphone access for real-time voice conversations.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Takvime etkinlik eklemek ve yönetmek için erişim gerekiyor.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Access contacts for event attendee editing.</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>Access most functions for calendar viewing and editing.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

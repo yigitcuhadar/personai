@@ -1,4 +1,6 @@
 PODS:
+  - device_calendar (0.0.1):
+    - Flutter
   - Firebase/Auth (12.6.0):
     - Firebase/CoreOnly
     - FirebaseAuth (~> 12.6.0)
@@ -63,6 +65,7 @@ PODS:
   - WebRTC-SDK (137.7151.04)
 
 DEPENDENCIES:
+  - device_calendar (from `.symlinks/plugins/device_calendar/ios`)
   - firebase_auth (from `.symlinks/plugins/firebase_auth/ios`)
   - firebase_core (from `.symlinks/plugins/firebase_core/ios`)
   - Flutter (from `Flutter`)
@@ -84,6 +87,8 @@ SPEC REPOS:
     - WebRTC-SDK
 
 EXTERNAL SOURCES:
+  device_calendar:
+    :path: ".symlinks/plugins/device_calendar/ios"
   firebase_auth:
     :path: ".symlinks/plugins/firebase_auth/ios"
   firebase_core:
@@ -96,6 +101,7 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/path_provider_foundation/darwin"
 
 SPEC CHECKSUMS:
+  device_calendar: b55b2c5406cfba45c95a59f9059156daee1f74ed
   Firebase: a451a7b61536298fd5cbfe3a746fd40443a50679
   firebase_auth: f547a06ed4933a1da2b9ac8d8c64ae09d113c8e1
   firebase_core: ba00a168e719694f38960502ceb560285603d073

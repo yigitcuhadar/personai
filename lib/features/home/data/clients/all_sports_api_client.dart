@@ -127,7 +127,7 @@ class AllSportsApiClient {
       matchedLeague = _matchByName(
         leaguePool.isNotEmpty ? leaguePool : leaguesResponse.items,
         'league_name',
-        normalizedLeague!,
+        normalizedLeague,
       );
       leagueId = matchedLeague?['league_key']?.toString();
       countryId = matchedLeague?['country_key']?.toString();

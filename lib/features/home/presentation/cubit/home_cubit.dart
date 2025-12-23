@@ -10,6 +10,7 @@ import '../../../../app/config/app_config.dart';
 import '../../data/clients/alpha_vantage_client.dart';
 import '../../data/clients/all_sports_api_client.dart';
 import '../../data/clients/open_meteo_client.dart';
+import '../../data/services/calendar_service.dart';
 import '../models/inputs/api_key_input.dart';
 import '../models/inputs/instructions_input.dart';
 import '../models/inputs/input_audio_transcription_input.dart';
@@ -29,6 +30,7 @@ class HomeCubit extends Cubit<HomeState> {
     AlphaVantageClient? alphaVantageClient,
     AllSportsApiClient? allSportsApiClient,
     OpenMeteoClient? openMeteoClient,
+    CalendarService? calendarService,
   }) : _config = config,
        super(
          HomeState(
@@ -56,12 +58,14 @@ class HomeCubit extends Cubit<HomeState> {
           apiKey: config.allSportsApiKey,
           onHttpLog: _logHttp,
         ));
+    _calendarService = calendarService ?? _calendarServiceSingleton ?? (_calendarServiceSingleton = CalendarService());
   }
 
   final AppConfig _config;
   late final AlphaVantageClient _alphaVantageClient;
   late final AllSportsApiClient _allSportsApiClient;
   late final OpenMeteoClient _openMeteoClient;
+  late final CalendarService _calendarService;
   OpenAIRealtimeClient? _client;
   StreamSubscription<RealtimeServerEvent>? _serverSubscription;
   StreamSubscription<RealtimeClientEvent>? _clientSubscription;
@@ -74,6 +78,7 @@ class HomeCubit extends Cubit<HomeState> {
   static AlphaVantageClient? _alphaVantageClientSingleton;
   static AllSportsApiClient? _allSportsApiClientSingleton;
   static OpenMeteoClient? _openMeteoClientSingleton;
+  static CalendarService? _calendarServiceSingleton;
 
   void onApiKeyChanged(String value) {
     if (state.canFixedFieldsChange) emit(state.copyWith(apiKey: ApiKeyInput.dirty(value)));
@@ -438,6 +443,18 @@ class HomeCubit extends Cubit<HomeState> {
           case 'get_livescore':
             output = await _executeGetLiveScore(args);
             break;
+          case 'get_calendar_events':
+            output = await _executeGetCalendarEvents(args);
+            break;
+          case 'create_calendar_event':
+            output = await _executeCreateCalendarEvent(args);
+            break;
+          case 'update_calendar_event':
+            output = await _executeUpdateCalendarEvent(args);
+            break;
+          case 'delete_calendar_event':
+            output = await _executeDeleteCalendarEvent(args);
+            break;
           default:
             output = {'error': 'Tool "$toolName" is not implemented yet'};
             break;
@@ -494,6 +511,81 @@ class HomeCubit extends Cubit<HomeState> {
     return _allSportsApiClient.fetchLiveScoreByQuery(
       countryName: countryName,
       leagueName: leagueName,
+    );
+  }
+
+  Future<Map<String, dynamic>> _executeGetCalendarEvents(
+    Map<String, dynamic> args,
+  ) {
+    final calendarId = (args['calendar_id'] as String?)?.trim();
+    final eventId = (args['event_id'] as String?)?.trim();
+    final startTime = (args['start_time'] as String?)?.trim();
+    final endTime = (args['end_time'] as String?)?.trim();
+    final searchQuery = (args['search_query'] as String?)?.trim();
+    final maxResults = (args['max_results'] as num?)?.toInt();
+    final includeAllDay = args['include_all_day'] as bool? ?? true;
+
+    return _calendarService.listEvents(
+      calendarId: calendarId,
+      eventId: eventId,
+      startTime: startTime,
+      endTime: endTime,
+      searchQuery: searchQuery,
+      maxResults: maxResults,
+      includeAllDay: includeAllDay,
+    );
+  }
+
+  Future<Map<String, dynamic>> _executeCreateCalendarEvent(
+    Map<String, dynamic> args,
+  ) async {
+    final title = (args['title'] as String?)?.trim();
+    final start = (args['start_time'] as String?)?.trim();
+    final end = (args['end_time'] as String?)?.trim();
+    if (title == null || title.isEmpty) {
+      throw ArgumentError('title is required');
+    }
+    if (start == null || start.isEmpty || end == null || end.isEmpty) {
+      throw ArgumentError('start_time and end_time are required');
+    }
+    return _calendarService.createEvent(
+      calendarId: (args['calendar_id'] as String?)?.trim(),
+      title: title,
+      description: (args['description'] as String?)?.trim(),
+      startTime: start,
+      endTime: end,
+      allDay: args['all_day'] == true,
+    );
+  }
+
+  Future<Map<String, dynamic>> _executeUpdateCalendarEvent(
+    Map<String, dynamic> args,
+  ) async {
+    final eventId = (args['event_id'] as String?)?.trim();
+    if (eventId == null || eventId.isEmpty) {
+      throw ArgumentError('event_id is required');
+    }
+    return _calendarService.updateEvent(
+      calendarId: (args['calendar_id'] as String?)?.trim(),
+      eventId: eventId,
+      title: (args['title'] as String?)?.trim(),
+      description: (args['description'] as String?)?.trim(),
+      startTime: (args['start_time'] as String?)?.trim(),
+      endTime: (args['end_time'] as String?)?.trim(),
+      allDay: args['all_day'] as bool?,
+    );
+  }
+
+  Future<Map<String, dynamic>> _executeDeleteCalendarEvent(
+    Map<String, dynamic> args,
+  ) async {
+    final eventId = (args['event_id'] as String?)?.trim();
+    if (eventId == null || eventId.isEmpty) {
+      throw ArgumentError('event_id is required');
+    }
+    return _calendarService.deleteEvent(
+      calendarId: (args['calendar_id'] as String?)?.trim(),
+      eventId: eventId,
     );
   }
 

@@ -97,6 +97,147 @@ const List<ToolOption> kToolOptions = [
       "required": [],
     },
   ),
+  ToolOption(
+    name: 'get_calendar_events',
+    label: 'Get calendar events',
+    description:
+        'List calendar events via device_calendar to answer scheduling questions. If no start/end is provided, default to start of today through the next 30 days. Use event_id for a single event lookup. Filter results with search_query across title/description/location.',
+    shortDescription: 'Takvim etkinliklerini getir',
+    parameters: {
+      "type": "object",
+      "properties": {
+        "calendar_id": {
+          "type": "string",
+          "description":
+              "Optional calendar id; leave empty to use the first writable calendar.",
+        },
+        "event_id": {
+          "type": "string",
+          "description":
+              "When provided, fetch only this event id (start/end are ignored).",
+        },
+        "start_time": {
+          "type": "string",
+          "description":
+              "Range start in ISO-8601 (e.g., 2025-01-01T09:00:00Z). Defaults to the start of today.",
+        },
+        "end_time": {
+          "type": "string",
+          "description":
+              "Range end in ISO-8601. Defaults to 30 days after start_time when omitted.",
+        },
+        "search_query": {
+          "type": "string",
+          "description":
+              "Keyword filter applied to title, description, and location.",
+        },
+        "max_results": {
+          "type": "integer",
+          "description":
+              "Limit the number of events returned (minimum 1, maximum 100).",
+          "minimum": 1,
+          "maximum": 100,
+        },
+        "include_all_day": {
+          "type": "boolean",
+          "description":
+              "Whether to include all-day events in results (default true).",
+        },
+      },
+      "required": [],
+      "additionalProperties": false,
+    },
+  ),
+  ToolOption(
+    name: 'create_calendar_event',
+    label: 'Add calendar event',
+    description:
+        'Create a calendar event using device_calendar. Use a writable calendar (provided or default). Require title, start/end time (ISO). Respect all_day flag. Reuse chosen calendar if not provided.',
+    shortDescription: 'Takvime etkinlik ekle',
+    parameters: {
+      "type": "object",
+      "properties": {
+        "calendar_id": {
+          "type": "string",
+          "description":
+              "Optional calendar id; leave empty to use the first writable calendar.",
+        },
+        "title": {"type": "string", "description": "Event title"},
+        "description": {
+          "type": "string",
+          "description": "Optional event description/notes",
+        },
+        "start_time": {
+          "type": "string",
+          "description": "Start time in ISO-8601 (e.g., 2025-01-01T09:00:00Z)",
+        },
+        "end_time": {
+          "type": "string",
+          "description": "End time in ISO-8601 (e.g., 2025-01-01T10:00:00Z)",
+        },
+        "all_day": {
+          "type": "boolean",
+          "description": "Whether the event spans all day",
+        },
+      },
+      "required": ["title", "start_time", "end_time"],
+      "additionalProperties": false,
+    },
+  ),
+  ToolOption(
+    name: 'update_calendar_event',
+    label: 'Update calendar event',
+    description:
+        'Update a calendar event via device_calendar by event_id. Merge provided fields; if calendar_id is omitted, uses first writable calendar. Start/end are ISO strings.',
+    shortDescription: 'Takvim etkinliğini güncelle',
+    parameters: {
+      "type": "object",
+      "properties": {
+        "calendar_id": {
+          "type": "string",
+          "description":
+              "Optional calendar id; leave empty to use the first writable calendar.",
+        },
+        "event_id": {"type": "string", "description": "Existing event id"},
+        "title": {"type": "string", "description": "New title"},
+        "description": {"type": "string", "description": "New description"},
+        "start_time": {
+          "type": "string",
+          "description": "Updated start time ISO-8601",
+        },
+        "end_time": {
+          "type": "string",
+          "description": "Updated end time ISO-8601",
+        },
+        "all_day": {
+          "type": "boolean",
+          "description": "Whether the event spans all day",
+        },
+      },
+      "required": ["event_id"],
+      "additionalProperties": false,
+    },
+  ),
+  ToolOption(
+    name: 'delete_calendar_event',
+    label: 'Delete calendar event',
+    description:
+        'Delete a calendar event via device_calendar using event_id (and optional calendar_id).',
+    shortDescription: 'Takvim etkinliğini sil',
+    parameters: {
+      "type": "object",
+      "properties": {
+        "calendar_id": {
+          "type": "string",
+          "description":
+              "Optional calendar id; leave empty to use the first writable calendar.",
+        },
+        "event_id": {"type": "string", "description": "Existing event id"},
+      },
+      "required": ["event_id"],
+      "additionalProperties": false,
+    },
+  ),
 ];
 
 Map<String, bool> defaultToolToggles() => {

@@ -21,6 +21,7 @@ dependencies:
   get_it: ^9.2.0
   hydrated_bloc: ^10.1.1
   path_provider: ^2.1.5
+  device_calendar: ^4.3.3
     
   authentication_repository:
     path: packages/authentication_repository
