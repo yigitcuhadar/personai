@@ -6,11 +6,9 @@ import 'http_logger.dart';
 
 class AllSportsListResponse {
   const AllSportsListResponse({
-    required this.raw,
     required this.items,
   });
 
-  final dynamic raw;
   final List<Map<String, dynamic>> items;
 }
 
@@ -63,7 +61,6 @@ class AllSportsApiClient {
     final uri = _buildUri('Countries');
     final json = await _getJson(uri, 'allsports:countries');
     _countriesCache = AllSportsListResponse(
-      raw: json,
       items: _extractResultList(json, 'countries'),
     );
     return _countriesCache!;
@@ -80,7 +77,6 @@ class AllSportsApiClient {
     );
     final json = await _getJson(uri, 'allsports:leagues');
     final response = AllSportsListResponse(
-      raw: json,
       items: _extractResultList(json, 'leagues'),
     );
     _leaguesCache[cacheKey] = response;
@@ -151,9 +147,6 @@ class AllSportsApiClient {
 
       final payload = {
         'input': {'country': normalizedCountry, 'league': normalizedLeague},
-        if (countriesResponse != null)
-          'countries_response': countriesResponse.raw,
-        if (leaguesResponse != null) 'leagues_response': leaguesResponse.raw,
         if (matchedCountry != null) 'matched_country': matchedCountry,
         if (matchedLeague != null) 'matched_league': matchedLeague,
         'livescore': livescore,
@@ -183,9 +176,6 @@ class AllSportsApiClient {
 
       final payload = {
         'input': {'country': normalizedCountry, 'league': normalizedLeague},
-        if (countriesResponse != null)
-          'countries_response': countriesResponse.raw,
-        if (leaguesResponse != null) 'leagues_response': leaguesResponse.raw,
         if (matchedCountry != null) 'matched_country': matchedCountry,
         if (matchedLeague != null) 'matched_league': matchedLeague,
         'livescore': livescore,
