@@ -53,26 +53,38 @@ class AllSportsApiClient {
   String? _apiKey;
   final http.Client _httpClient;
   HttpLogger? onHttpLog;
+  AllSportsListResponse? _countriesCache;
+  final Map<String, AllSportsListResponse> _leaguesCache = {};
+  final Map<String, Map<String, dynamic>> _livescoreCache = {};
 
   Future<AllSportsListResponse> fetchCountries() async {
+    if (_countriesCache != null) return _countriesCache!;
+
     final uri = _buildUri('Countries');
     final json = await _getJson(uri, 'allsports:countries');
-    return AllSportsListResponse(
+    _countriesCache = AllSportsListResponse(
       raw: json,
       items: _extractResultList(json, 'countries'),
     );
+    return _countriesCache!;
   }
 
   Future<AllSportsListResponse> fetchLeagues({String? countryId}) async {
+    final cacheKey = countryId?.trim() ?? '';
+    final cached = _leaguesCache[cacheKey];
+    if (cached != null) return cached;
+
     final uri = _buildUri(
       'Leagues',
       extraParams: {if (countryId != null) 'countryId': countryId},
     );
     final json = await _getJson(uri, 'allsports:leagues');
-    return AllSportsListResponse(
+    final response = AllSportsListResponse(
       raw: json,
       items: _extractResultList(json, 'leagues'),
     );
+    _leaguesCache[cacheKey] = response;
+    return response;
   }
 
   Future<Map<String, dynamic>> fetchLiveScoreByQuery({
@@ -97,6 +109,11 @@ class AllSportsApiClient {
     String? leagueId;
 
     if (wantsLeague) {
+      final liveCacheKey =
+          'league:${normalizedLeague}_${normalizedCountry ?? ''}';
+      final cachedLive = _livescoreCache[liveCacheKey];
+      if (cachedLive != null) return cachedLive;
+
       leaguesResponse = await fetchLeagues();
 
       List<Map<String, dynamic>> leaguePool = leaguesResponse.items;
@@ -126,7 +143,28 @@ class AllSportsApiClient {
       if (leagueId == null || leagueId.isEmpty) {
         throw Exception('League not found for "$normalizedLeague"');
       }
+
+      final livescore = await _fetchLiveScore(
+        countryId: countryId,
+        leagueId: leagueId,
+      );
+
+      final payload = {
+        'input': {'country': normalizedCountry, 'league': normalizedLeague},
+        if (countriesResponse != null)
+          'countries_response': countriesResponse.raw,
+        if (leaguesResponse != null) 'leagues_response': leaguesResponse.raw,
+        if (matchedCountry != null) 'matched_country': matchedCountry,
+        if (matchedLeague != null) 'matched_league': matchedLeague,
+        'livescore': livescore,
+      };
+      _livescoreCache[liveCacheKey] = payload;
+      return payload;
     } else {
+      final liveCacheKey = 'country:$normalizedCountry';
+      final cachedLive = _livescoreCache[liveCacheKey];
+      if (cachedLive != null) return cachedLive;
+
       countriesResponse = await fetchCountries();
       matchedCountry = _matchByName(
         countriesResponse.items,
@@ -138,22 +176,23 @@ class AllSportsApiClient {
       if (countryId == null || countryId.isEmpty) {
         throw Exception('Country not found for "$normalizedCountry"');
       }
+      final livescore = await _fetchLiveScore(
+        countryId: countryId,
+        leagueId: leagueId,
+      );
+
+      final payload = {
+        'input': {'country': normalizedCountry, 'league': normalizedLeague},
+        if (countriesResponse != null)
+          'countries_response': countriesResponse.raw,
+        if (leaguesResponse != null) 'leagues_response': leaguesResponse.raw,
+        if (matchedCountry != null) 'matched_country': matchedCountry,
+        if (matchedLeague != null) 'matched_league': matchedLeague,
+        'livescore': livescore,
+      };
+      _livescoreCache[liveCacheKey] = payload;
+      return payload;
     }
-
-    final livescore = await _fetchLiveScore(
-      countryId: countryId,
-      leagueId: leagueId,
-    );
-
-    return {
-      'input': {'country': normalizedCountry, 'league': normalizedLeague},
-      if (countriesResponse != null)
-        'countries_response': countriesResponse.raw,
-      if (leaguesResponse != null) 'leagues_response': leaguesResponse.raw,
-      if (matchedCountry != null) 'matched_country': matchedCountry,
-      if (matchedLeague != null) 'matched_league': matchedLeague,
-      'livescore': livescore,
-    };
   }
 
   Future<Map<String, dynamic>> _fetchLiveScore({

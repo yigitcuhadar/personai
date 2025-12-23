@@ -33,29 +33,33 @@ class OpenMeteoClient {
 
   final http.Client _httpClient;
   HttpLogger? onHttpLog;
+  final Map<String, Map<String, dynamic>> _weatherCache = {};
 
   Future<Map<String, dynamic>> fetchWeatherWithGeocoding(
     String location,
   ) async {
-    final trimmed = location.trim();
-    if (trimmed.isEmpty) throw ArgumentError('location is required');
+    final normalized = _normalizeLocation(location);
+    final cached = _weatherCache[normalized];
+    if (cached != null) return cached;
 
-    final geocoding = await _fetchGeocoding(trimmed);
+    final geocoding = await _fetchGeocoding(normalized);
     final results = (geocoding['results'] as List?) ?? [];
     if (results.isEmpty) throw Exception('City not found');
     final first = results.first as Map<String, dynamic>;
     final lat = first['latitude'];
     final lon = first['longitude'];
     if (lat == null || lon == null) {
-      throw Exception('Latitude/longitude missing for $trimmed');
+      throw Exception('Latitude/longitude missing for $normalized');
     }
 
     final forecast = await _fetchForecast(lat, lon);
 
-    return {
+    final payload = {
       'geocoding': geocoding,
       'forecast': forecast,
     };
+    _weatherCache[normalized] = payload;
+    return payload;
   }
 
   Future<Map<String, dynamic>> _fetchGeocoding(String city) async {
@@ -74,6 +78,12 @@ class OpenMeteoClient {
       '&timezone=auto',
     );
     return _getJson(uri, 'openmeteo:forecast');
+  }
+
+  String _normalizeLocation(String location) {
+    final trimmed = location.trim();
+    if (trimmed.isEmpty) throw ArgumentError('location is required');
+    return trimmed.toLowerCase();
   }
 
   Future<Map<String, dynamic>> _getJson(Uri uri, String label) async {

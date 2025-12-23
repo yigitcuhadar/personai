@@ -43,6 +43,8 @@ class AlphaVantageClient {
   String? _apiKey;
   final http.Client _httpClient;
   HttpLogger? onHttpLog;
+  final Map<String, Map<String, dynamic>> _timeSeriesCache = {};
+  final Map<String, Map<String, dynamic>> _globalQuoteCache = {};
 
   Future<Map<String, dynamic>> fetchStock({
     required String? symbol,
@@ -60,23 +62,29 @@ class AlphaVantageClient {
     };
 
     if (isHistorical) {
-      final response = await fetchTimeSeriesDaily(normalizedSymbol);
+      final cached = _timeSeriesCache[normalizedSymbol];
+      final response = cached ?? await fetchTimeSeriesDaily(normalizedSymbol);
+      _timeSeriesCache[normalizedSymbol] = response;
       return {
         'symbol': normalizedSymbol,
         'endpoint': 'TIME_SERIES_DAILY',
         if (normalizedDate != null) 'requested_date': normalizedDate,
         if (normalizedQuery != null) 'query_type': normalizedQuery,
         'response': response,
+        'cached': cached != null,
       };
     }
 
-    final response = await fetchGlobalQuote(normalizedSymbol);
+    final cached = _globalQuoteCache[normalizedSymbol];
+    final response = cached ?? await fetchGlobalQuote(normalizedSymbol);
+    _globalQuoteCache[normalizedSymbol] = response;
     return {
       'symbol': normalizedSymbol,
       'endpoint': 'GLOBAL_QUOTE',
       if (normalizedDate != null) 'requested_date': normalizedDate,
       if (normalizedQuery != null) 'query_type': normalizedQuery,
       'response': response,
+      'cached': cached != null,
     };
   }
 
