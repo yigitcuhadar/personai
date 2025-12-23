@@ -23,7 +23,6 @@ class HomeCubit extends Cubit<HomeState> {
   HomeCubit({required AppConfig config, String defaultApiKey = ''})
     : _config = config,
       _alphaVantageApiKey = config.alphaVantageApiKey,
-      _apiFootballApiKey = config.apiFootballApiKey,
       _allSportsApiKey = config.allSportsApiKey,
       super(
         HomeState(
@@ -34,7 +33,6 @@ class HomeCubit extends Cubit<HomeState> {
 
   final AppConfig _config;
   final String? _alphaVantageApiKey;
-  final String? _apiFootballApiKey;
   final String? _allSportsApiKey;
   OpenAIRealtimeClient? _client;
   StreamSubscription<RealtimeServerEvent>? _serverSubscription;
@@ -46,13 +44,11 @@ class HomeCubit extends Cubit<HomeState> {
   final Map<String, String> _toolNameByCallId = <String, String>{};
 
   void onApiKeyChanged(String value) {
-    if (state.canFixedFieldsChange)
-      emit(state.copyWith(apiKey: ApiKeyInput.dirty(value)));
+    if (state.canFixedFieldsChange) emit(state.copyWith(apiKey: ApiKeyInput.dirty(value)));
   }
 
   void onModelChanged(String value) {
-    if (state.canFixedFieldsChange)
-      emit(state.copyWith(model: ModelInput.dirty(value)));
+    if (state.canFixedFieldsChange) emit(state.copyWith(model: ModelInput.dirty(value)));
   }
 
   void onInputAudioTranscriptionChanged(String value) {
@@ -65,25 +61,21 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   void onVoiceChanged(String value) {
-    if (state.canFixedFieldsChange)
-      emit(state.copyWith(voice: VoiceInput.dirty(value)));
+    if (state.canFixedFieldsChange) emit(state.copyWith(voice: VoiceInput.dirty(value)));
   }
 
   void onInstructionsChanged(String value) {
-    if (state.canUnfixedFieldsChange)
-      emit(state.copyWith(instructions: InstructionsInput.dirty(value)));
+    if (state.canUnfixedFieldsChange) emit(state.copyWith(instructions: InstructionsInput.dirty(value)));
   }
 
   void onToolToggled(String name, bool enabled) {
     if (!state.canUnfixedFieldsChange) return;
-    final nextToggles = _normalizedToolToggles(state.toolToggles)
-      ..[name] = enabled;
+    final nextToggles = _normalizedToolToggles(state.toolToggles)..[name] = enabled;
     emit(state.copyWith(toolToggles: nextToggles));
   }
 
   void onPromptChanged(String value) {
-    if (state.isConnected)
-      emit(state.copyWith(prompt: PromptInput.dirty(value)));
+    if (state.isConnected) emit(state.copyWith(prompt: PromptInput.dirty(value)));
   }
 
   void clearLogs() {
@@ -318,17 +310,13 @@ class HomeCubit extends Cubit<HomeState> {
               .where((text) => text.isNotEmpty)
               .join('\n');
 
-          final seedText = initialText.isNotEmpty
-              ? initialText
-              : initialTranscript;
+          final seedText = initialText.isNotEmpty ? initialText : initialTranscript;
           if (seedText.isEmpty) break;
 
           final useTextId = initialText.isNotEmpty;
           if (useTextId) _responseTextKeys.add(outputKey);
           messageUpdate = _MessageUpdate.text(
-            id: useTextId
-                ? _outputTextId(outputKey)
-                : _outputAudioTranscriptId(outputKey),
+            id: useTextId ? _outputTextId(outputKey) : _outputAudioTranscriptId(outputKey),
             direction: LogDirection.server,
             text: seedText,
             isFinal: item.status == 'completed',
@@ -415,9 +403,6 @@ class HomeCubit extends Cubit<HomeState> {
           case 'get_stock_price':
             output = await _executeGetStockPrice(args);
             break;
-          case 'get_sports_scores':
-            output = await _executeGetSportsScores(args);
-            break;
           case 'get_livescore':
             output = await _executeGetLiveScore(args);
             break;
@@ -438,8 +423,7 @@ class HomeCubit extends Cubit<HomeState> {
     Map<String, dynamic> args,
   ) async {
     final location = (args['location'] as String?)?.trim();
-    if (location == null || location.isEmpty)
-      throw ArgumentError('location is required');
+    if (location == null || location.isEmpty) throw ArgumentError('location is required');
 
     final requestedUnit = ((args['unit'] as String?) ?? 'c').toLowerCase();
     final base = await getWeatherOpenMeteo(location);
@@ -486,6 +470,13 @@ class HomeCubit extends Cubit<HomeState> {
       '&apikey=$apiKey',
     );
 
+    final uri2 = Uri.parse(
+      'https://www.alphavantage.co/query'
+      '?function=TIME_SERIES_DAILY'
+      '&symbol=$symbol'
+      '&apikey=$apiKey',
+    );
+
     final res = await http.get(uri);
     _logHttp('stocks:global_quote', uri, res);
     if (res.statusCode != 200) {
@@ -493,101 +484,7 @@ class HomeCubit extends Cubit<HomeState> {
     }
 
     final json = jsonDecode(res.body) as Map<String, dynamic>;
-    final quote = (json['Global Quote'] as Map?)?.cast<String, dynamic>() ?? {};
-    if (quote.isEmpty) throw Exception('Quote not found');
-
-    double? _num(String? raw) => raw == null ? null : double.tryParse(raw);
-    final price = _num(quote['05. price'] as String?);
-    final change = _num(quote['09. change'] as String?);
-    final changePercentRaw = (quote['10. change percent'] as String?) ?? '';
-    final changePercent = double.tryParse(
-      changePercentRaw.replaceAll('%', '').trim(),
-    );
-
-    return {
-      'symbol': quote['01. symbol'] ?? symbol,
-      'price': price ?? quote['05. price'],
-      'currency': 'USD',
-      'change': change,
-      'change_percent': changePercent ?? changePercentRaw,
-      'latest_trading_day': quote['07. latest trading day'],
-      'source': 'Alpha Vantage',
-    };
-  }
-
-  Future<Map<String, dynamic>> _executeGetSportsScores(
-    Map<String, dynamic> args,
-  ) async {
-    final apiKey = _apiFootballApiKey;
-    if (apiKey == null || apiKey.isEmpty) {
-      throw Exception('API-Football API key not configured');
-    }
-
-    final leagueIdRaw = args['league_id'];
-    final leagueId =
-        (leagueIdRaw is num ? leagueIdRaw.toString() : leagueIdRaw as String?)
-            ?.trim();
-    if (leagueId == null || leagueId.isEmpty) {
-      throw ArgumentError('league_id is required');
-    }
-    final date = ((args['date'] as String?) ?? '').trim();
-    final today = DateTime.now();
-    final fallbackDate =
-        '${today.year.toString().padLeft(4, '0')}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
-    final targetDate = date.isNotEmpty ? date : fallbackDate;
-
-    final uri = Uri.parse(
-      'https://apiv3.apifootball.com/'
-      '?action=get_events'
-      '&from=$targetDate'
-      '&to=$targetDate'
-      '&league_id=$leagueId'
-      '&APIkey=$apiKey',
-    );
-
-    final res = await http.get(uri);
-    _logHttp('sports_scores:get_events', uri, res);
-    if (res.statusCode != 200) {
-      throw Exception('API-Football fetch failed (${res.statusCode})');
-    }
-
-    final parsed = jsonDecode(res.body);
-    if (parsed is Map && parsed['error'] != null) {
-      throw Exception('API-Football error: ${parsed['error']}');
-    }
-    if (parsed is! List) throw Exception('Unexpected API-Football response');
-
-    List<Map<String, dynamic>> events = [];
-    for (final item in parsed) {
-      if (item is! Map) continue;
-      final data = item.cast<String, dynamic>();
-      events.add({
-        'event_id': data['match_id'],
-        'league_id': data['league_id'],
-        'league_name': data['league_name'],
-        'country': data['country_name'],
-        'status': data['match_status'],
-        'start_time': data['match_time'],
-        'start_date': data['match_date'],
-        'home_team': data['match_hometeam_name'],
-        'away_team': data['match_awayteam_name'],
-        'score': {
-          'home': data['match_hometeam_score'],
-          'away': data['match_awayteam_score'],
-          'ht_home': data['match_hometeam_halftime_score'],
-          'ht_away': data['match_awayteam_halftime_score'],
-        },
-        'round': data['round'],
-      });
-    }
-
-    return {
-      'date': targetDate,
-      'league_id': leagueId,
-      'count': events.length,
-      'events': events,
-      'source': 'api-football.com',
-    };
+    return json;
   }
 
   Future<Map<String, dynamic>> _executeGetLiveScore(
@@ -612,8 +509,7 @@ class HomeCubit extends Cubit<HomeState> {
       throw Exception('Failed to fetch countries (${countriesRes.statusCode})');
     }
     final countriesJson = jsonDecode(countriesRes.body);
-    final countriesList =
-        countriesJson is Map && countriesJson['result'] is List
+    final countriesList = countriesJson is Map && countriesJson['result'] is List
         ? (countriesJson['result'] as List)
         : (countriesJson is List ? countriesJson : null);
     if (countriesList == null) {
@@ -630,16 +526,12 @@ class HomeCubit extends Cubit<HomeState> {
         break;
       }
     }
-    matched ??= countriesList
-        .cast<Map>()
-        .cast<Map<String, dynamic>>()
-        .firstWhere(
-          (map) =>
-              ((map['country_name'] as String?) ?? '').toLowerCase().contains(
-                countryName.toLowerCase(),
-              ),
-          orElse: () => <String, dynamic>{},
-        );
+    matched ??= countriesList.cast<Map>().cast<Map<String, dynamic>>().firstWhere(
+      (map) => ((map['country_name'] as String?) ?? '').toLowerCase().contains(
+        countryName.toLowerCase(),
+      ),
+      orElse: () => <String, dynamic>{},
+    );
     if (matched == null || matched.isEmpty) {
       throw Exception('Country not found for "$countryName"');
     }
@@ -665,37 +557,8 @@ class HomeCubit extends Cubit<HomeState> {
     if (liveJson is Map && liveJson['error'] != null) {
       throw Exception('Livescore error: ${liveJson['error']}');
     }
-    final result = liveJson is Map ? liveJson['result'] : null;
-    if (result is! List) {
-      throw Exception('Unexpected Livescore response');
-    }
 
-    final events = result
-        .whereType<Map>()
-        .map((raw) => raw.cast<String, dynamic>())
-        .map((map) {
-          return {
-            'event_key': map['event_key'],
-            'event_date': map['event_date'],
-            'event_time': map['event_time'],
-            'league_key': map['league_key'],
-            'league_name': map['league_name'],
-            'home_team': map['event_home_team'],
-            'away_team': map['event_away_team'],
-            'home_score': map['event_home_final_result'],
-            'away_score': map['event_away_final_result'],
-            'status': map['event_status'],
-          };
-        })
-        .toList();
-
-    return {
-      'country': matched,
-      'country_id': countryId,
-      'count': events.length,
-      'events': events,
-      'source': 'allsportsapi.com',
-    };
+    return liveJson;
   }
 
   Future<Map<String, dynamic>> getWeatherOpenMeteo(String city) async {
@@ -772,18 +635,12 @@ class HomeCubit extends Cubit<HomeState> {
     final includeVoice = forceAll;
     final includeAudioTranscription = forceAll;
     final includeTools = forceAll || toolsChanged;
-    final tools = includeTools
-        ? _enabledRealtimeTools(state.toolToggles)
-        : null;
+    final tools = includeTools ? _enabledRealtimeTools(state.toolToggles) : null;
 
     final session = RealtimeSessionConfig(
       voice: includeVoice ? state.voice.value : null,
-      instructions: includeInstructions
-          ? state.instructions.value.trim()
-          : null,
-      inputAudioTranscription: includeAudioTranscription
-          ? {'model': state.inputAudioTranscription.value}
-          : null,
+      instructions: includeInstructions ? state.instructions.value.trim() : null,
+      inputAudioTranscription: includeAudioTranscription ? {'model': state.inputAudioTranscription.value} : null,
       tools: tools,
     );
     if (session.voice == null &&
@@ -837,11 +694,8 @@ class HomeCubit extends Cubit<HomeState> {
     Object? rawEvent,
   }) {
     final now = timestamp ?? DateTime.now();
-    final normalizedPayload = Map<String, dynamic>.from(payload)
-      ..putIfAbsent('type', () => type);
-    final elapsed = _sessionCreatedAt != null
-        ? now.difference(_sessionCreatedAt!)
-        : null;
+    final normalizedPayload = Map<String, dynamic>.from(payload)..putIfAbsent('type', () => type);
+    final elapsed = _sessionCreatedAt != null ? now.difference(_sessionCreatedAt!) : null;
     final detail = LogEventDetail(
       payload: normalizedPayload,
       timestamp: now,
@@ -853,8 +707,7 @@ class HomeCubit extends Cubit<HomeState> {
     if (logs.isNotEmpty) {
       final last = logs.last;
       if (last.type == type && last.direction == direction) {
-        final updatedDetails = List<LogEventDetail>.from(last.details)
-          ..add(detail);
+        final updatedDetails = List<LogEventDetail>.from(last.details)..add(detail);
         logs[logs.length - 1] = last.copyWith(details: updatedDetails);
         emit(state.copyWith(logs: logs));
         return;
@@ -896,9 +749,7 @@ class HomeCubit extends Cubit<HomeState> {
           : incoming;
       final shouldStream = isFinal ? false : (hasDelta || existing.isStreaming);
       final shouldInterrupt = interrupt || existing.isInterrupted;
-      if (nextText == existing.text &&
-          existing.isStreaming == shouldStream &&
-          existing.isInterrupted == shouldInterrupt) {
+      if (nextText == existing.text && existing.isStreaming == shouldStream && existing.isInterrupted == shouldInterrupt) {
         return;
       }
       messages[index] = existing.copyWith(
@@ -929,17 +780,12 @@ class HomeCubit extends Cubit<HomeState> {
 
   List<RealtimeTool> _enabledRealtimeTools(Map<String, bool> toggles) {
     final merged = _normalizedToolToggles(toggles);
-    return kToolOptions
-        .where((tool) => merged[tool.name] ?? false)
-        .map((tool) => tool.toRealtimeTool())
-        .toList();
+    return kToolOptions.where((tool) => merged[tool.name] ?? false).map((tool) => tool.toRealtimeTool()).toList();
   }
 
-  String _inputTranscriptId(String itemId, int contentIndex) =>
-      'input_audio:$itemId:$contentIndex';
+  String _inputTranscriptId(String itemId, int contentIndex) => 'input_audio:$itemId:$contentIndex';
 
-  String _outputKey(String itemId, int outputIndex, int contentIndex) =>
-      '$itemId:$outputIndex:$contentIndex';
+  String _outputKey(String itemId, int outputIndex, int contentIndex) => '$itemId:$outputIndex:$contentIndex';
 
   String _outputTextId(String key) => 'output_text:$key';
 
