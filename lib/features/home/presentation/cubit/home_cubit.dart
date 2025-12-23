@@ -11,6 +11,7 @@ import '../../data/clients/alpha_vantage_client.dart';
 import '../../data/clients/all_sports_api_client.dart';
 import '../../data/clients/open_meteo_client.dart';
 import '../../data/services/calendar_service.dart';
+import '../../data/services/contacts_service.dart';
 import '../models/inputs/api_key_input.dart';
 import '../models/inputs/instructions_input.dart';
 import '../models/inputs/input_audio_transcription_input.dart';
@@ -31,6 +32,7 @@ class HomeCubit extends Cubit<HomeState> {
     AllSportsApiClient? allSportsApiClient,
     OpenMeteoClient? openMeteoClient,
     CalendarService? calendarService,
+    ContactsService? contactsService,
   }) : _config = config,
        super(
          HomeState(
@@ -62,6 +64,10 @@ class HomeCubit extends Cubit<HomeState> {
         calendarService ??
         _calendarServiceSingleton ??
         (_calendarServiceSingleton = CalendarService());
+    _contactsService =
+        contactsService ??
+        _contactsServiceSingleton ??
+        (_contactsServiceSingleton = ContactsService());
   }
 
   final AppConfig _config;
@@ -69,6 +75,7 @@ class HomeCubit extends Cubit<HomeState> {
   late final AllSportsApiClient _allSportsApiClient;
   late final OpenMeteoClient _openMeteoClient;
   late final CalendarService _calendarService;
+  late final ContactsService _contactsService;
   OpenAIRealtimeClient? _client;
   StreamSubscription<RealtimeServerEvent>? _serverSubscription;
   StreamSubscription<RealtimeClientEvent>? _clientSubscription;
@@ -82,6 +89,7 @@ class HomeCubit extends Cubit<HomeState> {
   static AllSportsApiClient? _allSportsApiClientSingleton;
   static OpenMeteoClient? _openMeteoClientSingleton;
   static CalendarService? _calendarServiceSingleton;
+  static ContactsService? _contactsServiceSingleton;
 
   void onApiKeyChanged(String value) {
     if (state.canFixedFieldsChange)
@@ -482,6 +490,27 @@ class HomeCubit extends Cubit<HomeState> {
           case 'delete_calendar_event':
             output = await _executeDeleteCalendarEvent(args);
             break;
+          case 'get_contacts':
+            output = await _executeGetContacts(args);
+            break;
+          case 'search_contacts':
+            output = await _executeSearchContacts(args);
+            break;
+          case 'create_contact':
+            output = await _executeCreateContact(args);
+            break;
+          case 'update_contact':
+            output = await _executeUpdateContact(args);
+            break;
+          case 'delete_contact':
+            output = await _executeDeleteContact(args);
+            break;
+          case 'call_contact':
+            output = await _executeCallContact(args);
+            break;
+          case 'send_sms':
+            output = await _executeSendSms(args);
+            break;
           default:
             output = {'error': 'Tool "$toolName" is not implemented yet'};
             break;
@@ -613,6 +642,108 @@ class HomeCubit extends Cubit<HomeState> {
     return _calendarService.deleteEvent(
       calendarId: (args['calendar_id'] as String?)?.trim(),
       eventId: eventId,
+    );
+  }
+
+  Future<Map<String, dynamic>> _executeGetContacts(
+    Map<String, dynamic> args,
+  ) {
+    final query = (args['search_query'] as String?)?.trim();
+    final maxResults = (args['max_results'] as num?)?.toInt();
+    return _contactsService.listContacts(
+      query: query,
+      maxResults: maxResults,
+    );
+  }
+
+  Future<Map<String, dynamic>> _executeSearchContacts(
+    Map<String, dynamic> args,
+  ) {
+    final query = (args['query'] as String?)?.trim();
+    if (query == null || query.isEmpty) {
+      throw ArgumentError('query is required');
+    }
+    final maxResults = (args['max_results'] as num?)?.toInt();
+    return _contactsService.searchContacts(
+      query: query,
+      maxResults: maxResults,
+    );
+  }
+
+  Future<Map<String, dynamic>> _executeCreateContact(
+    Map<String, dynamic> args,
+  ) {
+    final givenName = (args['given_name'] as String?)?.trim();
+    if (givenName == null || givenName.isEmpty) {
+      throw ArgumentError('given_name is required');
+    }
+    return _contactsService.createContact(
+      givenName: givenName,
+      familyName: (args['family_name'] as String?)?.trim(),
+      phoneNumber: (args['phone_number'] as String?)?.trim(),
+      email: (args['email'] as String?)?.trim(),
+      note: (args['note'] as String?)?.trim(),
+    );
+  }
+
+  Future<Map<String, dynamic>> _executeUpdateContact(
+    Map<String, dynamic> args,
+  ) {
+    final contactId = (args['contact_id'] as String?)?.trim();
+    if (contactId == null || contactId.isEmpty) {
+      throw ArgumentError('contact_id is required');
+    }
+    return _contactsService.updateContact(
+      contactId: contactId,
+      givenName: (args['given_name'] as String?)?.trim(),
+      familyName: (args['family_name'] as String?)?.trim(),
+      phoneNumber: (args['phone_number'] as String?)?.trim(),
+      email: (args['email'] as String?)?.trim(),
+      note: (args['note'] as String?)?.trim(),
+    );
+  }
+
+  Future<Map<String, dynamic>> _executeDeleteContact(
+    Map<String, dynamic> args,
+  ) {
+    final contactId = (args['contact_id'] as String?)?.trim();
+    if (contactId == null || contactId.isEmpty) {
+      throw ArgumentError('contact_id is required');
+    }
+    return _contactsService.deleteContact(contactId: contactId);
+  }
+
+  Future<Map<String, dynamic>> _executeCallContact(
+    Map<String, dynamic> args,
+  ) {
+    final contactId = (args['contact_id'] as String?)?.trim();
+    final phoneNumber = (args['phone_number'] as String?)?.trim();
+    if ((contactId == null || contactId.isEmpty) &&
+        (phoneNumber == null || phoneNumber.isEmpty)) {
+      throw ArgumentError('contact_id or phone_number is required');
+    }
+    return _contactsService.callContact(
+      contactId: contactId,
+      phoneNumber: phoneNumber,
+    );
+  }
+
+  Future<Map<String, dynamic>> _executeSendSms(
+    Map<String, dynamic> args,
+  ) {
+    final message = (args['message'] as String?)?.trim();
+    if (message == null || message.isEmpty) {
+      throw ArgumentError('message is required');
+    }
+    final recipients = (args['recipients'] as List<dynamic>?)
+        ?.map((e) => (e as String?)?.trim())
+        .whereType<String>()
+        .toList();
+    return _contactsService.sendSms(
+      message: message,
+      contactId: (args['contact_id'] as String?)?.trim(),
+      phoneNumber: (args['phone_number'] as String?)?.trim(),
+      recipients: recipients,
     );
   }
 

@@ -205,6 +205,7 @@ class _SectionTitle extends StatelessWidget {
     );
   }
 }
+
 class _SubSectionTitle extends StatelessWidget {
   const _SubSectionTitle(this.label);
 
@@ -433,13 +434,30 @@ class _ToolToggleList extends StatelessWidget {
       builder: (context, state) {
         final isEnabled = state.canUnfixedFieldsChange;
         final toggles = defaultToolToggles()..addAll(state.toolToggles);
-        final calendarEnabled = toggles[kCalendarToolsToggle] ?? true;
         final apiTools = kToolOptions
             .where((tool) => tool.group == ToolGroup.api)
             .toList();
-        final calendarTools = kToolOptions
-            .where((tool) => tool.family == kToolFamilyCalendar)
+        final localTools = kToolOptions
+            .where((tool) => tool.group == ToolGroup.local)
             .toList();
+        final familyTools = <String, List<ToolOption>>{};
+        final standaloneLocalTools = <ToolOption>[];
+        for (final tool in localTools) {
+          final family = tool.family;
+          if (family == null) {
+            standaloneLocalTools.add(tool);
+          } else {
+            familyTools.putIfAbsent(family, () => []).add(tool);
+          }
+        }
+        final sortedFamilies = familyTools.entries.toList()
+          ..sort(
+            (a, b) {
+              final aLabel = kToolFamilyLabels[a.key] ?? a.key;
+              final bLabel = kToolFamilyLabels[b.key] ?? b.key;
+              return aLabel.compareTo(bLabel);
+            },
+          );
 
         List<Widget> buildToolTiles(
           List<ToolOption> tools, {
@@ -475,6 +493,37 @@ class _ToolToggleList extends StatelessWidget {
           ],
         ];
 
+        List<Widget> buildFamilyTiles(String family, List<ToolOption> tools) {
+          final familyKey = toolFamilyToggleKey(family);
+          final familyEnabled = toggles[familyKey] ?? true;
+          final label =
+              kToolFamilyLabels[family] ??
+              '${family[0].toUpperCase()}${family.substring(1)} tools';
+          return [
+            SwitchListTile.adaptive(
+              dense: false,
+              contentPadding: EdgeInsets.zero,
+              title: Text(
+                label,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              subtitle: Text(
+                'Enable or hide all $label',
+                style: const TextStyle(fontSize: 12, color: Colors.black54),
+              ),
+              value: familyEnabled,
+              onChanged: isEnabled
+                  ? (value) => context.read<HomeCubit>().onToolFamilyToggled(
+                      family,
+                      value,
+                    )
+                  : null,
+            ),
+            const Divider(height: 1),
+            if (familyEnabled) ...buildToolTiles(tools, isChild: true),
+          ];
+        }
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -488,28 +537,9 @@ class _ToolToggleList extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: _SubSectionTitle('Local tools'),
             ),
-            SwitchListTile.adaptive(
-              dense: false,
-              contentPadding: EdgeInsets.zero,
-              title: const Text(
-                'Calendar tools',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
-              subtitle: const Text(
-                'Enable or hide all device calendar tools',
-                style: TextStyle(fontSize: 12, color: Colors.black54),
-              ),
-              value: calendarEnabled,
-              onChanged: isEnabled
-                  ? (value) => context.read<HomeCubit>().onToolFamilyToggled(
-                      kToolFamilyCalendar,
-                      value,
-                    )
-                  : null,
-            ),
-            const Divider(height: 1),
-            if (calendarEnabled)
-              ...buildToolTiles(calendarTools, isChild: true),
+            for (final entry in sortedFamilies)
+              ...buildFamilyTiles(entry.key, entry.value),
+            ...buildToolTiles(standaloneLocalTools),
           ],
         );
       },

@@ -30,9 +30,16 @@ class ToolOption {
 enum ToolGroup { api, local }
 
 const String kToolFamilyCalendar = 'calendar';
+const String kToolFamilyContacts = 'contacts';
 const String kToolFamilyTogglePrefix = 'family_toggle:';
 String toolFamilyToggleKey(String family) => '$kToolFamilyTogglePrefix$family';
 String get kCalendarToolsToggle => toolFamilyToggleKey(kToolFamilyCalendar);
+String get kContactsToolsToggle => toolFamilyToggleKey(kToolFamilyContacts);
+
+const Map<String, String> kToolFamilyLabels = {
+  kToolFamilyCalendar: 'Calendar tools',
+  kToolFamilyContacts: 'Contacts tools',
+};
 
 const List<ToolOption> kToolOptions = [
   ToolOption(
@@ -260,9 +267,220 @@ const List<ToolOption> kToolOptions = [
       "additionalProperties": false,
     },
   ),
+  ToolOption(
+    name: 'get_contacts',
+    label: 'Get contacts',
+    description:
+        'List device contacts (names, phones, emails). Filter with search_query to narrow results. Always request properties so phone/email are present.',
+    shortDescription: 'List device contacts',
+    group: ToolGroup.local,
+    family: kToolFamilyContacts,
+    parameters: {
+      "type": "object",
+      "properties": {
+        "search_query": {
+          "type": "string",
+          "description":
+              "Optional keyword to filter contacts by name/phone/email.",
+        },
+        "max_results": {
+          "type": "integer",
+          "description": "Limit number of contacts (1-200, default 50).",
+          "minimum": 1,
+          "maximum": 200,
+        },
+      },
+      "required": [],
+      "additionalProperties": false,
+    },
+  ),
+  ToolOption(
+    name: 'search_contacts',
+    label: 'Search contacts',
+    description:
+        'Search device contacts by name, phone, or email. Always fetch phones/emails. Return best matches only.',
+    shortDescription: 'Search contacts on device',
+    group: ToolGroup.local,
+    family: kToolFamilyContacts,
+    parameters: {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "Search term for name/phone/email (required).",
+        },
+        "max_results": {
+          "type": "integer",
+          "description": "Limit number of contacts (1-200, default 50).",
+          "minimum": 1,
+          "maximum": 200,
+        },
+      },
+      "required": ["query"],
+      "additionalProperties": false,
+    },
+  ),
+  ToolOption(
+    name: 'create_contact',
+    label: 'Create contact',
+    description:
+        'Create a new contact on device with given_name (required) and optional family_name, phone_number, email, and note.',
+    shortDescription: 'Add a new contact',
+    group: ToolGroup.local,
+    family: kToolFamilyContacts,
+    parameters: {
+      "type": "object",
+      "properties": {
+        "given_name": {
+          "type": "string",
+          "description": "First name of the contact.",
+        },
+        "family_name": {
+          "type": "string",
+          "description": "Last name of the contact.",
+        },
+        "phone_number": {
+          "type": "string",
+          "description": "Primary phone number.",
+        },
+        "email": {
+          "type": "string",
+          "description": "Primary email address.",
+        },
+        "note": {
+          "type": "string",
+          "description": "Optional note text.",
+        },
+      },
+      "required": ["given_name"],
+      "additionalProperties": false,
+    },
+  ),
+  ToolOption(
+    name: 'update_contact',
+    label: 'Update contact',
+    description:
+        'Update an existing contact by contact_id. Any provided fields replace existing values (given_name, family_name, phone_number, email, note).',
+    shortDescription: 'Edit an existing contact',
+    group: ToolGroup.local,
+    family: kToolFamilyContacts,
+    parameters: {
+      "type": "object",
+      "properties": {
+        "contact_id": {
+          "type": "string",
+          "description": "Existing contact id to update.",
+        },
+        "given_name": {
+          "type": "string",
+          "description": "New first name.",
+        },
+        "family_name": {
+          "type": "string",
+          "description": "New last name.",
+        },
+        "phone_number": {
+          "type": "string",
+          "description": "New primary phone number (replaces existing phones).",
+        },
+        "email": {
+          "type": "string",
+          "description": "New primary email (replaces existing emails).",
+        },
+        "note": {
+          "type": "string",
+          "description": "New note content (replaces existing notes).",
+        },
+      },
+      "required": ["contact_id"],
+      "additionalProperties": false,
+    },
+  ),
+  ToolOption(
+    name: 'delete_contact',
+    label: 'Delete contact',
+    description: 'Delete a contact from device by contact_id.',
+    shortDescription: 'Remove a contact',
+    group: ToolGroup.local,
+    family: kToolFamilyContacts,
+    parameters: {
+      "type": "object",
+      "properties": {
+        "contact_id": {
+          "type": "string",
+          "description": "Contact id to delete.",
+        },
+      },
+      "required": ["contact_id"],
+      "additionalProperties": false,
+    },
+  ),
+  ToolOption(
+    name: 'call_contact',
+    label: 'Call contact',
+    description:
+        'Place a direct phone call via flutter_phone_direct_caller. Provide phone_number or contact_id with at least one phone. On iOS this will fail (Android-only).',
+    shortDescription: 'Call a contact number',
+    group: ToolGroup.local,
+    family: kToolFamilyContacts,
+    parameters: {
+      "type": "object",
+      "properties": {
+        "contact_id": {
+          "type": "string",
+          "description": "Contact id to call (uses first phone).",
+        },
+        "phone_number": {
+          "type": "string",
+          "description": "Explicit phone number to dial.",
+        },
+      },
+      "required": [],
+      "additionalProperties": false,
+    },
+  ),
+  ToolOption(
+    name: 'send_sms',
+    label: 'Send SMS',
+    description:
+        'Send an SMS via flutter_sms. Provide message and at least one recipient via phone_number, contact_id, or recipients list. Uses direct send on Android, opens composer on iOS.',
+    shortDescription: 'Send an SMS',
+    group: ToolGroup.local,
+    family: kToolFamilyContacts,
+    parameters: {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "description": "Message text to send.",
+        },
+        "contact_id": {
+          "type": "string",
+          "description": "Contact id to use for recipient numbers.",
+        },
+        "phone_number": {
+          "type": "string",
+          "description": "Single recipient number.",
+        },
+        "recipients": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Optional additional recipient numbers.",
+        },
+      },
+      "required": ["message"],
+      "additionalProperties": false,
+    },
+  ),
 ];
 
-Map<String, bool> defaultToolToggles() => {
-  kCalendarToolsToggle: true,
-  for (final tool in kToolOptions) tool.name: true,
-};
+Map<String, bool> defaultToolToggles() {
+  final families = <String>{};
+  for (final tool in kToolOptions) {
+    if (tool.family != null) families.add(tool.family!);
+  }
+  return {
+    for (final family in families) toolFamilyToggleKey(family): true,
+    for (final tool in kToolOptions) tool.name: true,
+  };
+}
