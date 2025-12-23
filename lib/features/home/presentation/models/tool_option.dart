@@ -31,7 +31,7 @@ const List<ToolOption> kToolOptions = [
       "properties": {
         "location": {
           "type": "string",
-          "description": "The city and state e.g. San Francisco, CA",
+          "description": "The city and state e.g. San Francisco, CA, but not country or country added.",
         },
         "unit": {
           "type": "string",
@@ -45,11 +45,23 @@ const List<ToolOption> kToolOptions = [
   ToolOption(
     name: 'get_stock_price',
     label: 'Get stock price',
-    description: 'Get the current stock price',
+    description:
+        'Get stock price (current via GLOBAL_QUOTE or historical via TIME_SERIES_DAILY)',
     parameters: {
       "type": "object",
       "properties": {
         "symbol": {"type": "string", "description": "The stock symbol"},
+        "date": {
+          "type": "string",
+          "description":
+              "YYYY-MM-DD date if historical data is requested; TIME_SERIES_DAILY is used when a past date is provided.",
+        },
+        "query_type": {
+          "type": "string",
+          "description":
+              "Force which Alpha Vantage endpoint to use. Use 'today'/'latest'/'current' for GLOBAL_QUOTE or 'history'/'historical' for TIME_SERIES_DAILY.",
+          "enum": ["today", "latest", "current", "history", "historical"],
+        },
       },
       "additionalProperties": false,
       "required": ["symbol"],
@@ -58,17 +70,23 @@ const List<ToolOption> kToolOptions = [
   ToolOption(
     name: 'get_livescore',
     label: 'Live scores (AllSports)',
-    description: 'Fetch live scores for a country (soccer/football)',
+    description: 'Fetch live scores for soccer/football by country or league',
     parameters: {
       "type": "object",
       "properties": {
         "country": {
           "type": "string",
-          "description": "Country name in English (e.g., England)",
+          "description":
+              "Country name in English (e.g., England). Provide this when the user mentions a country.",
+        },
+        "league": {
+          "type": "string",
+          "description":
+              "League name (e.g., Premier League, La Liga). Provide this when the user mentions a league.",
         },
       },
       "additionalProperties": false,
-      "required": ["country"],
+      "required": [],
     },
   ),
 ];

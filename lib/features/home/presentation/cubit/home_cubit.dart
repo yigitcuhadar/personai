@@ -7,6 +7,9 @@ import 'package:http/http.dart' as http;
 import 'package:openai_realtime/openai_realtime.dart';
 
 import '../../../../app/config/app_config.dart';
+import '../../data/clients/alpha_vantage_client.dart';
+import '../../data/clients/all_sports_api_client.dart';
+import '../../data/clients/open_meteo_client.dart';
 import '../models/inputs/api_key_input.dart';
 import '../models/inputs/instructions_input.dart';
 import '../models/inputs/input_audio_transcription_input.dart';
@@ -20,20 +23,45 @@ import '../models/tool_option.dart';
 part 'home_state.dart';
 
 class HomeCubit extends Cubit<HomeState> {
-  HomeCubit({required AppConfig config, String defaultApiKey = ''})
-    : _config = config,
-      _alphaVantageApiKey = config.alphaVantageApiKey,
-      _allSportsApiKey = config.allSportsApiKey,
-      super(
-        HomeState(
-          apiKey: ApiKeyInput.pure(defaultApiKey.trim()),
-          toolToggles: defaultToolToggles(),
-        ),
-      );
+  HomeCubit({
+    required AppConfig config,
+    String defaultApiKey = '',
+    AlphaVantageClient? alphaVantageClient,
+    AllSportsApiClient? allSportsApiClient,
+    OpenMeteoClient? openMeteoClient,
+  }) : _config = config,
+       super(
+         HomeState(
+           apiKey: ApiKeyInput.pure(defaultApiKey.trim()),
+           toolToggles: defaultToolToggles(),
+         ),
+       ) {
+    _openMeteoClient =
+        openMeteoClient ??
+        _openMeteoClientSingleton ??
+        (_openMeteoClientSingleton = OpenMeteoClient.singleton(
+          onHttpLog: _logHttp,
+        ));
+    _alphaVantageClient =
+        alphaVantageClient ??
+        _alphaVantageClientSingleton ??
+        (_alphaVantageClientSingleton = AlphaVantageClient.singleton(
+          apiKey: config.alphaVantageApiKey,
+          onHttpLog: _logHttp,
+        ));
+    _allSportsApiClient =
+        allSportsApiClient ??
+        _allSportsApiClientSingleton ??
+        (_allSportsApiClientSingleton = AllSportsApiClient.singleton(
+          apiKey: config.allSportsApiKey,
+          onHttpLog: _logHttp,
+        ));
+  }
 
   final AppConfig _config;
-  final String? _alphaVantageApiKey;
-  final String? _allSportsApiKey;
+  late final AlphaVantageClient _alphaVantageClient;
+  late final AllSportsApiClient _allSportsApiClient;
+  late final OpenMeteoClient _openMeteoClient;
   OpenAIRealtimeClient? _client;
   StreamSubscription<RealtimeServerEvent>? _serverSubscription;
   StreamSubscription<RealtimeClientEvent>? _clientSubscription;
@@ -42,6 +70,10 @@ class HomeCubit extends Cubit<HomeState> {
   final Map<String, int> _messageIndexById = <String, int>{};
   final Set<String> _responseTextKeys = <String>{};
   final Map<String, String> _toolNameByCallId = <String, String>{};
+
+  static AlphaVantageClient? _alphaVantageClientSingleton;
+  static AllSportsApiClient? _allSportsApiClientSingleton;
+  static OpenMeteoClient? _openMeteoClientSingleton;
 
   void onApiKeyChanged(String value) {
     if (state.canFixedFieldsChange) emit(state.copyWith(apiKey: ApiKeyInput.dirty(value)));
@@ -422,17 +454,8 @@ class HomeCubit extends Cubit<HomeState> {
   Future<Map<String, dynamic>> _executeGetWeather(
     Map<String, dynamic> args,
   ) async {
-    final location = (args['location'] as String?)?.trim();
-    if (location == null || location.isEmpty) throw ArgumentError('location is required');
-
-    final requestedUnit = ((args['unit'] as String?) ?? 'c').toLowerCase();
-    final base = await getWeatherOpenMeteo(location);
-    final result = {...base, 'unit': requestedUnit == 'f' ? 'f' : 'c'};
-    final tempC = base['temp_c'];
-    if (requestedUnit == 'f' && tempC is num) {
-      result['temp_f'] = (tempC * 9 / 5) + 32;
-    }
-    return result;
+    final location = args['location'] as String?;
+    return _openMeteoClient.fetchWeatherWithGeocoding(location ?? '');
   }
 
   Future<void> _sendToolOutput(
@@ -453,152 +476,25 @@ class HomeCubit extends Cubit<HomeState> {
   Future<Map<String, dynamic>> _executeGetStockPrice(
     Map<String, dynamic> args,
   ) async {
-    final apiKey = _alphaVantageApiKey;
-    if (apiKey == null || apiKey.isEmpty) {
-      throw Exception('Alpha Vantage API key not configured');
-    }
-
-    final symbol = (args['symbol'] as String?)?.trim().toUpperCase();
-    if (symbol == null || symbol.isEmpty) {
-      throw ArgumentError('symbol is required');
-    }
-
-    final uri = Uri.parse(
-      'https://www.alphavantage.co/query'
-      '?function=GLOBAL_QUOTE'
-      '&symbol=$symbol'
-      '&apikey=$apiKey',
+    final symbol = args['symbol'] as String?;
+    final date = args['date'] as String?;
+    final queryType = args['query_type'] as String?;
+    return _alphaVantageClient.fetchStock(
+      symbol: symbol,
+      date: date,
+      queryType: queryType,
     );
-
-    final uri2 = Uri.parse(
-      'https://www.alphavantage.co/query'
-      '?function=TIME_SERIES_DAILY'
-      '&symbol=$symbol'
-      '&apikey=$apiKey',
-    );
-
-    final res = await http.get(uri);
-    _logHttp('stocks:global_quote', uri, res);
-    if (res.statusCode != 200) {
-      throw Exception('Stock fetch failed (${res.statusCode})');
-    }
-
-    final json = jsonDecode(res.body) as Map<String, dynamic>;
-    return json;
   }
 
   Future<Map<String, dynamic>> _executeGetLiveScore(
     Map<String, dynamic> args,
   ) async {
-    final apiKey = _allSportsApiKey;
-    if (apiKey == null || apiKey.isEmpty) {
-      throw Exception('AllSports API key not configured');
-    }
-
-    final countryName = (args['country'] as String?)?.trim();
-    if (countryName == null || countryName.isEmpty) {
-      throw ArgumentError('country is required');
-    }
-
-    final countriesUri = Uri.parse(
-      'https://apiv2.allsportsapi.com/football?met=Countries&APIkey=$apiKey',
+    final countryName = args['country'] as String?;
+    final leagueName = args['league'] as String?;
+    return _allSportsApiClient.fetchLiveScoreByQuery(
+      countryName: countryName,
+      leagueName: leagueName,
     );
-    final countriesRes = await http.get(countriesUri);
-    _logHttp('allsports:countries', countriesUri, countriesRes);
-    if (countriesRes.statusCode != 200) {
-      throw Exception('Failed to fetch countries (${countriesRes.statusCode})');
-    }
-    final countriesJson = jsonDecode(countriesRes.body);
-    final countriesList = countriesJson is Map && countriesJson['result'] is List
-        ? (countriesJson['result'] as List)
-        : (countriesJson is List ? countriesJson : null);
-    if (countriesList == null) {
-      throw Exception('Unexpected Countries response');
-    }
-
-    Map<String, dynamic>? matched;
-    for (final item in countriesList) {
-      if (item is! Map) continue;
-      final map = item.cast<String, dynamic>();
-      final name = (map['country_name'] as String?) ?? '';
-      if (name.toLowerCase() == countryName.toLowerCase()) {
-        matched = map;
-        break;
-      }
-    }
-    matched ??= countriesList.cast<Map>().cast<Map<String, dynamic>>().firstWhere(
-      (map) => ((map['country_name'] as String?) ?? '').toLowerCase().contains(
-        countryName.toLowerCase(),
-      ),
-      orElse: () => <String, dynamic>{},
-    );
-    if (matched == null || matched.isEmpty) {
-      throw Exception('Country not found for "$countryName"');
-    }
-
-    final countryId = matched['country_key'];
-    if (countryId == null) {
-      throw Exception('country_key missing for "$countryName"');
-    }
-
-    final liveUri = Uri.parse(
-      'https://apiv2.allsportsapi.com/football'
-      '?met=Livescore'
-      '&APIkey=$apiKey'
-      '&countryId=$countryId',
-    );
-    final liveRes = await http.get(liveUri);
-    _logHttp('allsports:livescore', liveUri, liveRes);
-    if (liveRes.statusCode != 200) {
-      throw Exception('Failed to fetch livescore (${liveRes.statusCode})');
-    }
-
-    final liveJson = jsonDecode(liveRes.body);
-    if (liveJson is Map && liveJson['error'] != null) {
-      throw Exception('Livescore error: ${liveJson['error']}');
-    }
-
-    return liveJson;
-  }
-
-  Future<Map<String, dynamic>> getWeatherOpenMeteo(String city) async {
-    // 1) Geocoding
-    final geoUri = Uri.parse(
-      'https://geocoding-api.open-meteo.com/v1/search'
-      '?name=${Uri.encodeComponent(city)}&count=1&language=en&format=json',
-    );
-    final geoRes = await http.get(geoUri);
-    _logHttp('weather:geocode', geoUri, geoRes);
-    if (geoRes.statusCode != 200) throw Exception('Geocoding failed');
-    final geoJson = jsonDecode(geoRes.body) as Map<String, dynamic>;
-    final results = (geoJson['results'] as List?) ?? [];
-    if (results.isEmpty) throw Exception('City not found');
-
-    final first = results.first as Map<String, dynamic>;
-    final lat = first['latitude'];
-    final lon = first['longitude'];
-
-    // 2) Forecast / current
-    final wxUri = Uri.parse(
-      'https://api.open-meteo.com/v1/forecast'
-      '?latitude=$lat&longitude=$lon'
-      '&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m'
-      '&timezone=auto',
-    );
-    final wxRes = await http.get(wxUri);
-    _logHttp('weather:forecast', wxUri, wxRes);
-    if (wxRes.statusCode != 200) throw Exception('Weather fetch failed');
-    final wxJson = jsonDecode(wxRes.body) as Map<String, dynamic>;
-
-    // Realtime tool output olarak döneceğin “sade” payload
-    final current = (wxJson['current'] as Map<String, dynamic>?) ?? {};
-    return {
-      'location': {'name': first['name'], 'country': first['country']},
-      'temp_c': current['temperature_2m'],
-      'humidity': current['relative_humidity_2m'],
-      'weather_code': current['weather_code'],
-      'wind_kmh': current['wind_speed_10m'],
-    };
   }
 
   void _handleClientEvent(RealtimeClientEvent event) {
