@@ -360,7 +360,7 @@ const List<ToolOption> kToolOptions = [
     name: 'update_contact',
     label: 'Update contact',
     description:
-        'Update an existing contact by contact_id. Any provided fields replace existing values (given_name, family_name, phone_number, email, note).',
+        'Update an existing contact by contact_id. Any provided fields replace existing values (given_name, family_name, phone_number, email, note). Do not delete via update: never blank out fields to remove a contact. Never use this update for deletion.',
     shortDescription: 'Edit an existing contact',
     group: ToolGroup.local,
     family: kToolFamilyContacts,
@@ -399,7 +399,8 @@ const List<ToolOption> kToolOptions = [
   ToolOption(
     name: 'delete_contact',
     label: 'Delete contact',
-    description: 'Delete a contact from device by contact_id.',
+    description:
+        'Delete a contact from device by contact_id. Do not simulate delete via update: never blank out fields to remove a contact.',
     shortDescription: 'Remove a contact',
     group: ToolGroup.local,
     family: kToolFamilyContacts,
@@ -419,8 +420,8 @@ const List<ToolOption> kToolOptions = [
     name: 'call_contact',
     label: 'Call contact',
     description:
-        'Place a direct phone call via flutter_phone_direct_caller. Provide phone_number or contact_id with at least one phone. On iOS this will fail (Android-only).',
-    shortDescription: 'Call a contact number',
+        'Place a phone call via url_launcher tel: scheme. Provide phone_number or contact_id with at least one phone. Opens the dialer; relies on system handling.',
+    shortDescription: 'Call a contact number (tel: link)',
     group: ToolGroup.local,
     family: kToolFamilyContacts,
     parameters: {

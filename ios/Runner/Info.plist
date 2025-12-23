@@ -34,6 +34,13 @@
 	<string>Access contacts for event attendee editing.</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>
 	<string>Access most functions for calendar viewing and editing.</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>tel</string>
+		<string>telprompt</string>
+		<string>sms</string>
+		<string>mailto</string>
+	</array>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

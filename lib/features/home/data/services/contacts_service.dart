@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter_contacts/flutter_contacts.dart';
-import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import 'package:flutter_sms/flutter_sms.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ContactsService {
   Future<Map<String, dynamic>> listContacts({
@@ -80,8 +80,8 @@ class ContactsService {
     required String contactId,
   }) async {
     await _ensurePermissions();
-    final contact = await _loadContact(contactId);
-    await contact.delete();
+    final contact = Contact(id: contactId);
+    await FlutterContacts.deleteContact(contact);
     return {
       'contact_id': contactId,
       'deleted': true,
@@ -99,17 +99,12 @@ class ContactsService {
     if (number == null) {
       throw ArgumentError('Provide phone_number or contact_id with a phone');
     }
-    if (Platform.isIOS) {
-      // Plugin does not support direct dialing on iOS
-      throw UnsupportedError(
-        'Direct call is only supported on Android devices',
-      );
-    }
-    final success = await FlutterPhoneDirectCaller.callNumber(number);
+    final uri = Uri(scheme: 'tel', path: number);
+    final success = await launchUrl(uri);
     return {
       'contact_id': contactId,
       'phone_number': number,
-      'called': success ?? false,
+      'called': success,
     };
   }
 
