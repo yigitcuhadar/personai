@@ -18,37 +18,39 @@ class CalendarService {
     bool includeAllDay = true,
   }) async {
     final normalizedEventId = _normalizedId(eventId);
-    final calendar = await _resolveCalendarId(calendarId);
+    final normalizedCalendarId = _normalizedId(calendarId);
+    final calendarIds = normalizedCalendarId != null
+        ? [normalizedCalendarId]
+        : await _listCalendarIds(writableOnly: false);
     final params = _buildRetrieveParams(
       eventId: normalizedEventId,
       startTime: startTime,
       endTime: endTime,
     );
-    final result = await _plugin.retrieveEvents(calendar, params);
-    if (result.isSuccess && result.data != null) {
-      final filtered = _filterAndSortEvents(
-        result.data!.toList(),
-        searchQuery: searchQuery,
-        includeAllDay: includeAllDay,
-      );
-      final limit = _normalizeLimit(maxResults);
-      final limited = filtered
-          .take(limit)
-          .map((event) => _eventToJson(event, calendarId: calendar))
-          .toList();
-      return {
-        'calendar_id': calendar,
-        if (normalizedEventId != null) 'event_id': normalizedEventId,
-        'count': limited.length,
-        'has_more': filtered.length > limited.length,
-        'events': limited,
-      };
+    final collected = <Event>[];
+    for (final id in calendarIds) {
+      final result = await _plugin.retrieveEvents(id, params);
+      if (result.isSuccess && result.data != null) {
+        collected.addAll(result.data!);
+      }
     }
-    throw Exception(
-      result.errors.isNotEmpty
-          ? result.errors.first.errorMessage
-          : 'Retrieve events failed',
+    final filtered = _filterAndSortEvents(
+      collected,
+      searchQuery: searchQuery,
+      includeAllDay: includeAllDay,
     );
+    final limit = _normalizeLimit(maxResults);
+    final limited = filtered.take(limit).map(_eventToJson).toList();
+    return {
+      if (calendarIds.length == 1)
+        'calendar_id': calendarIds.first
+      else
+        'calendar_ids': calendarIds,
+      if (normalizedEventId != null) 'event_id': normalizedEventId,
+      'count': limited.length,
+      'has_more': filtered.length > limited.length,
+      'events': limited,
+    };
   }
 
   Future<Map<String, dynamic>> createEvent({
@@ -270,19 +272,28 @@ class CalendarService {
     if (trimmed != null && trimmed.isNotEmpty) return trimmed;
 
     if (_cachedCalendarId != null) return _cachedCalendarId!;
+    final ids = await _listCalendarIds(writableOnly: true);
+    _cachedCalendarId = ids.first;
+    return _cachedCalendarId!;
+  }
+
+  Future<List<String>> _listCalendarIds({required bool writableOnly}) async {
     final calendarsResult = await _plugin.retrieveCalendars();
     if (!calendarsResult.isSuccess || calendarsResult.data == null) {
       throw Exception('Unable to retrieve calendars');
     }
-    final firstWritable = calendarsResult.data!.firstWhere(
-      (cal) => !(cal.isReadOnly ?? true),
-      orElse: () => calendarsResult.data!.first,
-    );
-    _cachedCalendarId = firstWritable.id;
-    if (_cachedCalendarId == null || _cachedCalendarId!.isEmpty) {
-      throw Exception('No writable calendar found');
+    final ids = calendarsResult.data!
+        .where((cal) => !writableOnly || !(cal.isReadOnly ?? true))
+        .map((cal) => cal.id)
+        .whereType<String>()
+        .where((id) => id.isNotEmpty)
+        .toList();
+    if (ids.isEmpty) {
+      throw Exception(
+        writableOnly ? 'No writable calendar found' : 'No calendars found',
+      );
     }
-    return _cachedCalendarId!;
+    return ids;
   }
 
   Future<void> _ensurePermissions() async {
