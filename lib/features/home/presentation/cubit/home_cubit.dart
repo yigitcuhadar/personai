@@ -58,7 +58,10 @@ class HomeCubit extends Cubit<HomeState> {
           apiKey: config.allSportsApiKey,
           onHttpLog: _logHttp,
         ));
-    _calendarService = calendarService ?? _calendarServiceSingleton ?? (_calendarServiceSingleton = CalendarService());
+    _calendarService =
+        calendarService ??
+        _calendarServiceSingleton ??
+        (_calendarServiceSingleton = CalendarService());
   }
 
   final AppConfig _config;
@@ -81,11 +84,13 @@ class HomeCubit extends Cubit<HomeState> {
   static CalendarService? _calendarServiceSingleton;
 
   void onApiKeyChanged(String value) {
-    if (state.canFixedFieldsChange) emit(state.copyWith(apiKey: ApiKeyInput.dirty(value)));
+    if (state.canFixedFieldsChange)
+      emit(state.copyWith(apiKey: ApiKeyInput.dirty(value)));
   }
 
   void onModelChanged(String value) {
-    if (state.canFixedFieldsChange) emit(state.copyWith(model: ModelInput.dirty(value)));
+    if (state.canFixedFieldsChange)
+      emit(state.copyWith(model: ModelInput.dirty(value)));
   }
 
   void onInputAudioTranscriptionChanged(String value) {
@@ -98,21 +103,36 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   void onVoiceChanged(String value) {
-    if (state.canFixedFieldsChange) emit(state.copyWith(voice: VoiceInput.dirty(value)));
+    if (state.canFixedFieldsChange)
+      emit(state.copyWith(voice: VoiceInput.dirty(value)));
   }
 
   void onInstructionsChanged(String value) {
-    if (state.canUnfixedFieldsChange) emit(state.copyWith(instructions: InstructionsInput.dirty(value)));
+    if (state.canUnfixedFieldsChange)
+      emit(state.copyWith(instructions: InstructionsInput.dirty(value)));
   }
 
   void onToolToggled(String name, bool enabled) {
     if (!state.canUnfixedFieldsChange) return;
-    final nextToggles = _normalizedToolToggles(state.toolToggles)..[name] = enabled;
+    final nextToggles = _normalizedToolToggles(state.toolToggles)
+      ..[name] = enabled;
+    emit(state.copyWith(toolToggles: nextToggles));
+  }
+
+  void onToolFamilyToggled(String family, bool enabled) {
+    if (!state.canUnfixedFieldsChange) return;
+    final familyKey = toolFamilyToggleKey(family);
+    final nextToggles = _normalizedToolToggles(state.toolToggles)
+      ..[familyKey] = enabled;
+    for (final tool in kToolOptions) {
+      if (tool.family == family) nextToggles[tool.name] = enabled;
+    }
     emit(state.copyWith(toolToggles: nextToggles));
   }
 
   void onPromptChanged(String value) {
-    if (state.isConnected) emit(state.copyWith(prompt: PromptInput.dirty(value)));
+    if (state.isConnected)
+      emit(state.copyWith(prompt: PromptInput.dirty(value)));
   }
 
   void clearLogs() {
@@ -347,13 +367,17 @@ class HomeCubit extends Cubit<HomeState> {
               .where((text) => text.isNotEmpty)
               .join('\n');
 
-          final seedText = initialText.isNotEmpty ? initialText : initialTranscript;
+          final seedText = initialText.isNotEmpty
+              ? initialText
+              : initialTranscript;
           if (seedText.isEmpty) break;
 
           final useTextId = initialText.isNotEmpty;
           if (useTextId) _responseTextKeys.add(outputKey);
           messageUpdate = _MessageUpdate.text(
-            id: useTextId ? _outputTextId(outputKey) : _outputAudioTranscriptId(outputKey),
+            id: useTextId
+                ? _outputTextId(outputKey)
+                : _outputAudioTranscriptId(outputKey),
             direction: LogDirection.server,
             text: seedText,
             isFinal: item.status == 'completed',
@@ -422,7 +446,10 @@ class HomeCubit extends Cubit<HomeState> {
     final callId = event.callId;
     final toolName = _toolNameByCallId[callId] ?? 'unknown_tool';
     final toggles = _normalizedToolToggles(state.toolToggles);
-    final isEnabled = toggles[toolName] ?? false;
+    final toolDef = _toolByName(toolName);
+    final isEnabled = toolDef != null
+        ? _isToolEnabled(toolDef, toggles)
+        : (toggles[toolName] ?? false);
 
     Map<String, dynamic> output;
     try {
@@ -623,12 +650,18 @@ class HomeCubit extends Cubit<HomeState> {
     final includeVoice = forceAll;
     final includeAudioTranscription = forceAll;
     final includeTools = forceAll || toolsChanged;
-    final tools = includeTools ? _enabledRealtimeTools(state.toolToggles) : null;
+    final tools = includeTools
+        ? _enabledRealtimeTools(state.toolToggles)
+        : null;
 
     final session = RealtimeSessionConfig(
       voice: includeVoice ? state.voice.value : null,
-      instructions: includeInstructions ? state.instructions.value.trim() : null,
-      inputAudioTranscription: includeAudioTranscription ? {'model': state.inputAudioTranscription.value} : null,
+      instructions: includeInstructions
+          ? state.instructions.value.trim()
+          : null,
+      inputAudioTranscription: includeAudioTranscription
+          ? {'model': state.inputAudioTranscription.value}
+          : null,
       tools: tools,
     );
     if (session.voice == null &&
@@ -682,8 +715,11 @@ class HomeCubit extends Cubit<HomeState> {
     Object? rawEvent,
   }) {
     final now = timestamp ?? DateTime.now();
-    final normalizedPayload = Map<String, dynamic>.from(payload)..putIfAbsent('type', () => type);
-    final elapsed = _sessionCreatedAt != null ? now.difference(_sessionCreatedAt!) : null;
+    final normalizedPayload = Map<String, dynamic>.from(payload)
+      ..putIfAbsent('type', () => type);
+    final elapsed = _sessionCreatedAt != null
+        ? now.difference(_sessionCreatedAt!)
+        : null;
     final detail = LogEventDetail(
       payload: normalizedPayload,
       timestamp: now,
@@ -695,7 +731,8 @@ class HomeCubit extends Cubit<HomeState> {
     if (logs.isNotEmpty) {
       final last = logs.last;
       if (last.type == type && last.direction == direction) {
-        final updatedDetails = List<LogEventDetail>.from(last.details)..add(detail);
+        final updatedDetails = List<LogEventDetail>.from(last.details)
+          ..add(detail);
         logs[logs.length - 1] = last.copyWith(details: updatedDetails);
         emit(state.copyWith(logs: logs));
         return;
@@ -737,7 +774,9 @@ class HomeCubit extends Cubit<HomeState> {
           : incoming;
       final shouldStream = isFinal ? false : (hasDelta || existing.isStreaming);
       final shouldInterrupt = interrupt || existing.isInterrupted;
-      if (nextText == existing.text && existing.isStreaming == shouldStream && existing.isInterrupted == shouldInterrupt) {
+      if (nextText == existing.text &&
+          existing.isStreaming == shouldStream &&
+          existing.isInterrupted == shouldInterrupt) {
         return;
       }
       messages[index] = existing.copyWith(
@@ -766,14 +805,35 @@ class HomeCubit extends Cubit<HomeState> {
     return merged;
   }
 
-  List<RealtimeTool> _enabledRealtimeTools(Map<String, bool> toggles) {
-    final merged = _normalizedToolToggles(toggles);
-    return kToolOptions.where((tool) => merged[tool.name] ?? false).map((tool) => tool.toRealtimeTool()).toList();
+  ToolOption? _toolByName(String name) {
+    for (final tool in kToolOptions) {
+      if (tool.name == name) return tool;
+    }
+    return null;
   }
 
-  String _inputTranscriptId(String itemId, int contentIndex) => 'input_audio:$itemId:$contentIndex';
+  bool _isToolEnabled(ToolOption tool, Map<String, bool> mergedToggles) {
+    final family = tool.family;
+    if (family != null) {
+      final familyKey = toolFamilyToggleKey(family);
+      if (!(mergedToggles[familyKey] ?? true)) return false;
+    }
+    return mergedToggles[tool.name] ?? false;
+  }
 
-  String _outputKey(String itemId, int outputIndex, int contentIndex) => '$itemId:$outputIndex:$contentIndex';
+  List<RealtimeTool> _enabledRealtimeTools(Map<String, bool> toggles) {
+    final merged = _normalizedToolToggles(toggles);
+    return kToolOptions
+        .where((tool) => _isToolEnabled(tool, merged))
+        .map((tool) => tool.toRealtimeTool())
+        .toList();
+  }
+
+  String _inputTranscriptId(String itemId, int contentIndex) =>
+      'input_audio:$itemId:$contentIndex';
+
+  String _outputKey(String itemId, int outputIndex, int contentIndex) =>
+      '$itemId:$outputIndex:$contentIndex';
 
   String _outputTextId(String key) => 'output_text:$key';
 

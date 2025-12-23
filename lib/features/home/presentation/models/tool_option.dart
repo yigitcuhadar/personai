@@ -7,6 +7,8 @@ class ToolOption {
     required this.description,
     required this.shortDescription,
     required this.parameters,
+    required this.group,
+    this.family,
   });
 
   final String name;
@@ -14,6 +16,8 @@ class ToolOption {
   final String description;
   final String shortDescription;
   final Map<String, dynamic> parameters;
+  final ToolGroup group;
+  final String? family;
 
   RealtimeTool toRealtimeTool() => RealtimeTool(
     type: 'function',
@@ -23,13 +27,21 @@ class ToolOption {
   );
 }
 
+enum ToolGroup { api, local }
+
+const String kToolFamilyCalendar = 'calendar';
+const String kToolFamilyTogglePrefix = 'family_toggle:';
+String toolFamilyToggleKey(String family) => '$kToolFamilyTogglePrefix$family';
+String get kCalendarToolsToggle => toolFamilyToggleKey(kToolFamilyCalendar);
+
 const List<ToolOption> kToolOptions = [
   ToolOption(
     name: 'get_weather',
     label: 'Get weather',
     description:
         'Fetch current weather via Open-Meteo (geocoding + forecast). Return the raw service payload; do not convert units. Reuse previously returned data for the same location instead of calling again unless the user asks for an update.',
-    shortDescription: 'Anlık hava durumu (Open-Meteo)',
+    shortDescription: 'Current weather via Open-Meteo',
+    group: ToolGroup.api,
     parameters: {
       "type": "object",
       "properties": {
@@ -52,7 +64,8 @@ const List<ToolOption> kToolOptions = [
     label: 'Get stock price',
     description:
         'Get stock price (current via GLOBAL_QUOTE, historical via TIME_SERIES_DAILY). Use GLOBAL_QUOTE only for latest/today; use TIME_SERIES_DAILY for past dates. Return only the requested date entry (not the whole series). Reuse previously returned data for the same symbol/date unless the user asks for a refresh.',
-    shortDescription: 'Hisse fiyatı (güncel veya geçmiş)',
+    shortDescription: 'Stock price (current or historical)',
+    group: ToolGroup.api,
     parameters: {
       "type": "object",
       "properties": {
@@ -78,7 +91,8 @@ const List<ToolOption> kToolOptions = [
     label: 'Live scores (AllSports)',
     description:
         'Fetch soccer/football live scores via AllSports. If league is provided, resolve league_id (and country_id from the league) and query by league; if only country is provided, resolve country_id and query by country. Return the raw API payload and any matched lookup info. Reuse previously returned data for the same country/league unless the user asks for a refresh.',
-    shortDescription: 'Canlı skorlar (ülke veya lig)',
+    shortDescription: 'Live football scores (country or league)',
+    group: ToolGroup.api,
     parameters: {
       "type": "object",
       "properties": {
@@ -102,7 +116,9 @@ const List<ToolOption> kToolOptions = [
     label: 'Get calendar events',
     description:
         'List calendar events via device_calendar to answer scheduling questions. If no start/end is provided, default to start of today through the next 30 days. Use event_id for a single event lookup. Filter results with search_query across title/description/location.',
-    shortDescription: 'Takvim etkinliklerini getir',
+    shortDescription: 'List device calendar events',
+    group: ToolGroup.local,
+    family: kToolFamilyCalendar,
     parameters: {
       "type": "object",
       "properties": {
@@ -153,7 +169,9 @@ const List<ToolOption> kToolOptions = [
     label: 'Add calendar event',
     description:
         'Create a calendar event using device_calendar. Use a writable calendar (provided or default). Require title, start/end time (ISO). Respect all_day flag. Reuse chosen calendar if not provided.',
-    shortDescription: 'Takvime etkinlik ekle',
+    shortDescription: 'Add an event to the device calendar',
+    group: ToolGroup.local,
+    family: kToolFamilyCalendar,
     parameters: {
       "type": "object",
       "properties": {
@@ -189,7 +207,9 @@ const List<ToolOption> kToolOptions = [
     label: 'Update calendar event',
     description:
         'Update a calendar event via device_calendar by event_id. Merge provided fields; if calendar_id is omitted, uses first writable calendar. Start/end are ISO strings.',
-    shortDescription: 'Takvim etkinliğini güncelle',
+    shortDescription: 'Update an event on the device calendar',
+    group: ToolGroup.local,
+    family: kToolFamilyCalendar,
     parameters: {
       "type": "object",
       "properties": {
@@ -223,7 +243,9 @@ const List<ToolOption> kToolOptions = [
     label: 'Delete calendar event',
     description:
         'Delete a calendar event via device_calendar using event_id (and optional calendar_id).',
-    shortDescription: 'Takvim etkinliğini sil',
+    shortDescription: 'Delete an event from the device calendar',
+    group: ToolGroup.local,
+    family: kToolFamilyCalendar,
     parameters: {
       "type": "object",
       "properties": {
@@ -241,5 +263,6 @@ const List<ToolOption> kToolOptions = [
 ];
 
 Map<String, bool> defaultToolToggles() => {
+  kCalendarToolsToggle: true,
   for (final tool in kToolOptions) tool.name: true,
 };

@@ -183,7 +183,7 @@ class _DrawerFields extends StatelessWidget {
         _InstructionsField(),
         SizedBox(height: 20),
         _SectionTitle('Tools'),
-        SizedBox(height: 8),
+        SizedBox(height: 4),
         _ToolToggleList(),
         SizedBox(height: 20),
         _ConnectButtons(),
@@ -194,6 +194,19 @@ class _DrawerFields extends StatelessWidget {
 
 class _SectionTitle extends StatelessWidget {
   const _SectionTitle(this.label);
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      label,
+      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+    );
+  }
+}
+class _SubSectionTitle extends StatelessWidget {
+  const _SubSectionTitle(this.label);
 
   final String label;
 
@@ -419,35 +432,84 @@ class _ToolToggleList extends StatelessWidget {
           p.canUnfixedFieldsChange != c.canUnfixedFieldsChange,
       builder: (context, state) {
         final isEnabled = state.canUnfixedFieldsChange;
-        final toggles = {
-          for (final tool in kToolOptions) tool.name: true,
-          ...state.toolToggles,
-        };
+        final toggles = defaultToolToggles()..addAll(state.toolToggles);
+        final calendarEnabled = toggles[kCalendarToolsToggle] ?? true;
+        final apiTools = kToolOptions
+            .where((tool) => tool.group == ToolGroup.api)
+            .toList();
+        final calendarTools = kToolOptions
+            .where((tool) => tool.family == kToolFamilyCalendar)
+            .toList();
+
+        List<Widget> buildToolTiles(
+          List<ToolOption> tools, {
+          bool isChild = false,
+        }) => [
+          for (final tool in tools) ...[
+            SwitchListTile.adaptive(
+              dense: isChild,
+              contentPadding: EdgeInsets.only(left: isChild ? 24 : 0),
+              title: Text(
+                tool.label,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: isChild ? 13 : 14,
+                ),
+              ),
+              subtitle: Text(
+                tool.shortDescription,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.black.withAlpha(140),
+                ),
+              ),
+              value: toggles[tool.name] ?? true,
+              onChanged: isEnabled
+                  ? (value) => context.read<HomeCubit>().onToolToggled(
+                      tool.name,
+                      value,
+                    )
+                  : null,
+            ),
+            const Divider(height: 1),
+          ],
+        ];
 
         return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            for (final tool in kToolOptions) ...[
-              SwitchListTile.adaptive(
-                dense: true,
-                contentPadding: EdgeInsets.zero,
-                title: Text(
-                  tool.label,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                subtitle: Text(
-                  tool.shortDescription,
-                  style: const TextStyle(fontSize: 12, color: Colors.black54),
-                ),
-                value: toggles[tool.name] ?? true,
-                onChanged: isEnabled
-                    ? (value) => context.read<HomeCubit>().onToolToggled(
-                        tool.name,
-                        value,
-                      )
-                    : null,
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: _SubSectionTitle('API tools'),
+            ),
+            ...buildToolTiles(apiTools),
+            const SizedBox(height: 20),
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: _SubSectionTitle('Local tools'),
+            ),
+            SwitchListTile.adaptive(
+              dense: false,
+              contentPadding: EdgeInsets.zero,
+              title: const Text(
+                'Calendar tools',
+                style: TextStyle(fontWeight: FontWeight.w600),
               ),
-              const Divider(height: 1),
-            ],
+              subtitle: const Text(
+                'Enable or hide all device calendar tools',
+                style: TextStyle(fontSize: 12, color: Colors.black54),
+              ),
+              value: calendarEnabled,
+              onChanged: isEnabled
+                  ? (value) => context.read<HomeCubit>().onToolFamilyToggled(
+                      kToolFamilyCalendar,
+                      value,
+                    )
+                  : null,
+            ),
+            const Divider(height: 1),
+            if (calendarEnabled)
+              ...buildToolTiles(calendarTools, isChild: true),
           ],
         );
       },
