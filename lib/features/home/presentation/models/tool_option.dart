@@ -5,12 +5,14 @@ class ToolOption {
     required this.name,
     required this.label,
     required this.description,
+    required this.shortDescription,
     required this.parameters,
   });
 
   final String name;
   final String label;
   final String description;
+  final String shortDescription;
   final Map<String, dynamic> parameters;
 
   RealtimeTool toRealtimeTool() => RealtimeTool(
@@ -25,13 +27,16 @@ const List<ToolOption> kToolOptions = [
   ToolOption(
     name: 'get_weather',
     label: 'Get weather',
-    description: 'Determine weather in my location',
+    description:
+        'Fetch current weather via Open-Meteo (geocoding + forecast). Return the raw service payload; do not convert units. Reuse previously returned data for the same location instead of calling again unless the user asks for an update.',
+    shortDescription: 'Anlık hava durumu (Open-Meteo)',
     parameters: {
       "type": "object",
       "properties": {
         "location": {
           "type": "string",
-          "description": "The city and state e.g. San Francisco, CA, but not country or country added.",
+          "description":
+              "The city and state e.g. San Francisco, CA, but not country or country added.",
         },
         "unit": {
           "type": "string",
@@ -46,7 +51,8 @@ const List<ToolOption> kToolOptions = [
     name: 'get_stock_price',
     label: 'Get stock price',
     description:
-        'Get stock price (current via GLOBAL_QUOTE or historical via TIME_SERIES_DAILY)',
+        'Get stock price (current via GLOBAL_QUOTE, historical via TIME_SERIES_DAILY). Use GLOBAL_QUOTE only for latest/today; use TIME_SERIES_DAILY for past dates. Return only the requested date entry (not the whole series). Reuse previously returned data for the same symbol/date unless the user asks for a refresh.',
+    shortDescription: 'Hisse fiyatı (güncel veya geçmiş)',
     parameters: {
       "type": "object",
       "properties": {
@@ -70,7 +76,9 @@ const List<ToolOption> kToolOptions = [
   ToolOption(
     name: 'get_livescore',
     label: 'Live scores (AllSports)',
-    description: 'Fetch live scores for soccer/football by country or league',
+    description:
+        'Fetch soccer/football live scores via AllSports. If league is provided, resolve league_id (and country_id from the league) and query by league; if only country is provided, resolve country_id and query by country. Return the raw API payload and any matched lookup info. Reuse previously returned data for the same country/league unless the user asks for a refresh.',
+    shortDescription: 'Canlı skorlar (ülke veya lig)',
     parameters: {
       "type": "object",
       "properties": {

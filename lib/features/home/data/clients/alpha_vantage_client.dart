@@ -65,12 +65,14 @@ class AlphaVantageClient {
       final cached = _timeSeriesCache[normalizedSymbol];
       final response = cached ?? await fetchTimeSeriesDaily(normalizedSymbol);
       _timeSeriesCache[normalizedSymbol] = response;
+      final selected = _selectDailyEntry(response, normalizedDate);
       return {
         'symbol': normalizedSymbol,
         'endpoint': 'TIME_SERIES_DAILY',
         if (normalizedDate != null) 'requested_date': normalizedDate,
         if (normalizedQuery != null) 'query_type': normalizedQuery,
-        'response': response,
+        'date': selected.date,
+        'price': selected.data,
         'cached': cached != null,
       };
     }
@@ -151,4 +153,61 @@ class AlphaVantageClient {
     if (decoded is Map) return decoded.cast<String, dynamic>();
     throw Exception('Unexpected Alpha Vantage response for $label');
   }
+
+  _DailySelection _selectDailyEntry(
+    Map<String, dynamic> response,
+    String? requestedDate,
+  ) {
+    final series =
+        (response['Time Series (Daily)'] ?? response['time_series_daily'])
+            as Map?;
+    if (series == null) {
+      throw Exception('TIME_SERIES_DAILY payload missing');
+    }
+    final daily = series.cast<String, dynamic>();
+    String? chosenKey = requestedDate;
+    Map<String, dynamic>? chosenData;
+
+    if (chosenKey != null && daily.containsKey(chosenKey)) {
+      chosenData = _asStringMap(daily[chosenKey]);
+    } else {
+      // pick most recent date
+      final keys = daily.keys.toList()
+        ..sort(
+          (a, b) {
+            final da = DateTime.tryParse(a);
+            final db = DateTime.tryParse(b);
+            if (da == null || db == null) return b.compareTo(a);
+            return db.compareTo(da); // descending
+          },
+        );
+      if (keys.isEmpty) {
+        throw Exception('TIME_SERIES_DAILY has no entries');
+      }
+      chosenKey = keys.first;
+      chosenData = _asStringMap(daily[chosenKey]);
+    }
+
+    if (chosenData == null) {
+      throw Exception('No data found for requested date');
+    }
+
+    return _DailySelection(date: chosenKey, data: chosenData);
+  }
+
+  Map<String, dynamic> _asStringMap(dynamic value) {
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) return value.cast<String, dynamic>();
+    throw Exception('Unexpected daily entry type');
+  }
+}
+
+class _DailySelection {
+  _DailySelection({
+    required this.date,
+    required this.data,
+  });
+
+  final String? date;
+  final Map<String, dynamic> data;
 }

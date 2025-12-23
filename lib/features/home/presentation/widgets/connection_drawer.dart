@@ -435,7 +435,7 @@ class _ToolToggleList extends StatelessWidget {
                   style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
                 subtitle: Text(
-                  tool.description,
+                  tool.shortDescription,
                   style: const TextStyle(fontSize: 12, color: Colors.black54),
                 ),
                 value: toggles[tool.name] ?? true,
