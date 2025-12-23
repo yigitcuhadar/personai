@@ -444,8 +444,8 @@ const List<ToolOption> kToolOptions = [
     name: 'send_sms',
     label: 'Send SMS',
     description:
-        'Send an SMS via flutter_sms. Provide message and at least one recipient via phone_number, contact_id, or recipients list. Uses direct send on Android, opens composer on iOS.',
-    shortDescription: 'Send an SMS',
+        'Send an SMS via url_launcher sms: scheme. Provide message and at least one recipient via phone_number, contact_id, or recipients list. Opens the system SMS app.',
+    shortDescription: 'Send an SMS (sms: link)',
     group: ToolGroup.local,
     family: kToolFamilyContacts,
     parameters: {

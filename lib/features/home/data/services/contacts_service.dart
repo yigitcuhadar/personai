@@ -1,7 +1,4 @@
-import 'dart:io';
-
 import 'package:flutter_contacts/flutter_contacts.dart';
-import 'package:flutter_sms/flutter_sms.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ContactsService {
@@ -124,15 +121,16 @@ class ContactsService {
         'Provide at least one phone number or contact with numbers',
       );
     }
-    final result = await sendSMS(
-      message: message.trim(),
-      recipients: resolvedRecipients,
-      sendDirect: Platform.isAndroid,
+    final uri = Uri(
+      scheme: 'sms',
+      path: resolvedRecipients.join(','),
+      queryParameters: {'body': message.trim()},
     );
+    final launched = await launchUrl(uri);
     return {
       'contact_id': contactId,
       'recipients': resolvedRecipients,
-      'result': result,
+      'sent': launched,
     };
   }
 
