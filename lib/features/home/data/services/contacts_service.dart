@@ -121,11 +121,8 @@ class ContactsService {
         'Provide at least one phone number or contact with numbers',
       );
     }
-    final uri = Uri(
-      scheme: 'sms',
-      path: resolvedRecipients.join(','),
-      queryParameters: {'body': message.trim()},
-    );
+    final body = Uri.encodeComponent(message.trim());
+    final uri = Uri.parse('sms:${resolvedRecipients.join(",")}?body=$body');
     final launched = await launchUrl(uri);
     return {
       'contact_id': contactId,
