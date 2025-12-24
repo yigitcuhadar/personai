@@ -154,6 +154,14 @@ class HomeCubit extends Cubit<HomeState> {
     emit(state.copyWith(mcpServers: servers));
   }
 
+  void removeMcpServer(String serverLabel) {
+    if (!state.canUnfixedFieldsChange) return;
+    final servers = state.mcpServers
+        .where((server) => server.serverLabel != serverLabel)
+        .toList();
+    emit(state.copyWith(mcpServers: servers));
+  }
+
   void onPromptChanged(String value) {
     if (state.isConnected)
       emit(state.copyWith(prompt: PromptInput.dirty(value)));
@@ -349,6 +357,16 @@ class HomeCubit extends Cubit<HomeState> {
           final baseKey = _outputKey(e.item.id ?? 'unknown', e.outputIndex, 0);
           _markMessageInterrupted(_outputAudioTranscriptId(baseKey));
           _markMessageInterrupted(_outputTextId(baseKey));
+        } else if (e.item.type == 'mcp_call' && e.item.error != null) {
+          final error = e.item.error ?? const {};
+          final message = error['message'] ?? '$error';
+          final id = e.item.id ?? 'mcp_call_error';
+          _applyMessageChange(
+            id: id,
+            direction: LogDirection.server,
+            text: 'MCP "${e.item.name ?? 'call'}" failed: $message',
+            isFinal: true,
+          );
         }
         break;
       case ConversationItemAddedEvent e:
@@ -438,12 +456,19 @@ class HomeCubit extends Cubit<HomeState> {
       case ResponseMcpCallArgumentsDoneEvent():
       case ResponseMcpCallInProgressEvent():
       case ResponseMcpCallCompletedEvent():
-      case ResponseMcpCallFailedEvent():
       case McpListToolsInProgressEvent():
       case McpListToolsCompletedEvent():
       case McpListToolsFailedEvent():
       case RateLimitsUpdatedEvent():
       case UnknownServerEvent():
+        break;
+      case ResponseMcpCallFailedEvent e:
+        _applyMessageChange(
+          id: e.itemId,
+          direction: LogDirection.server,
+          text: 'MCP call failed (see logs for details)',
+          isFinal: true,
+        );
         break;
     }
     if (messageUpdate != null) {

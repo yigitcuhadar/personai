@@ -75,7 +75,6 @@ class McpServerConfig extends Equatable {
     required this.serverLabel,
     required this.description,
     required this.accessToken,
-    required this.apiKey,
     required this.connectorId,
     required this.toolToggles,
   });
@@ -83,7 +82,6 @@ class McpServerConfig extends Equatable {
   final String serverLabel;
   final String description;
   final String accessToken;
-  final String apiKey;
   final String connectorId;
   final Map<String, bool> toolToggles;
 
@@ -95,20 +93,15 @@ class McpServerConfig extends Equatable {
 
   List<String> enabledTools(Map<String, bool> defaults) {
     final toggles = _normalizedToolToggles(defaults);
-    return toggles.entries
-        .where((entry) => entry.value)
-        .map((entry) => entry.key)
-        .toList();
+    return toggles.entries.where((entry) => entry.value).map((entry) => entry.key).toList();
   }
 
-  bool get hasCredentials =>
-      accessToken.trim().isNotEmpty && apiKey.trim().isNotEmpty;
+  bool get hasCredentials => accessToken.trim().isNotEmpty;
 
   McpServerConfig copyWith({
     String? serverLabel,
     String? description,
     String? accessToken,
-    String? apiKey,
     String? connectorId,
     Map<String, bool>? toolToggles,
   }) {
@@ -116,7 +109,6 @@ class McpServerConfig extends Equatable {
       serverLabel: serverLabel ?? this.serverLabel,
       description: description ?? this.description,
       accessToken: accessToken ?? this.accessToken,
-      apiKey: apiKey ?? this.apiKey,
       connectorId: connectorId ?? this.connectorId,
       toolToggles: toolToggles ?? this.toolToggles,
     );
@@ -127,24 +119,21 @@ class McpServerConfig extends Equatable {
   }) {
     final allowedTools = enabledTools(defaultToolToggles);
     final trimmedToken = accessToken.trim();
-    final trimmedApiKey = apiKey.trim();
-    final headers = <String, String>{};
-    if (trimmedApiKey.isNotEmpty) headers['x-goog-api-key'] = trimmedApiKey;
+    final authHeader = trimmedToken.isEmpty ? null : trimmedToken;
 
     final extra = <String, dynamic>{
       'server_label': serverLabel,
       'connector_id': connectorId,
-      if (trimmedToken.isNotEmpty) 'authorization': trimmedToken,
+      'require_approval': 'never',
+      if (authHeader != null) 'authorization': authHeader,
       if (allowedTools.isNotEmpty) 'allowed_tools': allowedTools,
-      if (headers.isNotEmpty) 'headers': headers,
     };
 
     return RealtimeTool(type: 'mcp', extra: extra);
   }
 
   List<String> get _toggleSnapshot {
-    final entries = toolToggles.entries.toList()
-      ..sort((a, b) => a.key.compareTo(b.key));
+    final entries = toolToggles.entries.toList()..sort((a, b) => a.key.compareTo(b.key));
     return entries.map((entry) => '${entry.key}:${entry.value}').toList();
   }
 
@@ -153,7 +142,6 @@ class McpServerConfig extends Equatable {
     serverLabel,
     description,
     accessToken,
-    apiKey,
     connectorId,
     _toggleSnapshot,
   ];

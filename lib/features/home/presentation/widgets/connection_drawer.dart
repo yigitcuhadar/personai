@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:openai_realtime/openai_realtime.dart';
 
-import '../../../../app/config/app_config.dart';
-import '../../../../app/di/injector.dart';
 import '../cubit/home_cubit.dart';
 import '../models/tool_option.dart';
 import '../models/mcp_server_config.dart';
@@ -604,7 +602,7 @@ class _GmailServerTile extends StatelessWidget {
     final added = config?.hasCredentials == true;
     final subtitle = added
         ? 'Ready with ${enabledTools.length} tool${enabledTools.length == 1 ? '' : 's'}'
-        : 'Add description, access token, API key, then choose tools.';
+        : 'Add an optional description, access token, then choose tools.';
     final badgeColor = added ? Colors.green.shade600 : Colors.orange.shade600;
 
     return InkWell(
@@ -752,22 +750,17 @@ class _GmailMcpSheet extends StatefulWidget {
 class _GmailMcpSheetState extends State<_GmailMcpSheet> {
   late final TextEditingController _descriptionController;
   late final TextEditingController _accessTokenController;
-  late final TextEditingController _apiKeyController;
   late Map<String, bool> _toolToggles;
   bool _showErrors = false;
 
   @override
   void initState() {
     super.initState();
-    final appConfig = getIt<AppConfig>();
     _descriptionController = TextEditingController(
-      text: widget.existing?.description.trim().isNotEmpty == true ? widget.existing!.description : 'Personal Gmail inbox',
+      text: widget.existing?.description ?? '',
     );
     _accessTokenController = TextEditingController(
-      text: widget.existing?.accessToken ?? appConfig.googleOAuthClientId ?? '',
-    );
-    _apiKeyController = TextEditingController(
-      text: widget.existing?.apiKey ?? appConfig.googleApiKey ?? '',
+      text: widget.existing?.accessToken ?? '',
     );
     _toolToggles = defaultMcpToolToggles(kGmailMcpConnectorId);
     final existingToggles = widget.existing?.toolToggles ?? {};
@@ -778,7 +771,6 @@ class _GmailMcpSheetState extends State<_GmailMcpSheet> {
   void dispose() {
     _descriptionController.dispose();
     _accessTokenController.dispose();
-    _apiKeyController.dispose();
     super.dispose();
   }
 
@@ -791,8 +783,7 @@ class _GmailMcpSheetState extends State<_GmailMcpSheet> {
   void _submit() {
     final description = _descriptionController.text.trim();
     final token = _accessTokenController.text.trim();
-    final apiKey = _apiKeyController.text.trim();
-    final isValid = description.isNotEmpty && token.isNotEmpty && apiKey.isNotEmpty;
+    final isValid = token.isNotEmpty;
     if (!isValid) {
       setState(() {
         _showErrors = true;
@@ -803,7 +794,6 @@ class _GmailMcpSheetState extends State<_GmailMcpSheet> {
       serverLabel: kGmailMcpServerLabel,
       description: description,
       accessToken: token,
-      apiKey: apiKey,
       connectorId: kGmailMcpConnectorId,
       toolToggles: Map<String, bool>.from(_toolToggles),
     );
@@ -814,7 +804,6 @@ class _GmailMcpSheetState extends State<_GmailMcpSheet> {
   @override
   Widget build(BuildContext context) {
     final canEdit = widget.canEdit;
-    final theme = Theme.of(context);
     final title = widget.existing == null ? 'Add Gmail (MCP)' : 'Update Gmail (MCP)';
     final actionLabel = widget.existing == null ? 'Add' : 'Update';
     final actionIcon = widget.existing == null ? Icons.add : Icons.save_outlined;
@@ -874,7 +863,7 @@ class _GmailMcpSheetState extends State<_GmailMcpSheet> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Based on the latest OpenAI MCP connector docs. Keep scopes minimal and disable tools you do not need.',
+                          'Keep scopes minimal and disable tools and connectors you do not need.',
                           style: TextStyle(
                             fontSize: 12.5,
                             color: Colors.black.withAlpha(150),
@@ -896,7 +885,7 @@ class _GmailMcpSheetState extends State<_GmailMcpSheet> {
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const Text(
                       'Describe the connection',
@@ -907,9 +896,8 @@ class _GmailMcpSheetState extends State<_GmailMcpSheet> {
                       controller: _descriptionController,
                       enabled: canEdit,
                       decoration: InputDecoration(
-                        labelText: 'Description',
+                        labelText: 'Description (optional)',
                         hintText: 'e.g. Personal inbox, work updates only',
-                        errorText: _showErrors && _descriptionController.text.trim().isEmpty ? 'Description is required' : null,
                       ),
                     ),
                     const SizedBox(height: 14),
@@ -928,22 +916,6 @@ class _GmailMcpSheetState extends State<_GmailMcpSheet> {
                         hintText: 'ya29....',
                         errorText: _showErrors && _accessTokenController.text.trim().isEmpty ? 'Access token is required' : null,
                         helperText: 'Should include scopes: userinfo.email, userinfo.profile, gmail.modify',
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    const Text(
-                      'API key',
-                      style: TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _apiKeyController,
-                      enabled: canEdit,
-                      obscureText: true,
-                      decoration: InputDecoration(
-                        labelText: 'Google API key',
-                        hintText: 'AIza...',
-                        errorText: _showErrors && _apiKeyController.text.trim().isEmpty ? 'API key is required' : null,
                       ),
                     ),
                     const SizedBox(height: 18),
@@ -1010,25 +982,31 @@ class _GmailMcpSheetState extends State<_GmailMcpSheet> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton.icon(
-                        icon: Icon(actionIcon),
-                        onPressed: canEdit ? _submit : null,
-                        style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          backgroundColor: theme.colorScheme.primary,
-                        ),
-                        label: Text('$actionLabel connector'),
-                      ),
+                    FilledButton.icon(
+                      icon: Icon(actionIcon),
+                      onPressed: canEdit ? _submit : null,
+                      label: Text('$actionLabel connector'),
                     ),
                     if (widget.existing != null) ...[
                       const SizedBox(height: 6),
-                      Text(
-                        'Updates will apply on next Save/Connect.',
-                        style: TextStyle(
-                          color: Colors.black.withAlpha(140),
-                          fontSize: 12,
+                      OutlinedButton.icon(
+                        icon: const Icon(Icons.delete_outline, color: Colors.red),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Colors.red),
+                        ),
+                        onPressed: canEdit
+                            ? () {
+                                final cubit = context.read<HomeCubit>();
+                                cubit.removeMcpServer(kGmailMcpServerLabel);
+                                if (cubit.state.canSave) {
+                                  cubit.saveSessionChanges();
+                                }
+                                Navigator.of(context).pop();
+                              }
+                            : null,
+                        label: const Text(
+                          'Remove connector',
+                          style: TextStyle(color: Colors.red),
                         ),
                       ),
                     ],
