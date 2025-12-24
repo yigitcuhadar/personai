@@ -36,12 +36,12 @@ class HomeCubit extends Cubit<HomeState> {
     ContactsService? contactsService,
   }) : _config = config,
        super(
-       HomeState(
-         apiKey: ApiKeyInput.pure(defaultApiKey.trim()),
-         toolToggles: defaultToolToggles(),
-         mcpServers: const [],
-       ),
-      ) {
+         HomeState(
+           apiKey: ApiKeyInput.pure(defaultApiKey.trim()),
+           toolToggles: defaultToolToggles(),
+           mcpServers: const [],
+         ),
+       ) {
     _openMeteoClient =
         openMeteoClient ??
         _openMeteoClientSingleton ??
@@ -62,14 +62,8 @@ class HomeCubit extends Cubit<HomeState> {
           apiKey: config.allSportsApiKey,
           onHttpLog: _logHttp,
         ));
-    _calendarService =
-        calendarService ??
-        _calendarServiceSingleton ??
-        (_calendarServiceSingleton = CalendarService());
-    _contactsService =
-        contactsService ??
-        _contactsServiceSingleton ??
-        (_contactsServiceSingleton = ContactsService());
+    _calendarService = calendarService ?? _calendarServiceSingleton ?? (_calendarServiceSingleton = CalendarService());
+    _contactsService = contactsService ?? _contactsServiceSingleton ?? (_contactsServiceSingleton = ContactsService());
   }
 
   final AppConfig _config;
@@ -94,13 +88,11 @@ class HomeCubit extends Cubit<HomeState> {
   static ContactsService? _contactsServiceSingleton;
 
   void onApiKeyChanged(String value) {
-    if (state.canFixedFieldsChange)
-      emit(state.copyWith(apiKey: ApiKeyInput.dirty(value)));
+    if (state.canFixedFieldsChange) emit(state.copyWith(apiKey: ApiKeyInput.dirty(value)));
   }
 
   void onModelChanged(String value) {
-    if (state.canFixedFieldsChange)
-      emit(state.copyWith(model: ModelInput.dirty(value)));
+    if (state.canFixedFieldsChange) emit(state.copyWith(model: ModelInput.dirty(value)));
   }
 
   void onInputAudioTranscriptionChanged(String value) {
@@ -113,27 +105,23 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   void onVoiceChanged(String value) {
-    if (state.canFixedFieldsChange)
-      emit(state.copyWith(voice: VoiceInput.dirty(value)));
+    if (state.canFixedFieldsChange) emit(state.copyWith(voice: VoiceInput.dirty(value)));
   }
 
   void onInstructionsChanged(String value) {
-    if (state.canUnfixedFieldsChange)
-      emit(state.copyWith(instructions: InstructionsInput.dirty(value)));
+    if (state.canUnfixedFieldsChange) emit(state.copyWith(instructions: InstructionsInput.dirty(value)));
   }
 
   void onToolToggled(String name, bool enabled) {
     if (!state.canUnfixedFieldsChange) return;
-    final nextToggles = _normalizedToolToggles(state.toolToggles)
-      ..[name] = enabled;
+    final nextToggles = _normalizedToolToggles(state.toolToggles)..[name] = enabled;
     emit(state.copyWith(toolToggles: nextToggles));
   }
 
   void onToolFamilyToggled(String family, bool enabled) {
     if (!state.canUnfixedFieldsChange) return;
     final familyKey = toolFamilyToggleKey(family);
-    final nextToggles = _normalizedToolToggles(state.toolToggles)
-      ..[familyKey] = enabled;
+    final nextToggles = _normalizedToolToggles(state.toolToggles)..[familyKey] = enabled;
     for (final tool in kToolOptions) {
       if (tool.family == family) nextToggles[tool.name] = enabled;
     }
@@ -156,15 +144,12 @@ class HomeCubit extends Cubit<HomeState> {
 
   void removeMcpServer(String serverLabel) {
     if (!state.canUnfixedFieldsChange) return;
-    final servers = state.mcpServers
-        .where((server) => server.serverLabel != serverLabel)
-        .toList();
+    final servers = state.mcpServers.where((server) => server.serverLabel != serverLabel).toList();
     emit(state.copyWith(mcpServers: servers));
   }
 
   void onPromptChanged(String value) {
-    if (state.isConnected)
-      emit(state.copyWith(prompt: PromptInput.dirty(value)));
+    if (state.isConnected) emit(state.copyWith(prompt: PromptInput.dirty(value)));
   }
 
   void clearLogs() {
@@ -357,16 +342,28 @@ class HomeCubit extends Cubit<HomeState> {
           final baseKey = _outputKey(e.item.id ?? 'unknown', e.outputIndex, 0);
           _markMessageInterrupted(_outputAudioTranscriptId(baseKey));
           _markMessageInterrupted(_outputTextId(baseKey));
-        } else if (e.item.type == 'mcp_call' && e.item.error != null) {
-          final error = e.item.error ?? const {};
-          final message = error['message'] ?? '$error';
-          final id = e.item.id ?? 'mcp_call_error';
-          _applyMessageChange(
-            id: id,
-            direction: LogDirection.server,
-            text: 'MCP "${e.item.name ?? 'call'}" failed: $message',
-            isFinal: true,
-          );
+        } else if (e.item.type == 'mcp_call') {
+          if (e.item.error != null) {
+            final error = e.item.error ?? const {};
+            final message = error['message'] ?? '$error';
+            final id = e.item.id ?? 'mcp_call_error';
+            _applyMessageChange(
+              id: id,
+              direction: LogDirection.server,
+              text: 'MCP "${e.item.name ?? 'call'}" failed: $message',
+              isFinal: true,
+            );
+          } else if (e.item.output != null) {
+            /*final output = '${e.item.output}';
+            final preview = output.length > 1200 ? '${output.substring(0, 1200)}...' : output;
+            final id = e.item.id ?? 'mcp_call_output';
+            _applyMessageChange(
+              id: 'mcp_output:$id',
+              direction: LogDirection.server,
+              text: 'MCP "${e.item.name ?? 'call'}" output:\n$preview',
+              isFinal: true,
+            );*/
+          }
         }
         break;
       case ConversationItemAddedEvent e:
@@ -409,17 +406,13 @@ class HomeCubit extends Cubit<HomeState> {
               .where((text) => text.isNotEmpty)
               .join('\n');
 
-          final seedText = initialText.isNotEmpty
-              ? initialText
-              : initialTranscript;
+          final seedText = initialText.isNotEmpty ? initialText : initialTranscript;
           if (seedText.isEmpty) break;
 
           final useTextId = initialText.isNotEmpty;
           if (useTextId) _responseTextKeys.add(outputKey);
           messageUpdate = _MessageUpdate.text(
-            id: useTextId
-                ? _outputTextId(outputKey)
-                : _outputAudioTranscriptId(outputKey),
+            id: useTextId ? _outputTextId(outputKey) : _outputAudioTranscriptId(outputKey),
             direction: LogDirection.server,
             text: seedText,
             isFinal: item.status == 'completed',
@@ -429,6 +422,11 @@ class HomeCubit extends Cubit<HomeState> {
       case ResponseFunctionCallArgumentsDoneEvent e:
         _handleToolCall(e);
         break;
+      case ResponseMcpCallCompletedEvent():
+        unawaited(_client?.sendEvent(ResponseCreateEvent()));
+        break;
+      case ResponseMcpCallArgumentsDoneEvent():
+      case ResponseMcpCallFailedEvent ():
       case InputAudioBufferSpeechStartedEvent():
       case InputAudioBufferClearedEvent():
       case InputAudioBufferSpeechStoppedEvent():
@@ -453,23 +451,12 @@ class HomeCubit extends Cubit<HomeState> {
       case ResponseOutputAudioDoneEvent():
       case ResponseFunctionCallArgumentsDeltaEvent():
       case ResponseMcpCallArgumentsDeltaEvent():
-      case ResponseMcpCallArgumentsDoneEvent():
       case ResponseMcpCallInProgressEvent():
-      case ResponseMcpCallCompletedEvent():
       case McpListToolsInProgressEvent():
       case McpListToolsCompletedEvent():
       case McpListToolsFailedEvent():
       case RateLimitsUpdatedEvent():
       case UnknownServerEvent():
-        break;
-      case ResponseMcpCallFailedEvent e:
-        _applyMessageChange(
-          id: e.itemId,
-          direction: LogDirection.server,
-          text: 'MCP call failed (see logs for details)',
-          isFinal: true,
-        );
-        break;
     }
     if (messageUpdate != null) {
       _applyMessageChange(
@@ -496,9 +483,7 @@ class HomeCubit extends Cubit<HomeState> {
     final toolName = _toolNameByCallId[callId] ?? 'unknown_tool';
     final toggles = _normalizedToolToggles(state.toolToggles);
     final toolDef = _toolByName(toolName);
-    final isEnabled = toolDef != null
-        ? _isToolEnabled(toolDef, toggles)
-        : (toggles[toolName] ?? false);
+    final isEnabled = toolDef != null ? _isToolEnabled(toolDef, toggles) : (toggles[toolName] ?? false);
 
     Map<String, dynamic> output;
     try {
@@ -759,8 +744,7 @@ class HomeCubit extends Cubit<HomeState> {
   ) {
     final contactId = (args['contact_id'] as String?)?.trim();
     final phoneNumber = (args['phone_number'] as String?)?.trim();
-    if ((contactId == null || contactId.isEmpty) &&
-        (phoneNumber == null || phoneNumber.isEmpty)) {
+    if ((contactId == null || contactId.isEmpty) && (phoneNumber == null || phoneNumber.isEmpty)) {
       throw ArgumentError('contact_id or phone_number is required');
     }
     return _contactsService.callContact(
@@ -776,10 +760,7 @@ class HomeCubit extends Cubit<HomeState> {
     if (message == null || message.isEmpty) {
       throw ArgumentError('message is required');
     }
-    final recipients = (args['recipients'] as List<dynamic>?)
-        ?.map((e) => (e as String?)?.trim())
-        .whereType<String>()
-        .toList();
+    final recipients = (args['recipients'] as List<dynamic>?)?.map((e) => (e as String?)?.trim()).whereType<String>().toList();
     return _contactsService.sendSms(
       message: message,
       contactId: (args['contact_id'] as String?)?.trim(),
@@ -826,12 +807,8 @@ class HomeCubit extends Cubit<HomeState> {
 
     final session = RealtimeSessionConfig(
       voice: includeVoice ? state.voice.value : null,
-      instructions: includeInstructions
-          ? state.instructions.value.trim()
-          : null,
-      inputAudioTranscription: includeAudioTranscription
-          ? {'model': state.inputAudioTranscription.value}
-          : null,
+      instructions: includeInstructions ? state.instructions.value.trim() : null,
+      inputAudioTranscription: includeAudioTranscription ? {'model': state.inputAudioTranscription.value} : null,
       tools: tools,
     );
     if (session.voice == null &&
@@ -885,11 +862,8 @@ class HomeCubit extends Cubit<HomeState> {
     Object? rawEvent,
   }) {
     final now = timestamp ?? DateTime.now();
-    final normalizedPayload = Map<String, dynamic>.from(payload)
-      ..putIfAbsent('type', () => type);
-    final elapsed = _sessionCreatedAt != null
-        ? now.difference(_sessionCreatedAt!)
-        : null;
+    final normalizedPayload = Map<String, dynamic>.from(payload)..putIfAbsent('type', () => type);
+    final elapsed = _sessionCreatedAt != null ? now.difference(_sessionCreatedAt!) : null;
     final detail = LogEventDetail(
       payload: normalizedPayload,
       timestamp: now,
@@ -901,8 +875,7 @@ class HomeCubit extends Cubit<HomeState> {
     if (logs.isNotEmpty) {
       final last = logs.last;
       if (last.type == type && last.direction == direction) {
-        final updatedDetails = List<LogEventDetail>.from(last.details)
-          ..add(detail);
+        final updatedDetails = List<LogEventDetail>.from(last.details)..add(detail);
         logs[logs.length - 1] = last.copyWith(details: updatedDetails);
         emit(state.copyWith(logs: logs));
         return;
@@ -944,9 +917,7 @@ class HomeCubit extends Cubit<HomeState> {
           : incoming;
       final shouldStream = isFinal ? false : (hasDelta || existing.isStreaming);
       final shouldInterrupt = interrupt || existing.isInterrupted;
-      if (nextText == existing.text &&
-          existing.isStreaming == shouldStream &&
-          existing.isInterrupted == shouldInterrupt) {
+      if (nextText == existing.text && existing.isStreaming == shouldStream && existing.isInterrupted == shouldInterrupt) {
         return;
       }
       messages[index] = existing.copyWith(
@@ -993,10 +964,7 @@ class HomeCubit extends Cubit<HomeState> {
 
   List<RealtimeTool> _enabledRealtimeTools(HomeState state) {
     final merged = _normalizedToolToggles(state.toolToggles);
-    final tools = kToolOptions
-        .where((tool) => _isToolEnabled(tool, merged))
-        .map((tool) => tool.toRealtimeTool())
-        .toList();
+    final tools = kToolOptions.where((tool) => _isToolEnabled(tool, merged)).map((tool) => tool.toRealtimeTool()).toList();
     for (final server in state.mcpServers) {
       if (!server.hasCredentials) continue;
       final defaults = defaultMcpToolToggles(server.connectorId);
@@ -1009,11 +977,9 @@ class HomeCubit extends Cubit<HomeState> {
     return tools;
   }
 
-  String _inputTranscriptId(String itemId, int contentIndex) =>
-      'input_audio:$itemId:$contentIndex';
+  String _inputTranscriptId(String itemId, int contentIndex) => 'input_audio:$itemId:$contentIndex';
 
-  String _outputKey(String itemId, int outputIndex, int contentIndex) =>
-      '$itemId:$outputIndex:$contentIndex';
+  String _outputKey(String itemId, int outputIndex, int contentIndex) => '$itemId:$outputIndex:$contentIndex';
 
   String _outputTextId(String key) => 'output_text:$key';
 
