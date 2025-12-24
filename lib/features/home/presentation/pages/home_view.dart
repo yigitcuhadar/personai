@@ -36,7 +36,8 @@ class _HomeViewState extends State<HomeView> {
 
   @override
   Widget build(BuildContext context) {
-    final keyboardInset = MediaQuery.of(context).viewInsets.bottom;
+    final viewPaddingBottom = MediaQuery.of(context).viewPadding.bottom;
+    final bottomPadding = 16 + viewPaddingBottom;
     final isDebug = _config.flavor == Flavor.dev;
     return MultiBlocListener(
       listeners: [
@@ -84,7 +85,7 @@ class _HomeViewState extends State<HomeView> {
           body: SafeArea(
             bottom: false,
             child: Padding(
-              padding: EdgeInsets.fromLTRB(16, 16, 16, keyboardInset > 0 ? keyboardInset + 16 : 16),
+              padding: EdgeInsets.fromLTRB(16, 16, 16, bottomPadding),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: const [

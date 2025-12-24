@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:openai_realtime/openai_realtime.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../cubit/home_cubit.dart';
 import '../models/tool_option.dart';
 import '../models/mcp_server_config.dart';
 import 'status_badge.dart';
+
+final Uri _gmailOauthPlaygroundUri = Uri.parse(
+  'https://developers.google.com/oauthplayground/?scope=https://mail.google.com/',
+);
 
 class ConnectionDrawer extends StatelessWidget {
   const ConnectionDrawer({super.key});
@@ -780,6 +785,25 @@ class _GmailMcpSheetState extends State<_GmailMcpSheet> {
     });
   }
 
+  Future<void> _openAccessTokenLink() async {
+    try {
+      final opened = await launchUrl(
+        _gmailOauthPlaygroundUri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (!opened && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open OAuth Playground')),
+        );
+      }
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open OAuth Playground')),
+      );
+    }
+  }
+
   void _submit() {
     final description = _descriptionController.text.trim();
     final token = _accessTokenController.text.trim();
@@ -901,9 +925,26 @@ class _GmailMcpSheetState extends State<_GmailMcpSheet> {
                       ),
                     ),
                     const SizedBox(height: 14),
-                    const Text(
-                      'Access token (OAuth)',
-                      style: TextStyle(fontWeight: FontWeight.w700),
+                    Row(
+                      children: [
+                        const Text(
+                          'Access token (OAuth)',
+                          style: TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        const Spacer(),
+                        TextButton(
+                          onPressed: canEdit ? _openAccessTokenLink : null,
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            minimumSize: const Size(0, 0),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: const Text(
+                            'Get access token',
+                            style: TextStyle(fontSize: 12.5),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 8),
                     TextFormField(
