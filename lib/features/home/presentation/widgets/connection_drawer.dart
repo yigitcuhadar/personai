@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:openai_realtime/openai_realtime.dart';
 
+import '../../../../app/config/app_config.dart';
+import '../../../../app/di/injector.dart';
 import '../cubit/home_cubit.dart';
 import '../models/tool_option.dart';
+import '../models/mcp_server_config.dart';
 import 'status_badge.dart';
 
 class ConnectionDrawer extends StatelessWidget {
@@ -165,28 +168,32 @@ class _DrawerFields extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: const [
-        _SectionTitle('Credentials'),
-        SizedBox(height: 8),
-        _ApiKeyField(),
-        SizedBox(height: 16),
-        _SectionTitle('Models & voice'),
-        SizedBox(height: 8),
-        _ModelDropdown(),
-        SizedBox(height: 10),
-        _InputTranscriptionDropdown(),
-        SizedBox(height: 10),
-        _VoiceDropdown(),
-        SizedBox(height: 16),
-        _SectionTitle('Instructions'),
-        SizedBox(height: 8),
-        _InstructionsField(),
-        SizedBox(height: 20),
-        _SectionTitle('Tools'),
-        SizedBox(height: 4),
-        _ToolToggleList(),
-        SizedBox(height: 20),
-        _ConnectButtons(),
+      children: [
+        const _SectionTitle('Credentials'),
+        const SizedBox(height: 8),
+        const _ApiKeyField(),
+        const SizedBox(height: 16),
+        const _SectionTitle('Models & voice'),
+        const SizedBox(height: 8),
+        const _ModelDropdown(),
+        const SizedBox(height: 10),
+        const _InputTranscriptionDropdown(),
+        const SizedBox(height: 10),
+        const _VoiceDropdown(),
+        const SizedBox(height: 16),
+        const _SectionTitle('Instructions'),
+        const SizedBox(height: 8),
+        const _InstructionsField(),
+        const SizedBox(height: 20),
+        const _SectionTitle('Tools'),
+        const SizedBox(height: 4),
+        const _ToolToggleList(),
+        const SizedBox(height: 20),
+        const _SectionTitle('MCP Servers'),
+        const SizedBox(height: 6),
+        const _McpServersSection(),
+        const SizedBox(height: 20),
+        const _ConnectButtons(),
       ],
     );
   }
@@ -226,9 +233,7 @@ class _ApiKeyField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<HomeCubit, HomeState>(
-      buildWhen: (p, c) =>
-          p.apiKey.displayError != c.apiKey.displayError ||
-          p.canFixedFieldsChange != c.canFixedFieldsChange,
+      buildWhen: (p, c) => p.apiKey.displayError != c.apiKey.displayError || p.canFixedFieldsChange != c.canFixedFieldsChange,
       builder: (context, state) {
         final displayError = state.apiKey.displayError;
         final isEnabled = state.canFixedFieldsChange;
@@ -237,8 +242,7 @@ class _ApiKeyField extends StatelessWidget {
           initialValue: state.apiKey.value,
           enabled: isEnabled,
           autocorrect: false,
-          onChanged: (value) =>
-              context.read<HomeCubit>().onApiKeyChanged(value),
+          onChanged: (value) => context.read<HomeCubit>().onApiKeyChanged(value),
           decoration: InputDecoration(
             labelText: 'OpenAI API Key',
             hintText: 'sk-...',
@@ -265,9 +269,7 @@ class _ModelDropdown extends StatelessWidget {
       builder: (context, state) {
         final displayError = state.model.displayError;
         final isEnabled = state.canFixedFieldsChange;
-        final value = state.model.value.isNotEmpty
-            ? state.model.value
-            : realtimeModelNames.first;
+        final value = state.model.value.isNotEmpty ? state.model.value : realtimeModelNames.first;
         return DropdownButtonFormField<String>(
           isExpanded: true,
           key: const ValueKey('model-dropdown'),
@@ -301,9 +303,7 @@ class _InstructionsField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<HomeCubit, HomeState>(
-      buildWhen: (p, c) =>
-          p.instructions != c.instructions ||
-          p.canUnfixedFieldsChange != c.canUnfixedFieldsChange,
+      buildWhen: (p, c) => p.instructions != c.instructions || p.canUnfixedFieldsChange != c.canUnfixedFieldsChange,
       builder: (context, state) {
         final isEnabled = state.canUnfixedFieldsChange;
         return TextFormField(
@@ -313,8 +313,7 @@ class _InstructionsField extends StatelessWidget {
           enabled: isEnabled,
           minLines: 2,
           maxLines: 4,
-          onChanged: (value) =>
-              context.read<HomeCubit>().onInstructionsChanged(value),
+          onChanged: (value) => context.read<HomeCubit>().onInstructionsChanged(value),
           decoration: const InputDecoration(
             labelText: 'Instructions (optional)',
             hintText: 'Assistant behavior...',
@@ -332,8 +331,7 @@ class _InputTranscriptionDropdown extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<HomeCubit, HomeState>(
       buildWhen: (p, c) =>
-          p.inputAudioTranscription != c.inputAudioTranscription ||
-          p.canFixedFieldsChange != c.canFixedFieldsChange,
+          p.inputAudioTranscription != c.inputAudioTranscription || p.canFixedFieldsChange != c.canFixedFieldsChange,
       builder: (context, state) {
         final isEnabled = state.canFixedFieldsChange;
         final value = state.inputAudioTranscription.value.isNotEmpty
@@ -344,10 +342,9 @@ class _InputTranscriptionDropdown extends StatelessWidget {
           key: const ValueKey('input-transcription-dropdown'),
           initialValue: value,
           onChanged: isEnabled
-              ? (value) =>
-                    context.read<HomeCubit>().onInputAudioTranscriptionChanged(
-                      value ?? realtimeTranscriptionModelNames.first,
-                    )
+              ? (value) => context.read<HomeCubit>().onInputAudioTranscriptionChanged(
+                  value ?? realtimeTranscriptionModelNames.first,
+                )
               : null,
           decoration: const InputDecoration(
             labelText: 'Input transcription model',
@@ -382,14 +379,10 @@ class _VoiceDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<HomeCubit, HomeState>(
-      buildWhen: (p, c) =>
-          p.voice != c.voice ||
-          p.canFixedFieldsChange != c.canFixedFieldsChange,
+      buildWhen: (p, c) => p.voice != c.voice || p.canFixedFieldsChange != c.canFixedFieldsChange,
       builder: (context, state) {
         final isEnabled = state.canFixedFieldsChange;
-        final value = state.voice.value.isNotEmpty
-            ? state.voice.value
-            : realtimeFavoriteVoices.first;
+        final value = state.voice.value.isNotEmpty ? state.voice.value : realtimeFavoriteVoices.first;
         return DropdownButtonFormField<String>(
           isExpanded: true,
           key: const ValueKey('voice-dropdown'),
@@ -428,18 +421,12 @@ class _ToolToggleList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<HomeCubit, HomeState>(
-      buildWhen: (p, c) =>
-          p.toolToggles != c.toolToggles ||
-          p.canUnfixedFieldsChange != c.canUnfixedFieldsChange,
+      buildWhen: (p, c) => p.toolToggles != c.toolToggles || p.canUnfixedFieldsChange != c.canUnfixedFieldsChange,
       builder: (context, state) {
         final isEnabled = state.canUnfixedFieldsChange;
         final toggles = defaultToolToggles()..addAll(state.toolToggles);
-        final apiTools = kToolOptions
-            .where((tool) => tool.group == ToolGroup.api)
-            .toList();
-        final localTools = kToolOptions
-            .where((tool) => tool.group == ToolGroup.local)
-            .toList();
+        final apiTools = kToolOptions.where((tool) => tool.group == ToolGroup.api).toList();
+        final localTools = kToolOptions.where((tool) => tool.group == ToolGroup.local).toList();
         final familyTools = <String, List<ToolOption>>{};
         final standaloneLocalTools = <ToolOption>[];
         for (final tool in localTools) {
@@ -496,9 +483,7 @@ class _ToolToggleList extends StatelessWidget {
         List<Widget> buildFamilyTiles(String family, List<ToolOption> tools) {
           final familyKey = toolFamilyToggleKey(family);
           final familyEnabled = toggles[familyKey] ?? true;
-          final label =
-              kToolFamilyLabels[family] ??
-              '${family[0].toUpperCase()}${family.substring(1)} tools';
+          final label = kToolFamilyLabels[family] ?? '${family[0].toUpperCase()}${family.substring(1)} tools';
           return [
             SwitchListTile.adaptive(
               dense: false,
@@ -537,12 +522,552 @@ class _ToolToggleList extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: _SubSectionTitle('Local tools'),
             ),
-            for (final entry in sortedFamilies)
-              ...buildFamilyTiles(entry.key, entry.value),
+            for (final entry in sortedFamilies) ...buildFamilyTiles(entry.key, entry.value),
             ...buildToolTiles(standaloneLocalTools),
           ],
         );
       },
+    );
+  }
+}
+
+class _McpServersSection extends StatelessWidget {
+  const _McpServersSection();
+
+  McpServerConfig? _gmailConfig(List<McpServerConfig> servers) {
+    for (final server in servers) {
+      if (server.connectorId == kGmailMcpConnectorId || server.serverLabel == kGmailMcpServerLabel) {
+        return server;
+      }
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<HomeCubit, HomeState>(
+      buildWhen: (p, c) => p.mcpServers != c.mcpServers || p.status != c.status,
+      builder: (context, state) {
+        final canEdit = state.canUnfixedFieldsChange;
+        final gmailConfig = _gmailConfig(state.mcpServers);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFFF4F6FB),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE0E7FF)),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              child: Row(
+                children: const [
+                  Icon(Icons.cable_rounded, color: Color(0xFF2563EB)),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Bridge Gmail via MCP connectors. Configure credentials and tools, then apply with Connect or Save.',
+                      style: TextStyle(fontSize: 12.5),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+            _GmailServerTile(
+              config: gmailConfig,
+              canEdit: canEdit,
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _GmailServerTile extends StatelessWidget {
+  const _GmailServerTile({
+    required this.config,
+    required this.canEdit,
+  });
+
+  final McpServerConfig? config;
+  final bool canEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabledTools =
+        config?.enabledTools(
+          defaultMcpToolToggles(kGmailMcpConnectorId),
+        ) ??
+        [];
+    final added = config?.hasCredentials == true;
+    final subtitle = added
+        ? 'Ready with ${enabledTools.length} tool${enabledTools.length == 1 ? '' : 's'}'
+        : 'Add description, access token, API key, then choose tools.';
+    final badgeColor = added ? Colors.green.shade600 : Colors.orange.shade600;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: canEdit
+          ? () => _showGmailSheet(
+              context,
+              existing: config,
+              canEdit: canEdit,
+            )
+          : null,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFE0E0E0)),
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(8),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF3F3),
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFFFFE0E0)),
+              ),
+              child: const Icon(
+                Icons.mark_email_unread_rounded,
+                color: Color(0xFFDB3C30),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Gmail connector',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      color: Colors.black.withAlpha(150),
+                      fontSize: 12.5,
+                    ),
+                  ),
+                  if (enabledTools.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: enabledTools
+                          .take(3)
+                          .map(
+                            (name) => _Pill(
+                              label: name.replaceAll('_', ' '),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: badgeColor.withAlpha(26),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                added ? 'Added' : 'Tap to add',
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: badgeColor,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Icon(
+              Icons.chevron_right,
+              color: canEdit ? Colors.black54 : Colors.black26,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+Future<void> _showGmailSheet(
+  BuildContext context, {
+  McpServerConfig? existing,
+  required bool canEdit,
+}) {
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (sheetContext) {
+      final bottomInset = MediaQuery.of(sheetContext).viewInsets.bottom;
+      final homeCubit = context.read<HomeCubit>();
+      return Padding(
+        padding: EdgeInsets.only(bottom: bottomInset),
+        child: BlocProvider.value(
+          value: homeCubit,
+          child: _GmailMcpSheet(
+            existing: existing,
+            canEdit: canEdit,
+          ),
+        ),
+      );
+    },
+  );
+}
+
+class _GmailMcpSheet extends StatefulWidget {
+  const _GmailMcpSheet({
+    this.existing,
+    required this.canEdit,
+  });
+
+  final McpServerConfig? existing;
+  final bool canEdit;
+
+  @override
+  State<_GmailMcpSheet> createState() => _GmailMcpSheetState();
+}
+
+class _GmailMcpSheetState extends State<_GmailMcpSheet> {
+  late final TextEditingController _descriptionController;
+  late final TextEditingController _accessTokenController;
+  late final TextEditingController _apiKeyController;
+  late Map<String, bool> _toolToggles;
+  bool _showErrors = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final appConfig = getIt<AppConfig>();
+    _descriptionController = TextEditingController(
+      text: widget.existing?.description.trim().isNotEmpty == true ? widget.existing!.description : 'Personal Gmail inbox',
+    );
+    _accessTokenController = TextEditingController(
+      text: widget.existing?.accessToken ?? appConfig.googleOAuthClientId ?? '',
+    );
+    _apiKeyController = TextEditingController(
+      text: widget.existing?.apiKey ?? appConfig.googleApiKey ?? '',
+    );
+    _toolToggles = defaultMcpToolToggles(kGmailMcpConnectorId);
+    final existingToggles = widget.existing?.toolToggles ?? {};
+    _toolToggles.addAll(existingToggles);
+  }
+
+  @override
+  void dispose() {
+    _descriptionController.dispose();
+    _accessTokenController.dispose();
+    _apiKeyController.dispose();
+    super.dispose();
+  }
+
+  void _onToggle(String name, bool value) {
+    setState(() {
+      _toolToggles[name] = value;
+    });
+  }
+
+  void _submit() {
+    final description = _descriptionController.text.trim();
+    final token = _accessTokenController.text.trim();
+    final apiKey = _apiKeyController.text.trim();
+    final isValid = description.isNotEmpty && token.isNotEmpty && apiKey.isNotEmpty;
+    if (!isValid) {
+      setState(() {
+        _showErrors = true;
+      });
+      return;
+    }
+    final config = McpServerConfig(
+      serverLabel: kGmailMcpServerLabel,
+      description: description,
+      accessToken: token,
+      apiKey: apiKey,
+      connectorId: kGmailMcpConnectorId,
+      toolToggles: Map<String, bool>.from(_toolToggles),
+    );
+    context.read<HomeCubit>().upsertMcpServer(config);
+    Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final canEdit = widget.canEdit;
+    final theme = Theme.of(context);
+    final title = widget.existing == null ? 'Add Gmail (MCP)' : 'Update Gmail (MCP)';
+    final actionLabel = widget.existing == null ? 'Add' : 'Update';
+    final actionIcon = widget.existing == null ? Icons.add : Icons.save_outlined;
+
+    return FractionallySizedBox(
+      heightFactor: 0.9,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(20),
+              blurRadius: 20,
+              offset: const Offset(0, -4),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 44,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.black.withAlpha(70),
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF0F0),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Icon(
+                      Icons.mark_email_read_rounded,
+                      color: Color(0xFFDB3C30),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Based on the latest OpenAI MCP connector docs. Keep scopes minimal and disable tools you do not need.',
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            color: Colors.black.withAlpha(150),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Close',
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close_rounded),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Describe the connection',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _descriptionController,
+                      enabled: canEdit,
+                      decoration: InputDecoration(
+                        labelText: 'Description',
+                        hintText: 'e.g. Personal inbox, work updates only',
+                        errorText: _showErrors && _descriptionController.text.trim().isEmpty ? 'Description is required' : null,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    const Text(
+                      'Access token (OAuth)',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _accessTokenController,
+                      enabled: canEdit,
+                      minLines: 1,
+                      maxLines: 3,
+                      decoration: InputDecoration(
+                        labelText: 'Access token',
+                        hintText: 'ya29....',
+                        errorText: _showErrors && _accessTokenController.text.trim().isEmpty ? 'Access token is required' : null,
+                        helperText: 'Should include scopes: userinfo.email, userinfo.profile, gmail.modify',
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    const Text(
+                      'API key',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _apiKeyController,
+                      enabled: canEdit,
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        labelText: 'Google API key',
+                        hintText: 'AIza...',
+                        errorText: _showErrors && _apiKeyController.text.trim().isEmpty ? 'API key is required' : null,
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Row(
+                      children: [
+                        const Text(
+                          'Tool access',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        _Pill(
+                          label: 'Toggles reflect allowed_tools',
+                          tone: const Color(0xFF2563EB),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: const Color(0xFFE5E7EB)),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        children: [
+                          for (final tool in kGmailMcpTools) ...[
+                            SwitchListTile.adaptive(
+                              dense: true,
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                              title: Text(
+                                tool.title,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 13.5,
+                                ),
+                              ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    tool.description,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.black.withAlpha(150),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Scopes: ${tool.scopes}',
+                                    style: TextStyle(
+                                      fontSize: 11.5,
+                                      color: Colors.black.withAlpha(120),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              value: _toolToggles[tool.name] ?? true,
+                              onChanged: canEdit ? (value) => _onToggle(tool.name, value) : null,
+                            ),
+                            if (tool != kGmailMcpTools.last) const Divider(height: 1, indent: 12, endIndent: 12),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        icon: Icon(actionIcon),
+                        onPressed: canEdit ? _submit : null,
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          backgroundColor: theme.colorScheme.primary,
+                        ),
+                        label: Text('$actionLabel connector'),
+                      ),
+                    ),
+                    if (widget.existing != null) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        'Updates will apply on next Save/Connect.',
+                        style: TextStyle(
+                          color: Colors.black.withAlpha(140),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Pill extends StatelessWidget {
+  const _Pill({
+    required this.label,
+    this.tone = const Color(0xFF2563EB),
+  });
+
+  final String label;
+  final Color tone;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: tone.withAlpha(16),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: tone,
+          fontWeight: FontWeight.w700,
+          fontSize: 12,
+        ),
+      ),
     );
   }
 }
@@ -582,12 +1107,8 @@ class _ConnectButton extends StatelessWidget {
         final isValid = state.isValid;
         final isConnecting = state.isConnecting;
         return OutlinedButton.icon(
-          onPressed: isEnabled && isValid
-              ? () => context.read<HomeCubit>().connect()
-              : null,
-          icon: isConnecting
-              ? CircularProgressIndicator.adaptive()
-              : const Icon(Icons.play_arrow),
+          onPressed: isEnabled && isValid ? () => context.read<HomeCubit>().connect() : null,
+          icon: isConnecting ? CircularProgressIndicator.adaptive() : const Icon(Icons.play_arrow),
           label: Text('Connect'),
         );
       },
@@ -607,12 +1128,8 @@ class _SaveButton extends StatelessWidget {
         final isValid = state.isValid;
         final isSaving = state.isSaving;
         return OutlinedButton.icon(
-          onPressed: isEnabled && isValid
-              ? () => context.read<HomeCubit>().saveSessionChanges()
-              : null,
-          icon: isSaving
-              ? CircularProgressIndicator.adaptive()
-              : const Icon(Icons.save),
+          onPressed: isEnabled && isValid ? () => context.read<HomeCubit>().saveSessionChanges() : null,
+          icon: isSaving ? CircularProgressIndicator.adaptive() : const Icon(Icons.save),
           label: Text('Save'),
         );
       },
@@ -631,12 +1148,8 @@ class _DisconnectButton extends StatelessWidget {
         final isEnabled = state.canDisconnect;
         final isDisconnecting = state.isDisconnecting;
         return OutlinedButton.icon(
-          onPressed: isEnabled
-              ? () => context.read<HomeCubit>().disconnect()
-              : null,
-          icon: isDisconnecting
-              ? CircularProgressIndicator.adaptive()
-              : const Icon(Icons.stop),
+          onPressed: isEnabled ? () => context.read<HomeCubit>().disconnect() : null,
+          icon: isDisconnecting ? CircularProgressIndicator.adaptive() : const Icon(Icons.stop),
           label: Text('Disconnect'),
         );
       },

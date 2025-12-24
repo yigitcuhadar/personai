@@ -15,6 +15,7 @@ class HomeState extends Equatable {
     this.instructions = const InstructionsInput.pure(),
     this.prompt = const PromptInput.pure(),
     this.toolToggles = const {},
+    this.mcpServers = const [],
   });
 
   final HomeStatus status;
@@ -30,6 +31,7 @@ class HomeState extends Equatable {
   final InstructionsInput instructions;
   final PromptInput prompt;
   final Map<String, bool> toolToggles;
+  final List<McpServerConfig> mcpServers;
 
   bool get isValid =>
       apiKey.isValid &&
@@ -64,6 +66,7 @@ class HomeState extends Equatable {
     VoiceInput? voice,
     InputAudioTranscriptionInput? inputAudioTranscription,
     Map<String, bool>? toolToggles,
+    List<McpServerConfig>? mcpServers,
   }) {
     return HomeState(
       status: status ?? this.status,
@@ -80,6 +83,7 @@ class HomeState extends Equatable {
       inputAudioTranscription:
           inputAudioTranscription ?? this.inputAudioTranscription,
       toolToggles: toolToggles ?? this.toolToggles,
+      mcpServers: mcpServers ?? this.mcpServers,
     );
   }
 
@@ -98,6 +102,7 @@ class HomeState extends Equatable {
     voice,
     inputAudioTranscription,
     toolToggles,
+    mcpServers,
   ];
 }
 

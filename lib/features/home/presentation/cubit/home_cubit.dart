@@ -20,6 +20,7 @@ import '../models/inputs/prompt_input.dart';
 import '../models/inputs/voice_input.dart';
 import '../models/log_entry.dart';
 import '../models/message_entry.dart';
+import '../models/mcp_server_config.dart';
 import '../models/tool_option.dart';
 
 part 'home_state.dart';
@@ -35,11 +36,12 @@ class HomeCubit extends Cubit<HomeState> {
     ContactsService? contactsService,
   }) : _config = config,
        super(
-         HomeState(
-           apiKey: ApiKeyInput.pure(defaultApiKey.trim()),
-           toolToggles: defaultToolToggles(),
-         ),
-       ) {
+       HomeState(
+         apiKey: ApiKeyInput.pure(defaultApiKey.trim()),
+         toolToggles: defaultToolToggles(),
+         mcpServers: const [],
+       ),
+      ) {
     _openMeteoClient =
         openMeteoClient ??
         _openMeteoClientSingleton ??
@@ -136,6 +138,20 @@ class HomeCubit extends Cubit<HomeState> {
       if (tool.family == family) nextToggles[tool.name] = enabled;
     }
     emit(state.copyWith(toolToggles: nextToggles));
+  }
+
+  void upsertMcpServer(McpServerConfig config) {
+    if (!state.canUnfixedFieldsChange) return;
+    final servers = List<McpServerConfig>.from(state.mcpServers);
+    final index = servers.indexWhere(
+      (server) => server.serverLabel == config.serverLabel,
+    );
+    if (index >= 0) {
+      servers[index] = config;
+    } else {
+      servers.add(config);
+    }
+    emit(state.copyWith(mcpServers: servers));
   }
 
   void onPromptChanged(String value) {
@@ -781,9 +797,7 @@ class HomeCubit extends Cubit<HomeState> {
     final includeVoice = forceAll;
     final includeAudioTranscription = forceAll;
     final includeTools = forceAll || toolsChanged;
-    final tools = includeTools
-        ? _enabledRealtimeTools(state.toolToggles)
-        : null;
+    final tools = includeTools ? _enabledRealtimeTools(state) : null;
 
     final session = RealtimeSessionConfig(
       voice: includeVoice ? state.voice.value : null,
@@ -952,12 +966,22 @@ class HomeCubit extends Cubit<HomeState> {
     return mergedToggles[tool.name] ?? false;
   }
 
-  List<RealtimeTool> _enabledRealtimeTools(Map<String, bool> toggles) {
-    final merged = _normalizedToolToggles(toggles);
-    return kToolOptions
+  List<RealtimeTool> _enabledRealtimeTools(HomeState state) {
+    final merged = _normalizedToolToggles(state.toolToggles);
+    final tools = kToolOptions
         .where((tool) => _isToolEnabled(tool, merged))
         .map((tool) => tool.toRealtimeTool())
         .toList();
+    for (final server in state.mcpServers) {
+      if (!server.hasCredentials) continue;
+      final defaults = defaultMcpToolToggles(server.connectorId);
+      tools.add(
+        server.toRealtimeTool(
+          defaultToolToggles: defaults,
+        ),
+      );
+    }
+    return tools;
   }
 
   String _inputTranscriptId(String itemId, int contentIndex) =>
