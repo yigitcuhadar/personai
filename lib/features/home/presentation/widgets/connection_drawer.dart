@@ -806,7 +806,7 @@ class _GmailMcpSheetState extends State<_GmailMcpSheet> {
 
   void _submit() {
     final description = _descriptionController.text.trim();
-    final token = _accessTokenController.text.trim();
+    final token = _accessTokenController.text;
     final isValid = token.isNotEmpty;
     if (!isValid) {
       setState(() {
