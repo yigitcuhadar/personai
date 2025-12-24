@@ -4,6 +4,7 @@ import 'package:formz/formz.dart';
 
 import '../../cubit/login_cubit.dart';
 import '../sign_up/sign_up_page.dart';
+import '../../widgets/auth_shared.dart';
 
 class LoginView extends StatelessWidget {
   const LoginView({super.key});
@@ -23,28 +24,19 @@ class LoginView extends StatelessWidget {
             );
         }
       },
-      child: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
-        behavior: HitTestBehavior.translucent,
-        child: Scaffold(
-          appBar: AppBar(title: Text('Login')),
-          body: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: const Column(
-                children: [
-                  _EmailInput(),
-                  SizedBox(height: 8),
-                  _PasswordInput(),
-                  SizedBox(height: 8),
-                  _LoginButton(),
-                  SizedBox(height: 4),
-                  _SignUpButton(),
-                ],
-              ),
-            ),
-          ),
-        ),
+      child: AuthPageShell(
+        title: 'Welcome back',
+        subtitle: 'Log in to continue with PersonAI.',
+        helperText: 'Don\'t have an account?',
+        helperActionLabel: 'Create account',
+        helperActionKey: const Key('loginForm_createAccount_flatButton'),
+        onHelperActionTap: () => Navigator.of(context).push<void>(SignUpPage.route()),
+        onTapOutside: () => FocusScope.of(context).unfocus(),
+        children: const [
+          _EmailInput(),
+          _PasswordInput(),
+          _LoginButton(),
+        ],
       ),
     );
   }
@@ -59,17 +51,16 @@ class _EmailInput extends StatelessWidget {
       builder: (context, state) {
         final displayError = state.email.displayError;
         final isInProgress = state.status.isInProgress;
-        return TextField(
-          key: const Key('loginForm_emailInput_textField'),
-          autocorrect: false,
+        return AuthInputField(
+          fieldKey: const Key('loginForm_emailInput_textField'),
+          label: 'Email',
+          hint: 'name@email.com',
+          icon: Icons.email_outlined,
           enabled: !isInProgress,
+          errorText: displayError != null ? 'Enter a valid email' : null,
           onChanged: (email) => context.read<LoginCubit>().emailChanged(email),
           keyboardType: TextInputType.emailAddress,
           textInputAction: TextInputAction.next,
-          decoration: InputDecoration(
-            labelText: 'email',
-            errorText: displayError != null ? 'invalid email' : null,
-          ),
         );
       },
     );
@@ -85,18 +76,18 @@ class _PasswordInput extends StatelessWidget {
       builder: (context, state) {
         final displayError = state.password.displayError;
         final isInProgress = state.status.isInProgress;
-        return TextField(
-          key: const Key('loginForm_passwordInput_textField'),
-          autocorrect: false,
+        return AuthInputField(
+          fieldKey: const Key('loginForm_passwordInput_textField'),
+          label: 'Password',
+          hint: '••••••••',
+          icon: Icons.lock_outline,
           enabled: !isInProgress,
-          onChanged: (password) => context.read<LoginCubit>().passwordChanged(password),
           obscureText: true,
+          enableToggle: true,
+          errorText: displayError != null ? 'Password is too short' : null,
+          onChanged: (password) => context.read<LoginCubit>().passwordChanged(password),
           keyboardType: TextInputType.visiblePassword,
           textInputAction: TextInputAction.done,
-          decoration: InputDecoration(
-            labelText: 'password',
-            errorText: displayError != null ? 'invalid password' : null,
-          ),
         );
       },
     );
@@ -112,30 +103,12 @@ class _LoginButton extends StatelessWidget {
       builder: (context, state) {
         final isInProgress = state.status.isInProgress;
         final isValid = state.isValid;
-        return ElevatedButton(
+        return AuthPrimaryButton(
           key: const Key('loginForm_continue_raisedButton'),
-          onPressed: isValid && !isInProgress ? () => context.read<LoginCubit>().submitted() : null,
-          child: !isInProgress ? const Text('Login') : const CircularProgressIndicator.adaptive(),
-        );
-      },
-    );
-  }
-}
-
-class _SignUpButton extends StatelessWidget {
-  const _SignUpButton();
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<LoginCubit, LoginState>(
-      buildWhen: (p, c) => p.status.isInProgress != c.status.isInProgress,
-      builder: (context, state) {
-        final isInProgress = state.status.isInProgress;
-        return TextButton(
-          key: const Key('loginForm_createAccount_flatButton'),
-          onPressed: !isInProgress ? () => Navigator.of(context).push<void>(SignUpPage.route()) : null,
-          child: Text(
-            'Create Account',
-          ),
+          label: 'Log in',
+          enabled: isValid && !isInProgress,
+          loading: isInProgress,
+          onPressed: () => context.read<LoginCubit>().submitted(),
         );
       },
     );

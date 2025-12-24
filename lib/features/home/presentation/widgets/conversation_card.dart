@@ -4,181 +4,18 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubit/home_cubit.dart';
 import '../models/log_entry.dart';
 import '../models/message_entry.dart';
-import 'home_card_styles.dart';
-import 'status_badge.dart';
 
 class ConversationCard extends StatelessWidget {
   const ConversationCard({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      elevation: 3,
-      borderRadius: BorderRadius.circular(kHomeCardRadius),
-      clipBehavior: Clip.antiAlias,
-      child: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFFFDF6EF), Color(0xFFEFF5FF)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              top: -70,
-              right: -40,
-              child: Container(
-                width: 180,
-                height: 180,
-                decoration: BoxDecoration(
-                  color: Color(0x33A7C7FF),
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: -60,
-              left: -30,
-              child: Container(
-                width: 160,
-                height: 160,
-                decoration: BoxDecoration(
-                  color: Color(0x33BEEBD2),
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: 40,
-              right: -50,
-              child: Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  color: Color(0x22F6D8A8),
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(kHomeCardPadding),
-              child: Column(
-                children: const [
-                  _ConversationHeader(),
-                  SizedBox(height: 10),
-                  _MessagePanelSlot(),
-                  _PromptComposer(),
-                ],
-              ),
-            ),
-            BlocBuilder<HomeCubit, HomeState>(
-              buildWhen: (p, c) => p.status != c.status,
-              builder: (context, state) {
-                final isConnected = state.isConnected;
-                if (isConnected) {
-                  return const SizedBox.shrink();
-                }
-                return Positioned.fill(
-                  child: Container(
-                    color: Colors.grey.shade400.withAlpha(90),
-                  ),
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ConversationHeader extends StatelessWidget {
-  const _ConversationHeader();
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<HomeCubit, HomeState>(
-      buildWhen: (p, c) => p.status != c.status,
-      builder: (context, state) {
-        final info = StatusInfo.fromStatus(state.status);
-        return Row(
-          children: [
-            const Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Conversation',
-                    style: kHomeCardTitleTextStyle,
-                  ),
-                  Text(
-                    'Live feed',
-                    style: TextStyle(fontSize: 10, color: Colors.black54),
-                  ),
-                ],
-              ),
-            ),
-            StatusBadge(label: info.label, color: info.color),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _MessagePanel extends StatelessWidget {
-  const _MessagePanel();
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.white.withAlpha(230),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withAlpha(180)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(12),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(10),
-        child: const _MessageList(),
-      ),
-    );
-  }
-}
-
-class _MessagePanelSlot extends StatelessWidget {
-  const _MessagePanelSlot();
-
-  @override
-  Widget build(BuildContext context) {
-    return Flexible(
-      fit: FlexFit.loose,
-      child: BlocBuilder<HomeCubit, HomeState>(
-        buildWhen: (p, c) => p.status != c.status,
-        builder: (context, state) {
-          final isConnected = state.isConnected;
-          return AnimatedSize(
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.easeInOut,
-            child: isConnected
-                ? Column(
-                    children: const [
-                      Expanded(child: _MessagePanel()),
-                      SizedBox(height: 10),
-                    ],
-                  )
-                : const SizedBox.shrink(),
-          );
-        },
-      ),
+    return Column(
+      children: const [
+        Expanded(child: _MessageList()),
+        SizedBox(height: 12),
+        _PromptComposer(),
+      ],
     );
   }
 }
@@ -247,104 +84,90 @@ class _MessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final isServer = group.direction == LogDirection.server;
     final alignment = isServer ? Alignment.centerLeft : Alignment.centerRight;
-    final bubbleColor = isServer ? const Color(0xFFEAF2FF) : const Color(0xFFE9F9EF);
-    final accentColor = isServer ? const Color(0xFF3D7BFF) : const Color(0xFF2E9E65);
-    final label = isServer ? 'Server' : 'You';
-    final labelColor = isServer ? const Color(0xFF3D7BFF) : const Color(0xFF2E9E65);
+    final bubbleColor = isServer ? const Color(0xFFF3F6FB) : const Color(0xFFF0FDF4);
+    final label = isServer ? 'Assistant' : 'You';
+    final labelColor = isServer ? const Color(0xFF1D4ED8) : const Color(0xFF15803D);
 
-    final bubble = GestureDetector(
-      onTap: () {
-        print('Tapped on ${group.entries[0].id} ${group.entries[0].text}');
-      },
-      child: Align(
-        alignment: alignment,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 680),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: bubbleColor,
-              borderRadius: BorderRadius.only(
-                topLeft: const Radius.circular(16),
-                topRight: const Radius.circular(16),
-                bottomLeft: Radius.circular(isServer ? 6 : 16),
-                bottomRight: Radius.circular(isServer ? 16 : 6),
-              ),
-              border: Border.all(color: accentColor.withAlpha(90)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha(12),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+    return Align(
+      alignment: alignment,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 680),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: bubbleColor,
+            borderRadius: BorderRadius.only(
+              topLeft: const Radius.circular(16),
+              topRight: const Radius.circular(16),
+              bottomLeft: Radius.circular(isServer ? 6 : 16),
+              bottomRight: Radius.circular(isServer ? 16 : 6),
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(10),
-              child: Column(
-                crossAxisAlignment: isServer ? CrossAxisAlignment.start : CrossAxisAlignment.end,
-                children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          color: accentColor,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        label,
-                        style: TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w600,
-                          color: labelColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Column(
-                    crossAxisAlignment: isServer ? CrossAxisAlignment.start : CrossAxisAlignment.end,
-                    children: [
-                      for (int i = 0; i < group.entries.length; i++) ...[
-                        if (i > 0) const SizedBox(height: 4),
-                        SelectableText(
-                          group.entries[i].text,
-                          style: const TextStyle(fontSize: 12, height: 1.35),
-                        ),
-                      ],
-                    ],
-                  ),
-                  if (group.isStreaming) ...[
-                    const SizedBox(height: 6),
-                    CircularProgressIndicator.adaptive(),
-                  ],
-                  if (group.isInterrupted) ...[
-                    const SizedBox(height: 6),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'interrupted!',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontStyle: FontStyle.italic,
-                          color: Colors.black54,
-                        ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: isServer ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isServer ? Icons.smart_toy_outlined : Icons.person_outline,
+                      color: labelColor,
+                      size: 14,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: labelColor,
+                        letterSpacing: 0.2,
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 6),
+                Column(
+                  crossAxisAlignment: isServer ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+                  children: [
+                    for (int i = 0; i < group.entries.length; i++) ...[
+                      if (i > 0) const SizedBox(height: 4),
+                      SelectableText(
+                        group.entries[i].text,
+                        style: const TextStyle(fontSize: 13, height: 1.4),
+                      ),
+                    ],
+                  ],
+                ),
+                if (group.isStreaming) ...[
+                  const SizedBox(height: 8),
+                  const SizedBox(
+                    height: 16,
+                    width: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
                 ],
-              ),
+                if (group.isInterrupted) ...[
+                  const SizedBox(height: 6),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Interrupted',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontStyle: FontStyle.italic,
+                        color: Colors.black54,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ),
       ),
     );
-
-    return bubble;
   }
 }
 
@@ -437,8 +260,9 @@ class _PromptComposerState extends State<_PromptComposer> {
                     horizontal: 12,
                     vertical: 10,
                   ),
+                  filled: !isPromptEnabled,
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(99),
                   ),
                 ),
               ),

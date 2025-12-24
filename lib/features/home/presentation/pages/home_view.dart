@@ -36,8 +36,6 @@ class _HomeViewState extends State<HomeView> {
 
   @override
   Widget build(BuildContext context) {
-    final viewPaddingBottom = MediaQuery.of(context).viewPadding.bottom;
-    final bottomPadding = 16 + viewPaddingBottom;
     final isDebug = _config.flavor == Flavor.dev;
     return MultiBlocListener(
       listeners: [
@@ -65,7 +63,7 @@ class _HomeViewState extends State<HomeView> {
         child: Scaffold(
           key: _scaffoldKey,
           appBar: AppBar(
-            title: const Text('Realtime Playground'),
+            title: const Text('PersonAI'),
             actions: [
               if (isDebug)
                 IconButton(
@@ -83,9 +81,9 @@ class _HomeViewState extends State<HomeView> {
           endDrawer: isDebug ? const LogsDrawer() : null,
           endDrawerEnableOpenDragGesture: isDebug,
           body: SafeArea(
-            bottom: false,
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(16, 16, 16, bottomPadding),
+            child: Container(
+              color: Colors.white,
+              padding: EdgeInsets.fromLTRB(16, 0, 16, 10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: const [

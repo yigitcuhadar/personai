@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
 import '../../cubit/sign_up_cubit.dart';
+import '../../widgets/auth_shared.dart';
 
 class SignUpView extends StatelessWidget {
   const SignUpView({super.key});
@@ -24,28 +25,19 @@ class SignUpView extends StatelessWidget {
           Navigator.of(context).pop();
         }
       },
-      child: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
-        behavior: HitTestBehavior.translucent,
-        child: Scaffold(
-          appBar: AppBar(title: Text('Sign Up')),
-          body: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: const Column(
-                children: [
-                  _EmailInput(),
-                  SizedBox(height: 8),
-                  _PasswordInput(),
-                  SizedBox(height: 8),
-                  _ConfirmPasswordInput(),
-                  SizedBox(height: 8),
-                  _SignUpButton(),
-                ],
-              ),
-            ),
-          ),
-        ),
+      child: AuthPageShell(
+        title: 'Create an account',
+        subtitle: 'Sign up to start taking your conversations further.',
+        helperText: 'Already have an account?',
+        helperActionLabel: 'Log in',
+        onHelperActionTap: () => Navigator.of(context).pop(),
+        onTapOutside: () => FocusScope.of(context).unfocus(),
+        children: const [
+          _EmailInput(),
+          _PasswordInput(),
+          _ConfirmPasswordInput(),
+          _SignUpButton(),
+        ],
       ),
     );
   }
@@ -60,17 +52,16 @@ class _EmailInput extends StatelessWidget {
       builder: (context, state) {
         final displayError = state.email.displayError;
         final isInProgress = state.status.isInProgress;
-        return TextField(
-          key: const Key('signUpForm_emailInput_textField'),
-          autocorrect: false,
+        return AuthInputField(
+          fieldKey: const Key('signUpForm_emailInput_textField'),
+          label: 'Email',
+          hint: 'name@email.com',
+          icon: Icons.email_outlined,
           enabled: !isInProgress,
+          errorText: displayError != null ? 'Enter a valid email' : null,
           onChanged: (email) => context.read<SignUpCubit>().emailChanged(email),
           keyboardType: TextInputType.emailAddress,
           textInputAction: TextInputAction.next,
-          decoration: InputDecoration(
-            labelText: 'email',
-            errorText: displayError != null ? 'invalid email' : null,
-          ),
         );
       },
     );
@@ -86,18 +77,18 @@ class _PasswordInput extends StatelessWidget {
       builder: (context, state) {
         final displayError = state.password.displayError;
         final isInProgress = state.status.isInProgress;
-        return TextField(
-          key: const Key('signUpForm_passwordInput_textField'),
-          autocorrect: false,
+        return AuthInputField(
+          fieldKey: const Key('signUpForm_passwordInput_textField'),
+          label: 'Password',
+          hint: 'At least 8 characters',
+          icon: Icons.lock_outline,
           enabled: !isInProgress,
-          onChanged: (password) => context.read<SignUpCubit>().passwordChanged(password),
           obscureText: true,
+          enableToggle: true,
+          errorText: displayError != null ? 'Password is too short' : null,
+          onChanged: (password) => context.read<SignUpCubit>().passwordChanged(password),
           keyboardType: TextInputType.visiblePassword,
           textInputAction: TextInputAction.next,
-          decoration: InputDecoration(
-            labelText: 'password',
-            errorText: displayError != null ? 'invalid password' : null,
-          ),
         );
       },
     );
@@ -114,18 +105,18 @@ class _ConfirmPasswordInput extends StatelessWidget {
       builder: (context, state) {
         final displayError = state.confirmPassword.displayError;
         final isInProgress = state.status.isInProgress;
-        return TextField(
-          key: const Key('signUpForm_confirmPasswordInput_textField'),
-          autocorrect: false,
+        return AuthInputField(
+          fieldKey: const Key('signUpForm_confirmPasswordInput_textField'),
+          label: 'Confirm password',
+          hint: 'Re-enter your password',
+          icon: Icons.verified_user_outlined,
           enabled: !isInProgress,
-          onChanged: (confirmPassword) => context.read<SignUpCubit>().confirmPasswordChanged(confirmPassword),
           obscureText: true,
+          enableToggle: true,
+          errorText: displayError != null ? 'Passwords do not match' : null,
+          onChanged: (confirmPassword) => context.read<SignUpCubit>().confirmPasswordChanged(confirmPassword),
           keyboardType: TextInputType.visiblePassword,
           textInputAction: TextInputAction.done,
-          decoration: InputDecoration(
-            labelText: 'confirm password',
-            errorText: displayError != null ? 'passwords do not match' : null,
-          ),
         );
       },
     );
@@ -141,10 +132,12 @@ class _SignUpButton extends StatelessWidget {
       builder: (context, state) {
         final isInProgress = state.status.isInProgress;
         final isValid = state.isValid;
-        return ElevatedButton(
+        return AuthPrimaryButton(
           key: const Key('signUpForm_continue_raisedButton'),
-          onPressed: isValid && !isInProgress ? () => context.read<SignUpCubit>().submitted() : null,
-          child: !isInProgress ? const Text('Sign Up') : const CircularProgressIndicator.adaptive(),
+          label: 'Sign up',
+          enabled: isValid && !isInProgress,
+          loading: isInProgress,
+          onPressed: () => context.read<SignUpCubit>().submitted(),
         );
       },
     );
