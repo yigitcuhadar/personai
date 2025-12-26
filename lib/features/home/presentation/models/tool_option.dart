@@ -95,7 +95,7 @@ const List<ToolOption> kToolOptions = [
   ),
   ToolOption(
     name: 'get_livescore',
-    label: 'Live scores (AllSports)',
+    label: 'Live scores',
     description:
         'Fetch soccer/football live scores via AllSports. If league is provided, resolve league_id (and country_id from the league) and query by league; if only country is provided, resolve country_id and query by country. Return the raw API payload and any matched lookup info. Reuse previously returned data for the same country/league unless the user asks for a refresh.',
     shortDescription: 'Live football scores (country or league)',
