@@ -46,11 +46,15 @@ class OpenAIRealtimeClient {
   final Map<String, dynamic> _rtcConfiguration;
   final RealtimeCallsApi callsApi;
 
+  // Persist durations across client instances for aggregated reporting.
+  static final List<Duration> _globalConnectDurations = [];
   final _serverEvents = StreamController<RealtimeServerEvent>.broadcast();
   final _clientEvents = StreamController<RealtimeClientEvent>.broadcast();
   final _remoteAudioTracks = StreamController<MediaStreamTrack>.broadcast();
   bool _responseInProgress = false;
   bool _outputAudioInProgress = false;
+  DateTime? _connectStartedAt;
+  final List<Duration> _connectDurations = [];
   final List<Completer<void>> _responseIdleWaiters = <Completer<void>>[];
 
   RTCPeerConnection? _peerConnection;
@@ -83,6 +87,7 @@ class OpenAIRealtimeClient {
   /// Establish the WebRTC connection and Realtime data channel.
   Future<void> connect({RealtimeSessionConfig? session}) async {
     _logger.info('🔄 Initiating WebRTC connection...');
+    _connectStartedAt = DateTime.now();
     await _hangupActiveCall();
     await _disposePeer();
     await _createPeerConnection();
@@ -90,6 +95,7 @@ class OpenAIRealtimeClient {
     await _prepareDataChannel();
     await _exchangeOffer(session);
     _logger.info('✅ WebRTC connection established successfully');
+    _recordConnectDuration();
   }
 
   /// Sends a client event over the data channel.
@@ -154,6 +160,7 @@ class OpenAIRealtimeClient {
     }
     await _disposePeer();
     _logger.info('✅ Disconnected from realtime session');
+    _logConnectSummary();
   }
 
   Future<void> _createPeerConnection() async {
@@ -501,6 +508,61 @@ class OpenAIRealtimeClient {
     await _serverEvents.close();
     await _clientEvents.close();
     await _remoteAudioTracks.close();
+  }
+
+  void _recordConnectDuration() {
+    final startedAt = _connectStartedAt;
+    if (startedAt == null) return;
+    final duration = DateTime.now().difference(startedAt);
+    _connectDurations.add(duration);
+    _globalConnectDurations.add(duration);
+    _logger.info(
+      '⏱️ WebRTC connect duration #${_connectDurations.length}: ${duration.inMilliseconds} ms',
+    );
+    _connectStartedAt = null;
+  }
+
+  void _logConnectSummary() {
+    if (_globalConnectDurations.isEmpty) {
+      _logger.info('No connect attempts recorded yet.');
+      return;
+    }
+    final attempts = _globalConnectDurations
+        .asMap()
+        .entries
+        .map(
+          (entry) => '#${entry.key + 1}=${entry.value.inMilliseconds}ms',
+        )
+        .join(', ');
+    final totalMs = _globalConnectDurations.fold<int>(
+      0,
+      (sum, d) => sum + d.inMilliseconds,
+    );
+    final avgMs = (totalMs / _globalConnectDurations.length).round();
+    _logger.info('Connect attempts (all sessions): $attempts');
+    _logger.info(
+      'Average connect time: $avgMs ms over ${_globalConnectDurations.length} attempt(s)',
+    );
+
+    // Also show per-client (current instance) summary for quick debugging.
+    if (_connectDurations.isNotEmpty) {
+      final instAttempts = _connectDurations
+          .asMap()
+          .entries
+          .map(
+            (entry) => '#${entry.key + 1}=${entry.value.inMilliseconds}ms',
+          )
+          .join(', ');
+      final instTotalMs = _connectDurations.fold<int>(
+        0,
+        (sum, d) => sum + d.inMilliseconds,
+      );
+      final instAvgMs = (instTotalMs / _connectDurations.length).round();
+      _logger.info('Connect attempts (current client): $instAttempts');
+      _logger.info(
+        'Average connect time (current client): $instAvgMs ms over ${_connectDurations.length} attempt(s)',
+      );
+    }
   }
 
   Future<void> _hangupActiveCall() async {
